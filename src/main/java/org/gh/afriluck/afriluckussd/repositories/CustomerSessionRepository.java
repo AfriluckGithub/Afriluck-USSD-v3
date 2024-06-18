@@ -6,6 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface CustomerSessionRepository extends CrudRepository<Session, Integer> {
-
     public Session findBySequenceID(String sessionId);
 }
