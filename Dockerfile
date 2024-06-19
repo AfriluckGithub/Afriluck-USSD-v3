@@ -11,6 +11,6 @@ WORKDIR /app
 
 COPY target/afriluck-ussd-0.0.1-SNAPSHOT.jar /app/app.jar
 
-EXPOSE 3005
+EXPOSE 8000
 
 CMD ["java", "-jar", "app.jar"]
