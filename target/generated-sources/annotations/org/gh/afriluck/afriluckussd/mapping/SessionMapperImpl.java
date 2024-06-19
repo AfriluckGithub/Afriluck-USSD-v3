@@ -7,8 +7,8 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2024-06-19T11:12:55+0000",
-    comments = "version: 1.6.0.Beta1, compiler: javac, environment: Java 21.0.3 (Oracle Corporation)"
+    date = "2024-06-19T15:18:03+0000",
+    comments = "version: 1.6.0.Beta1, compiler: javac, environment: Java 22.0.1 (Homebrew)"
 )
 @Component
 public class SessionMapperImpl implements SessionMapper {

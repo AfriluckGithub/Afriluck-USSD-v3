@@ -1,19 +1,40 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:latest
-    container_name: afriluck-pg
+  app:
+    image: stevesmart1113/afriluck:latest
     restart: always
-    environment:
-      POSTGRES_DB: afriluck-v2
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: root
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
-      - "5432:5432"
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - "3005:3005"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=root
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5431/afriluck-v2
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=root
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=create-drop
+    depends_on:
+      - db
+    networks:
+      - app-network
 
-volumes:
-  postgres-data:
-    driver: local
+  db:
+    image: postgres:13
+    container_name: db
+    environment:
+      - POSTGRES_DB=afriluck-v2
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=root
+    ports:
+      - "5431:5432"
+    networks:
+      - app-network
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+networks:
+  app-network:
+    driver: bridge

@@ -1,16 +1,14 @@
-# Use a base image with Java runtime
-FROM openjdk:11-jre-slim
+# Use a minimal base image
+FROM openjdk:24-slim-bullseye
 
-LABEL maintainer="steven@afriluck.com"
+COPY init.sql /docker-entrypoint-initdb.d/
 
-VOLUME /tmp
-# Set the working directory inside the container
-#WORKDIR /app
+#RUN chmod +r /docker-entrypoint-initdb.d/init.sql
+
+WORKDIR /app
+
+COPY target/afriluck-ussd-0.0.1-SNAPSHOT.jar /app/app.jar
+
 EXPOSE 3005
-# Copy the JAR file into the container
-ARG JAR_FILE=target/afriluck-ussd-0.0.1-SNAPSHOT.jar
 
-ADD ${JAR_FILE} app.jar
-
-# Command to run the application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+CMD ["java", "-jar", "app.jar"]
