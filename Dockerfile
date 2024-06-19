@@ -8,7 +8,7 @@ WORKDIR /app
 COPY target/afriluck-ussd-0.0.1-SNAPSHOT.jar app.jar
 
 # Expose the port your Spring Boot app runs on
-EXPOSE 8080
+EXPOSE 5000
 
 # Command to run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]
