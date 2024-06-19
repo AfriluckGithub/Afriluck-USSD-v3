@@ -1,6 +1,7 @@
 HELP.md
 target/afriluck-ussd-0.0.1-SNAPSHOT.jar
 target/
+src/main/docker/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/

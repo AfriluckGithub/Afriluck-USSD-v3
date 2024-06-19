@@ -1,6 +1,7 @@
 package org.gh.afriluck.afriluckussd.controllers;
 
 import org.gh.afriluck.afriluckussd.constants.AppConstants;
+import org.gh.afriluck.afriluckussd.dto.RecentTickets;
 import org.gh.afriluck.afriluckussd.dto.Transaction;
 import org.gh.afriluck.afriluckussd.entities.Game;
 import org.gh.afriluck.afriluckussd.mapping.TransactionMapper;
@@ -57,14 +58,17 @@ public class UssdController {
         session.setTimeStamp(String.valueOf(LocalDateTime.now()));
         Session savedSession = sessionRepository.findBySequenceID(session.getSequenceID());
 
+        //System.out.println("--- Initial Request ---");
+        //System.out.println(session.toString());
+
         if (savedSession == null) {
             session.setPosition(0);
             // session.setSequenceId(new Date().getTime() +session.getSequenceID());
             sessionRepository.save(session);
         } else {
-            System.out.println("--- Updating initial session ---");
+            //System.out.println("--- Updating initial session ---");
             updateSession(session, true);
-            System.out.println(savedSession.toString());
+            //System.out.println(savedSession.toString());
         }
 
         if (savedSession != null) {
@@ -72,13 +76,15 @@ public class UssdController {
                 case 1 -> megaGameOptions(savedSession.getGameType(), savedSession.getPosition(), savedSession);
                 case 2 -> directGameOptions(savedSession.getGameType(), savedSession.getPosition(), savedSession);
                 case 3 -> permGameOptions(savedSession.getGameType(), savedSession.getPosition(), savedSession);
-                case 4 -> "4";
-                case 5 -> tnCsMessage();
+                case 4 -> getDrawResults();
+                case 5 -> getLastFiveTransactions(savedSession.getMsisdn());
+                case 6 -> tnCsMessage();
                 case 99 -> contactUsMessage();
                 default -> AppConstants.WELCOME_MENU_MESSAGE;
 
             };
         } else {
+            System.out.println("--- Empty ---");
             message = AppConstants.WELCOME_MENU_MESSAGE;
         }
         return message;
@@ -91,25 +97,9 @@ public class UssdController {
         if (increment) {
             savedSession.setPosition(savedSession.getPosition() + 1);
         }
-        int amount = 0;
+
         if (savedSession.getPosition() == 1) {
             savedSession.setGameType(Integer.parseInt(session.getData()));
-        } else if (savedSession.getGameType() == 1 && savedSession.getPosition() == 2) {
-            savedSession.setSelectedNumbers(session.getData());
-        } else if (savedSession.getGameType() == 1 && savedSession.getPosition() == 3) {
-            amount = switch (session.getData()) {
-                case "1" -> 5;
-                case "2" -> 10;
-                case "3" -> 20;
-                default -> 0;
-            };
-            savedSession.setAmount((double) amount);
-        } else if (savedSession.getGameType() == 2 && savedSession.getPosition() == 2) {
-            savedSession.setGameTypeId(session.getData());
-        } else if (savedSession.getGameType() == 2 && savedSession.getPosition() == 3) {
-            savedSession.setSelectedNumbers(session.getData());
-        } else if (savedSession.getGameType() == 2 && savedSession.getPosition() == 4) {
-            // savedSession.setAmount((double) Integer.parseInt(session.getData()));
         }
         sessionRepository.save(savedSession);
     }
@@ -118,19 +108,19 @@ public class UssdController {
         String message = null;
         Game gameDraw;
         AtomicInteger index = new AtomicInteger(1);
-
-        if (gameType == FIRST && position == FIRST) {
-            gameDraw = new Game();
+        Session savedSession = sessionRepository.findBySequenceID(s.getSequenceID());
+        savedSession.setGameType(1);
+        savedSession.setCurrentGame("mega");
+        updateSession(savedSession, false);
+        System.out.println(savedSession.toString());
+        if (savedSession.getGameType() == FIRST && savedSession.getPosition() == FIRST) {
             message = AppConstants.MEGA_OPTIONS_CHOICE_MESSAGE;
-        } else if (gameType == FIRST && position == SECOND) {
-            gameDraw = new Game();
+            //updateSession(savedSession, true);
+        } else if (savedSession.getGameType() == FIRST && savedSession.getPosition() == SECOND) {
             StringBuilder messageBuilder = new StringBuilder(AppConstants.AMOUNT_TO_STAKE_MESSAGE);
 
-            CompletableFuture<List<Game>> gameAsync = CompletableFuture.supplyAsync(()
-                    -> gameRepository.findAll().stream().distinct().filter(game -> !game.getGameDraw().endsWith("A"))
-                    .sorted(Comparator.comparing(Game::getGameDraw)).toList());
-
-            games = gameAsync.get();
+            games = gameRepository.findAll().stream().distinct().filter(game -> !game.getGameDraw().endsWith("A"))
+                    .sorted(Comparator.comparing(Game::getGameDraw)).toList();
 
             games.stream().forEachOrdered(game -> {
                 int currentIndex = index.getAndIncrement();
@@ -138,8 +128,17 @@ public class UssdController {
             });
 
             message = messageBuilder.toString();
-        } else if (gameType == FIRST && position == THIRD) {
-            Session savedSession = sessionRepository.findBySequenceID(s.getSequenceID());
+            savedSession.setSelectedNumbers(s.getData());
+            s.setGameTypeCode(Integer.parseInt("1"));
+            updateSession(savedSession, true);
+        } else if (savedSession.getGameType() == FIRST && savedSession.getPosition() == FOURTH) {
+            int amount = 0;
+            amount = switch (s.getData()) {
+                case "1" -> 5;
+                case "2" -> 10;
+                case "3" -> 20;
+                default -> 0;
+            };
             String ticketInfo = """
                     Tck info:
                     Lucky 70 M Mega Jackpot
@@ -151,16 +150,15 @@ public class UssdController {
                     \s
                     0) to cancel.
                     \s""";
-            message = String.format(ticketInfo, s.getSelectedNumbers(), s.getAmount());
+            message = String.format(ticketInfo, s.getSelectedNumbers(), amount);
+            int finalAmount = amount;
             CompletableFuture<Game> matchAsync = CompletableFuture.supplyAsync(()
-                    -> games.stream().filter(game -> game.getAmount() == Double.parseDouble(savedSession.getAmount().toString())).findFirst().get());
+                    -> games.stream().filter(game -> game.getAmount() == Double.parseDouble(String.valueOf(finalAmount))).findFirst().get());
             gameDraw = matchAsync.get();
-            s.setGameTypeId(gameDraw.getGameDraw());
-            System.out.println("Game ID" + gameDraw.getGameId());
-            s.setAmount(Double.parseDouble(gameDraw.getAmount().toString()));
-            s.setGameId(gameDraw.getGameId());
-            s.setBetTypeCode(s.getBetTypeCode());
-            //s.setGameType("mega");
+            savedSession.setGameTypeId(gameDraw.getGameDraw());
+            savedSession.setAmount(Double.parseDouble(gameDraw.getAmount().toString()));
+            savedSession.setGameId(gameDraw.getGameId());
+            savedSession.setBetTypeCode("1");
             updateSession(s, true);
         } else {
             gameDraw = new Game();
@@ -186,21 +184,23 @@ public class UssdController {
     private String directGameOptions(int gameType, int position, Session s) throws ExecutionException, InterruptedException {
         System.out.printf("Position %s Game %s", position, gameType);
         String message = null;
+        Session savedSession = sessionRepository.findBySequenceID(s.getSequenceID());
         Optional<Game> currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameDraw().endsWith("A")).findFirst();
         final Game gameDraw = currentGameDraw.get();
-        s.setGameId(gameDraw.getGameId());
-        s.setGameTypeId(gameDraw.getGameDraw());
-        s.setBetTypeCode("direct");
+        savedSession.setGameId(gameDraw.getGameId());
+        savedSession.setGameTypeId(gameDraw.getGameDraw());
+        savedSession.setBetTypeCode("direct");
         AtomicInteger index = new AtomicInteger(1);
         List<String> directGames = AppConstants.directGames;
-        if (gameType == SECOND && position == FIRST) {
+        updateSession(savedSession, false);
+        if (savedSession.getGameType()  == SECOND && savedSession.getPosition()  == FIRST) {
             StringBuilder builder = new StringBuilder();
             directGames.stream().forEachOrdered(game -> {
                 int currentIndex = index.getAndIncrement();
                 builder.append(String.format("%s) %s\n", currentIndex, game.toString()));
             });
             message = builder.toString();
-        } else if (gameType == SECOND && position == SECOND) {
+        } else if (savedSession.getGameType()  == SECOND && savedSession.getPosition()  == SECOND) {
             String currentGame = directGames.get(Integer.parseInt(s.getData()) - 1).toString();
             message = """
                     %s
@@ -212,8 +212,10 @@ public class UssdController {
             s.setGameTypeCode(Integer.parseInt(s.getData()));
             s.setCurrentGame(currentGame);
             updateSession(s, false);
-        } else if (gameType == SECOND && position == THIRD) {
+        } else if (gameType == savedSession.getGameType()  && savedSession.getPosition()  == THIRD) {
             message = "Type Amount to Start (1 - 20)";
+            savedSession.setSelectedNumbers(s.getData());
+            updateSession(savedSession, false);
         } else if (gameType == SECOND && position == FOURTH) {
             String ticketInfo = """
                     Tck info:
@@ -231,7 +233,8 @@ public class UssdController {
             //s.setCurrentGame(directGameName);
             message = String.format(ticketInfo, s.getCurrentGame(), s.getSelectedNumbers(), s.getAmount());
             updateSession(s, false);
-        } else if (gameType == SECOND && position == FIFTH) {
+        } else if (savedSession.getGameType()  == SECOND && savedSession.getPosition()  == FIFTH) {
+            savedSession.setCurrentGame("direct");
             updateSession(s, true);
             message = AppConstants.PAYMENT_INIT_MESSAGE;
             Runnable paymentTask = () -> {
@@ -256,24 +259,31 @@ public class UssdController {
         String message = null;
         List<String> permGames = AppConstants.permGames;
         AtomicReference<Integer> index = new AtomicReference<>(0);
-        if (gameType == THIRD && position == FIRST) {
+        Session savedSession = sessionRepository.findBySequenceID(s.getSequenceID());
+        savedSession.setCurrentGame("perm");
+        updateSession(savedSession, false);
+        if (savedSession.getGameType() == THIRD && savedSession.getPosition() == FIRST) {
             StringBuilder builder = new StringBuilder();
             permGames.stream().forEachOrdered(game -> {
                 int currentIndex = index.updateAndGet(v -> v + 1);
                 builder.append(String.format("%s) %s\n", currentIndex, game.toString()));
             });
             message = builder.toString();
-        }else if (gameType == THIRD && position == SECOND) {
+        }else if (savedSession.getGameType() == THIRD && savedSession.getPosition() == SECOND) {
+            savedSession.setGameTypeCode(Integer.parseInt(s.getData()));
+            System.out.println("Data"+ s.getData());
+            int min = 0;
+            int max = 0;
             message = """
                     Choose 3 or not more than 10 numbers\n
                     between 1 & 57 separated by space\n
                     99. More info
                     """;
-        }else if (gameType == THIRD && position == THIRD) {
+        }else if (savedSession.getGameType() == THIRD && savedSession.getPosition() == THIRD) {
             message = """
                     Type Amount to Start (1 - 20):
                     """;
-        }else if (gameType == THIRD && position == FOURTH) {
+        }else if (savedSession.getGameType() == THIRD && savedSession.getPosition() == FOURTH) {
             String ticketInfo = """
                     Tck info:
                     Lucky 70 M %s
@@ -294,17 +304,26 @@ public class UssdController {
         return message;
     }
 
-    private String getGameType(String gameTypeId) {
-        return switch (gameTypeId) {
-            case "1" -> "Direct-1(Match first no.)";
-            case "2" -> "Direct-2(2 # to win)";
-            case "3" -> "Direct-3(3 # to win)";
-            case "4" -> "Direct-4(4 # to win)";
-            case "5" -> "Direct-5(5 # to win)";
-            case "6" -> "Direct-6(6 # to win)";
-            default -> throw new IllegalStateException("Unexpected value: " + gameTypeId);
-        };
+    private String getDrawResults() {
+        ResponseEntity<String> response = handler.client()
+                .get()
+                .uri("/api/V1/draw-results")
+                .retrieve()
+                .toEntity(String.class);
+        return response.getBody();
     }
+
+    private String getLastFiveTransactions(String msisdn) {
+        ResponseEntity<RecentTickets> response = handler.client()
+                .get()
+                .uri("/api/V1/recent-tickets")
+                //.body(String.format("{\"msisdn\":\"%s\"}", msisdn))
+                //.contentType(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .toEntity(RecentTickets.class);
+        return response.getBody().ticket;
+    }
+
 
     private String tnCsMessage() {
         return """
