@@ -5,7 +5,7 @@ COPY init.sql /docker-entrypoint-initdb.d/
 
 #RUN chmod +r /docker-entrypoint-initdb.d/init.sql
 
-RUN echo '18.193.168.136 host.docker.internal' >> /etc/hosts
+#RUN echo '18.193.168.136 host.docker.internal' >> /etc/hosts
 
 WORKDIR /app
 
