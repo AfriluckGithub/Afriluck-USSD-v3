@@ -5,6 +5,8 @@ COPY init.sql /docker-entrypoint-initdb.d/
 
 #RUN chmod +r /docker-entrypoint-initdb.d/init.sql
 
+RUN echo '18.193.168.136 host.docker.internal' >> /etc/hosts
+
 WORKDIR /app
 
 COPY target/afriluck-ussd-0.0.1-SNAPSHOT.jar /app/app.jar
