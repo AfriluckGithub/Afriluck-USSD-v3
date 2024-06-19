@@ -1,14 +1,16 @@
 # Use a base image with Java runtime
-FROM openjdk:21-bullseye
+FROM openjdk:11-jre-slim
 
+LABEL maintainer="steven@afriluck.com"
+
+VOLUME /tmp
 # Set the working directory inside the container
-WORKDIR /app
-
+#WORKDIR /app
+EXPOSE 3005
 # Copy the JAR file into the container
-COPY target/afriluck-ussd-0.0.1-SNAPSHOT.jar app.jar
+ARG JAR_FILE=target/afriluck-ussd-0.0.1-SNAPSHOT.jar
 
-# Expose the port your Spring Boot app runs on
-EXPOSE 5000
+ADD ${JAR_FILE} app.jar
 
 # Command to run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]
