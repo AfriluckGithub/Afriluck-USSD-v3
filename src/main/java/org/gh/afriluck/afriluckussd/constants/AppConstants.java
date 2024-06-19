@@ -14,7 +14,7 @@ public class AppConstants {
             2. Direct Game(Classic)
             3. Perm Game(Classic)
             4. Last Draw Results
-            5. Last Draw Results
+            5. Recent Transactions
             6. TnCs
             99. Contact U
             """.trim();
