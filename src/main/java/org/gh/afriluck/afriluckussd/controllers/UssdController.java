@@ -77,9 +77,9 @@ public class UssdController {
                 case 2 -> directGameOptions(savedSession.getGameType(), savedSession.getPosition(), savedSession);
                 case 3 -> permGameOptions(savedSession.getGameType(), savedSession.getPosition(), savedSession);
                 case 4 -> getDrawResults(savedSession);
-                case 5 -> getLastFiveTransactions(savedSession.getMsisdn());
-                case 6 -> tnCsMessage();
-                case 99 -> contactUsMessage();
+                case 5 -> getLastFiveTransactions(savedSession, savedSession.getMsisdn());
+                case 6 -> tnCsMessage(savedSession);
+                case 99 -> contactUsMessage(savedSession);
                 default -> menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE);
 
             };
