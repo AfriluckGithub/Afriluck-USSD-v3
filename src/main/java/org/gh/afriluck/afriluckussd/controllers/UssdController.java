@@ -76,7 +76,7 @@ public class UssdController {
                 case 1 -> megaGameOptions(savedSession.getGameType(), savedSession.getPosition(), savedSession);
                 case 2 -> directGameOptions(savedSession.getGameType(), savedSession.getPosition(), savedSession);
                 case 3 -> permGameOptions(savedSession.getGameType(), savedSession.getPosition(), savedSession);
-                case 4 -> getDrawResults();
+                case 4 -> getDrawResults(savedSession);
                 case 5 -> getLastFiveTransactions(savedSession.getMsisdn());
                 case 6 -> tnCsMessage();
                 case 99 -> contactUsMessage();
@@ -311,16 +311,16 @@ public class UssdController {
         return menuResponse(savedSession, continueFlag, message);
     }
 
-    private String getDrawResults() {
+    private String getDrawResults(Session session) {
         ResponseEntity<String> response = handler.client()
                 .get()
                 .uri("/api/V1/draw-results")
                 .retrieve()
                 .toEntity(String.class);
-        return response.getBody();
+        return menuResponse(session, 1, response.getBody());
     }
 
-    private String getLastFiveTransactions(String msisdn) {
+    private String getLastFiveTransactions(Session session, String msisdn) {
         ResponseEntity<RecentTickets> response = handler.client()
                 .get()
                 .uri("/api/V1/recent-tickets")
@@ -328,24 +328,24 @@ public class UssdController {
                 //.contentType(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .toEntity(RecentTickets.class);
-        return response.getBody().ticket;
+        return menuResponse(session, 1, response.getBody().ticket);
     }
 
 
-    private String tnCsMessage() {
-        return """
+    private String tnCsMessage(Session session) {
+        return menuResponse(session, 1, """
                                 TnCs
                 You can read here: http://www.afriluck.com/#/
                 page-details/terms-and-conditions
-                """;
+                """);
     }
 
-    private String contactUsMessage() {
-        return """
+    private String contactUsMessage(Session session) {
+        return menuResponse(session, 1, """
                 Contact us:
                 0303957964
                 0303958006
-                """;
+                """);
     }
 
     public String menuResponse(Session session, int continueFlag, String message) {
