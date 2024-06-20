@@ -7,17 +7,7 @@ public class AppConstants {
     public static final int SECOND = 2;
     public static final int THIRD = 3;
 
-    public static final String WELCOME_MENU_MESSAGE =
-            """
-            Welcome to Afriluck NLA
-            1. Mega Jackpot
-            2. Direct Game(Classic)
-            3. Perm Game(Classic)
-            4. Last Draw Results
-            5. Recent Transactions
-            6. TnCs
-            99. Contact Us
-            """.trim();
+    public static final String WELCOME_MENU_MESSAGE = "Welcome to Afriluck NLA\n 1. Mega Jackpot \n2. Direct Game(Classic)\n3. Perm Game(Classic)\n4. Last Draw Results\n5. Recent Transactions\n6. TnCs \n99. Contact Us".trim();
 
     public static final String MEGA_OPTIONS_CHOICE_MESSAGE = "Choose 6 numbers between 1 and 57 separated by space";
     public static final String AMOUNT_TO_STAKE_MESSAGE = "Choose stake amount\n";
