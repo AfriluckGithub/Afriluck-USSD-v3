@@ -76,8 +76,8 @@ public class UssdController {
                 case 1 -> megaGameOptions(savedSession.getGameType(), savedSession.getPosition(), savedSession);
                 case 2 -> directGameOptions(savedSession.getGameType(), savedSession.getPosition(), savedSession);
                 case 3 -> permGameOptions(savedSession.getGameType(), savedSession.getPosition(), savedSession);
-                case 4 -> getDrawResults(savedSession);
-                case 5 -> getLastFiveTransactions(savedSession, savedSession.getMsisdn());
+                case 4 -> banker(savedSession, "Banker");
+                case 5 -> account(savedSession);
                 case 6 -> tnCsMessage(savedSession);
                 case 99 -> contactUsMessage(savedSession);
                 default -> menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE);
@@ -85,10 +85,32 @@ public class UssdController {
             };
         } else {
             System.out.println("--- Initial Menu ---");
-            System.out.printf("Session => %s", session);
             message = menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE);
+            System.out.printf("Session => %s", session.getMessage());
         }
         return message;
+    }
+
+    private String account(Session savedSession) {
+        String message = null;
+        if (savedSession.getGameType() == FIFTH && savedSession.getPosition() == FIRST) {
+            message = AppConstants.ACCOUNT_MENU_MESSAGE;
+            updateSession(savedSession, false);
+        } else if (savedSession.getGameType() == FIFTH && savedSession.getPosition() == SECOND) {
+            switch (savedSession.getData()) {
+                case "3":
+                    message = getDrawResults(savedSession);
+                    break;
+                case "4":
+                    message = getLastFiveTransactions(savedSession, savedSession.getMsisdn());
+                    break;
+            }
+        }
+        return menuResponse(savedSession, 1, message);
+    }
+
+    private String banker(Session savedSession, String message) {
+        return menuResponse(savedSession, 1, message);
     }
 
 
@@ -102,6 +124,7 @@ public class UssdController {
         if (savedSession.getPosition() == 1) {
             savedSession.setGameType(Integer.parseInt(session.getData()));
         }
+        System.out.println(savedSession);
         sessionRepository.save(savedSession);
     }
 
@@ -275,13 +298,14 @@ public class UssdController {
                 builder.append(String.format("%s) %s\n", currentIndex, game.toString()));
             });
             message = builder.toString();
-        }else if (savedSession.getGameType() == THIRD && savedSession.getPosition() == SECOND) {
+        } else if (savedSession.getGameType() == THIRD && savedSession.getPosition() == SECOND) {
             savedSession.setGameTypeCode(Integer.parseInt(s.getData()));
-            System.out.println("Data"+ s.getData());
-            int min = 0;
-            int max = 0;
+            List<String> ranges = new ArrayList<>();
+            for (AbstractMap.SimpleEntry<Integer, Integer> permRange : AppConstants.permRanges) {
+
+            }
             message = """
-                    Choose 3 or not more than 10 numbers\n
+                    Choose %s or not more than %s numbers\n
                     between 1 & 57 separated by space\n
                     99. More info
                     """;
