@@ -16,11 +16,14 @@ public class AppConstants {
             4. Last Draw Results
             5. Recent Transactions
             6. TnCs
-            99. Contact U
+            99. Contact Us
             """.trim();
 
     public static final String MEGA_OPTIONS_CHOICE_MESSAGE = "Choose 6 numbers between 1 and 57 separated by space";
     public static final String AMOUNT_TO_STAKE_MESSAGE = "Choose stake amount\n";
+    public static final String MEGA = "MEGA";
+    public static final String DIRECT = "DIRECT";
+    public static final String PERM = "PERM";
 
     public static List<String> directGames = List.of(
             "Direct-1(Match first no.)",

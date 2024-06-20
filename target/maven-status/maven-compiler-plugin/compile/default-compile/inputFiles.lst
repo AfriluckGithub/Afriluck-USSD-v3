@@ -10,6 +10,7 @@
 /Users/bezomoney/IdeaProjects/afriluck-ussd/src/main/java/org/gh/afriluck/afriluckussd/entities/Game.java
 /Users/bezomoney/IdeaProjects/afriluck-ussd/src/main/java/org/gh/afriluck/afriluckussd/domain/redis/CustomerData.java
 /Users/bezomoney/IdeaProjects/afriluck-ussd/src/main/java/org/gh/afriluck/afriluckussd/dto/Transaction.java
+/Users/bezomoney/IdeaProjects/afriluck-ussd/src/main/java/org/gh/afriluck/afriluckussd/dto/RecentTickets.java
 /Users/bezomoney/IdeaProjects/afriluck-ussd/src/main/java/org/gh/afriluck/afriluckussd/mapping/TransactionMapper.java
 /Users/bezomoney/IdeaProjects/afriluck-ussd/src/main/java/org/gh/afriluck/afriluckussd/constants/Command.java
 /Users/bezomoney/IdeaProjects/afriluck-ussd/src/main/java/org/gh/afriluck/afriluckussd/controllers/UssdController.java

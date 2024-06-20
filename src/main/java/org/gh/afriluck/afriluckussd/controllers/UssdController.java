@@ -66,9 +66,8 @@ public class UssdController {
             // session.setSequenceId(new Date().getTime() +session.getSequenceID());
             sessionRepository.save(session);
         } else {
-            //System.out.println("--- Updating initial session ---");
+            System.out.println("--- Updating ---");
             updateSession(session, true);
-            //System.out.println(savedSession.toString());
         }
 
         if (savedSession != null) {
@@ -84,7 +83,8 @@ public class UssdController {
 
             };
         } else {
-            System.out.println("--- Empty ---");
+            System.out.println("--- Initial Menu ---");
+            System.out.printf("Session => %s", session);
             message = AppConstants.WELCOME_MENU_MESSAGE;
         }
         return message;
@@ -110,7 +110,7 @@ public class UssdController {
         AtomicInteger index = new AtomicInteger(1);
         Session savedSession = sessionRepository.findBySequenceID(s.getSequenceID());
         savedSession.setGameType(1);
-        savedSession.setCurrentGame("mega");
+        savedSession.setCurrentGame(AppConstants.MEGA);
         updateSession(savedSession, false);
         System.out.println(savedSession.toString());
         if (savedSession.getGameType() == FIRST && savedSession.getPosition() == FIRST) {
@@ -189,7 +189,7 @@ public class UssdController {
         final Game gameDraw = currentGameDraw.get();
         savedSession.setGameId(gameDraw.getGameId());
         savedSession.setGameTypeId(gameDraw.getGameDraw());
-        savedSession.setBetTypeCode("direct");
+        savedSession.setBetTypeCode(AppConstants.DIRECT);
         AtomicInteger index = new AtomicInteger(1);
         List<String> directGames = AppConstants.directGames;
         updateSession(savedSession, false);
@@ -260,7 +260,7 @@ public class UssdController {
         List<String> permGames = AppConstants.permGames;
         AtomicReference<Integer> index = new AtomicReference<>(0);
         Session savedSession = sessionRepository.findBySequenceID(s.getSequenceID());
-        savedSession.setCurrentGame("perm");
+        savedSession.setCurrentGame(AppConstants.PERM);
         updateSession(savedSession, false);
         if (savedSession.getGameType() == THIRD && savedSession.getPosition() == FIRST) {
             StringBuilder builder = new StringBuilder();
