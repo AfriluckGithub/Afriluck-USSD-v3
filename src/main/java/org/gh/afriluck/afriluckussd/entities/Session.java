@@ -18,6 +18,8 @@ public class Session {
 
     public String network;
 
+    public String message;
+
     private String data;
 
     private Integer position;
@@ -46,7 +48,7 @@ public class Session {
 
     public Session() {};
 
-    public Session(Integer id, String sequenceID, String network, String msisdn, String data, Integer position, Integer gameType, String selectedNumbers, Double amount, String gameTypeId,  String timeStamp, String gameId, String betTypeCode, Integer gameTypeCode, String currentGame) {
+    public Session(Integer id, String message, String sequenceID, String network, String msisdn, String data, Integer position, Integer gameType, String selectedNumbers, Double amount, String gameTypeId,  String timeStamp, String gameId, String betTypeCode, Integer gameTypeCode, String currentGame) {
         this.id = id;
         this.sequenceID = sequenceID;
         this.network = network;
@@ -62,6 +64,7 @@ public class Session {
         this.betTypeCode = betTypeCode;
         this.gameTypeCode = gameTypeCode;
         this.currentGame = currentGame;
+        this.message = message;
     }
 
     @PrePersist
@@ -75,6 +78,14 @@ public class Session {
     @PreUpdate
     protected void onUpdate() {
         updatedDate = LocalDateTime.now();
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public String getMessage() {
+        return message;
     }
 
     public Integer getId() {

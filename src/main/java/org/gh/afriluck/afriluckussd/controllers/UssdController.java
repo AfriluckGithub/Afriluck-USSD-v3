@@ -1,5 +1,6 @@
 package org.gh.afriluck.afriluckussd.controllers;
 
+import com.google.gson.JsonObject;
 import org.gh.afriluck.afriluckussd.constants.AppConstants;
 import org.gh.afriluck.afriluckussd.dto.RecentTickets;
 import org.gh.afriluck.afriluckussd.dto.Transaction;
@@ -79,13 +80,13 @@ public class UssdController {
                 case 5 -> getLastFiveTransactions(savedSession.getMsisdn());
                 case 6 -> tnCsMessage();
                 case 99 -> contactUsMessage();
-                default -> AppConstants.WELCOME_MENU_MESSAGE;
+                default -> menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE);
 
             };
         } else {
             System.out.println("--- Initial Menu ---");
             System.out.printf("Session => %s", session);
-            message = AppConstants.WELCOME_MENU_MESSAGE;
+            message = menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE);
         }
         return message;
     }
@@ -339,5 +340,15 @@ public class UssdController {
                 0303957964
                 0303958006
                 """;
+    }
+
+    public String menuResponse(Session session, int continueFlag, String message) {
+        JsonObject json = new JsonObject();
+        json.addProperty("msisdn", session.getMsisdn());
+        json.addProperty("sequenceID", session.getSequenceID());
+        json.addProperty("timestamp", session.getTimeStamp());
+        json.addProperty("message", message);
+        json.addProperty("continueFlag", continueFlag);
+        return json.getAsString();
     }
 }
