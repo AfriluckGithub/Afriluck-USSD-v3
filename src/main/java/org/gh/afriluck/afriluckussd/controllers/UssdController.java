@@ -10,6 +10,7 @@ import org.gh.afriluck.afriluckussd.repositories.CustomerSessionRepository;
 import org.gh.afriluck.afriluckussd.entities.Session;
 import org.gh.afriluck.afriluckussd.repositories.GameRepository;
 import org.gh.afriluck.afriluckussd.utils.AfriluckCallHandler;
+import org.json.JSONObject;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -98,14 +99,25 @@ public class UssdController {
             message = AppConstants.ACCOUNT_MENU_MESSAGE;
             updateSession(savedSession, false);
         } else if (savedSession.getGameType() == FIFTH && savedSession.getPosition() == SECOND) {
+            String response = null;
+            String json = null;
+            JSONObject oj = null;
             switch (savedSession.getData()) {
                 case "3":
                     continueFlag = 1;
-                    message = getDrawResults(savedSession);
+                    response = getDrawResults(savedSession);
+                    json = menuResponse(savedSession, continueFlag, response);
+                    oj = new JSONObject(json);
+                    message = oj.get("message").toString();
+                    System.out.println(message);
                     break;
                 case "4":
                     continueFlag = 1;
-                    message = getLastFiveTransactions(savedSession, savedSession.getMsisdn());
+                    response = getLastFiveTransactions(savedSession, savedSession.getMsisdn()).ticket;
+                    json = menuResponse(savedSession, continueFlag, response);
+                    oj = new JSONObject(json);
+                    message = oj.get("message").toString();
+                    System.out.println(message);
                     break;
             }
         }
@@ -347,7 +359,7 @@ public class UssdController {
         return response.getBody();
     }
 
-    private String getLastFiveTransactions(Session session, String msisdn) {
+    private RecentTickets getLastFiveTransactions(Session session, String msisdn) {
         ResponseEntity<RecentTickets> response = handler.client()
                 .get()
                 .uri("/api/V1/recent-tickets")
@@ -355,7 +367,7 @@ public class UssdController {
                 //.contentType(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .toEntity(RecentTickets.class);
-        return response.getBody().ticket;
+        return response.getBody();
     }
 
 
