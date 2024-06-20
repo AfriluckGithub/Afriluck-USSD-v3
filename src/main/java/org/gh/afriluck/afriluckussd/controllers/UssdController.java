@@ -93,20 +93,23 @@ public class UssdController {
 
     private String account(Session savedSession) {
         String message = null;
+        int continueFlag = 0;
         if (savedSession.getGameType() == FIFTH && savedSession.getPosition() == FIRST) {
             message = AppConstants.ACCOUNT_MENU_MESSAGE;
             updateSession(savedSession, false);
         } else if (savedSession.getGameType() == FIFTH && savedSession.getPosition() == SECOND) {
             switch (savedSession.getData()) {
                 case "3":
+                    continueFlag = 1;
                     message = getDrawResults(savedSession);
                     break;
                 case "4":
+                    continueFlag = 1;
                     message = getLastFiveTransactions(savedSession, savedSession.getMsisdn());
                     break;
             }
         }
-        return menuResponse(savedSession, 1, message);
+        return menuResponse(savedSession, continueFlag, message);
     }
 
     private String banker(Session savedSession, String message) {
