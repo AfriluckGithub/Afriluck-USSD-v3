@@ -349,6 +349,6 @@ public class UssdController {
         json.addProperty("timestamp", session.getTimeStamp());
         json.addProperty("message", message);
         json.addProperty("continueFlag", continueFlag);
-        return json.getAsString();
+        return json.toString();
     }
 }
