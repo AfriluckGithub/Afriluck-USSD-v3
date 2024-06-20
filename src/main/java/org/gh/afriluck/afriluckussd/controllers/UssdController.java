@@ -344,7 +344,7 @@ public class UssdController {
                 .uri("/api/V1/draw-results")
                 .retrieve()
                 .toEntity(String.class);
-        return menuResponse(session, 1, response.getBody());
+        return response.getBody();
     }
 
     private String getLastFiveTransactions(Session session, String msisdn) {
@@ -355,7 +355,7 @@ public class UssdController {
                 //.contentType(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .toEntity(RecentTickets.class);
-        return menuResponse(session, 1, response.getBody().ticket);
+        return response.getBody().ticket;
     }
 
 
