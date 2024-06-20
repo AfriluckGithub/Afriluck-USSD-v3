@@ -108,6 +108,7 @@ public class UssdController {
     private String megaGameOptions(int gameType, int position, Session s) throws ExecutionException, InterruptedException {
         String message = null;
         Game gameDraw;
+        int continueFlag = 0;
         AtomicInteger index = new AtomicInteger(1);
         Session savedSession = sessionRepository.findBySequenceID(s.getSequenceID());
         savedSession.setGameType(1);
@@ -178,13 +179,15 @@ public class UssdController {
             };
             Thread task = paymentThread.start(paymentTask);
             System.out.println(task.threadId());
+            continueFlag = 1;
         }
-        return menuResponse(savedSession, 0, message);
+        return menuResponse(savedSession, continueFlag, message);
     }
 
     private String directGameOptions(int gameType, int position, Session s) throws ExecutionException, InterruptedException {
         System.out.printf("Position %s Game %s", position, gameType);
         String message = null;
+        int continueFlag = 0;
         Session savedSession = sessionRepository.findBySequenceID(s.getSequenceID());
         Optional<Game> currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameDraw().endsWith("A")).findFirst();
         final Game gameDraw = currentGameDraw.get();
@@ -252,11 +255,13 @@ public class UssdController {
             };
             Thread task = paymentThread.start(paymentTask);
             System.out.println(task.threadId());
+            continueFlag = 1;
         }
-        return menuResponse(savedSession, 0, message);
+        return menuResponse(savedSession, continueFlag, message);
     }
 
     public String permGameOptions(int gameType, int position, Session s) {
+        int continueFlag = 0;
         String message = null;
         List<String> permGames = AppConstants.permGames;
         AtomicReference<Integer> index = new AtomicReference<>(0);
@@ -300,9 +305,10 @@ public class UssdController {
             message = String.format(ticketInfo, s.getCurrentGame(), s.getSelectedNumbers(), s.getAmount());
             updateSession(s, false);
         }else if (gameType == THIRD && position == FIFTH) {
+            continueFlag = 1;
             message = AppConstants.PAYMENT_INIT_MESSAGE;
         }
-        return menuResponse(savedSession, 0, message);
+        return menuResponse(savedSession, continueFlag, message);
     }
 
     private String getDrawResults() {
