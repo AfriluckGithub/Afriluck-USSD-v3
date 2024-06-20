@@ -179,7 +179,7 @@ public class UssdController {
             Thread task = paymentThread.start(paymentTask);
             System.out.println(task.threadId());
         }
-        return message;
+        return menuResponse(savedSession, 0, message);
     }
 
     private String directGameOptions(int gameType, int position, Session s) throws ExecutionException, InterruptedException {
@@ -253,7 +253,7 @@ public class UssdController {
             Thread task = paymentThread.start(paymentTask);
             System.out.println(task.threadId());
         }
-        return message;
+        return menuResponse(savedSession, 0, message);
     }
 
     public String permGameOptions(int gameType, int position, Session s) {
@@ -302,7 +302,7 @@ public class UssdController {
         }else if (gameType == THIRD && position == FIFTH) {
             message = AppConstants.PAYMENT_INIT_MESSAGE;
         }
-        return message;
+        return menuResponse(savedSession, 0, message);
     }
 
     private String getDrawResults() {
