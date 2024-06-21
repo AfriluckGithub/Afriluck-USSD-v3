@@ -147,6 +147,10 @@ public class UssdController {
         sessionRepository.save(savedSession);
     }
 
+    private void deleteSession(Session session) {
+        sessionRepository.delete(session);
+    }
+
     private String megaGameOptions(int gameType, int position, Session s) throws ExecutionException, InterruptedException {
         String message = null;
         Game gameDraw;
@@ -187,14 +191,14 @@ public class UssdController {
                 message = "Numbers must be a total of 6.\n 0) Back";
                 savedSession.setPosition(0);
                 savedSession.setGameType(0);
-                updateSession(savedSession, false);
+                deleteSession(savedSession);
             }
 
             if(!repeatedNumbers.isEmpty()) {
                 message = "Numbers selected must be unique.\n 0) Back";
                 savedSession.setPosition(0);
                 savedSession.setGameType(0);
-                updateSession(savedSession, false);
+                deleteSession(savedSession);
             }
         } else if (savedSession.getGameType() == FIRST && savedSession.getPosition() == FOURTH) {
             int amount = 0;
