@@ -84,7 +84,8 @@ public class UssdController {
                 case 5 -> account(savedSession);
                 case 6 -> tnCsMessage(savedSession);
                 case 99 -> contactUsMessage(savedSession);
-                default -> menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE);
+                case 0-> menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE);
+                default -> menuResponse(session,0, "Invalid input");
 
             };
         } else {
@@ -184,10 +185,16 @@ public class UssdController {
                 updateSession(savedSession, true);
             } else {
                 message = "Numbers must be a total of 6.\n 0) Back";
+                savedSession.setPosition(0);
+                savedSession.setGameType(0);
+                updateSession(savedSession, false);
             }
 
             if(!repeatedNumbers.isEmpty()) {
                 message = "Numbers selected must be unique.\n 0) Back";
+                savedSession.setPosition(0);
+                savedSession.setGameType(0);
+                updateSession(savedSession, false);
             }
         } else if (savedSession.getGameType() == FIRST && savedSession.getPosition() == FOURTH) {
             int amount = 0;
