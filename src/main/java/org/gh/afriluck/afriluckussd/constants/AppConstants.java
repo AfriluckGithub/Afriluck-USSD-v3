@@ -1,9 +1,8 @@
 package org.gh.afriluck.afriluckussd.constants;
 
-import java.util.AbstractMap;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import org.gh.afriluck.afriluckussd.dto.Pair;
+
+import java.util.*;
 
 public class AppConstants {
     public static final int FIRST = 1;
@@ -19,7 +18,7 @@ public class AppConstants {
     public static final String DIRECT = "DIRECT";
     public static final String PERM = "PERM";
 
-    public static List<String> directGames = List.of(
+    public static List<String> DIRECT_GAMES = List.of(
             "Direct-1(Match first no.)",
             "Direct-2(2 # to win)",
             "Direct-3(3 # to win)",
@@ -27,7 +26,7 @@ public class AppConstants {
             "Direct-5(5 # to win)",
             "Direct-6(6 # to win)");
 
-    public static List<String> permGames = List.of(
+    public static List<String> PERM_GAMES = List.of(
             "Perm-2(2 nos. to win)",
             "Perm-3(3 nos. to win)",
             "Perm-4(4 nos. to win)",
@@ -35,13 +34,19 @@ public class AppConstants {
             "Perm-6(6 nos. to win)"
     );
 
-    public static final List<AbstractMap.SimpleEntry<Integer, Integer>> permRanges = List.of(
-            new AbstractMap.SimpleEntry<>(3, 15),
-            new AbstractMap.SimpleEntry<>(4, 10),
-            new AbstractMap.SimpleEntry<>(5, 8),
-            new AbstractMap.SimpleEntry<>(6, 8),
-            new AbstractMap.SimpleEntry<>(7,8)
+    public static final List<org.gh.afriluck.afriluckussd.dto.Pair<Integer, Integer>> ranges = List.of(
+            new Pair<>(3, 15),
+            new Pair<>(4, 10),
+            new Pair<>(5, 8),
+            new Pair<>(6, 8),
+            new Pair<>(7, 8)
     );
+
+    public static final String RANGE_CHOICE_TEMPLATE = """
+            Choose %s or not more than %s numbers
+            between 1 & 57 separated by space
+            99. More info
+            """;
 
     public static String PAYMENT_INIT_MESSAGE = "Payment request initiated.\nApprove to complete ticket purchase";
 }

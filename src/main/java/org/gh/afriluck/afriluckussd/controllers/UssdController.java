@@ -2,6 +2,7 @@ package org.gh.afriluck.afriluckussd.controllers;
 
 import com.google.gson.JsonObject;
 import org.gh.afriluck.afriluckussd.constants.AppConstants;
+import org.gh.afriluck.afriluckussd.dto.Pair;
 import org.gh.afriluck.afriluckussd.dto.RecentTickets;
 import org.gh.afriluck.afriluckussd.dto.Transaction;
 import org.gh.afriluck.afriluckussd.entities.Game;
@@ -233,7 +234,7 @@ public class UssdController {
         savedSession.setGameTypeId(gameDraw.getGameDraw());
         savedSession.setBetTypeCode(AppConstants.DIRECT);
         AtomicInteger index = new AtomicInteger(1);
-        List<String> directGames = AppConstants.directGames;
+        List<String> directGames = AppConstants.DIRECT_GAMES;
         updateSession(savedSession, false);
         if (savedSession.getGameType()  == SECOND && savedSession.getPosition()  == FIRST) {
             StringBuilder builder = new StringBuilder();
@@ -301,10 +302,14 @@ public class UssdController {
     public String permGameOptions(int gameType, int position, Session s) {
         int continueFlag = 0;
         String message = null;
-        List<String> permGames = AppConstants.permGames;
+        List<String> permGames = AppConstants.PERM_GAMES;
         AtomicReference<Integer> index = new AtomicReference<>(0);
+        Optional<Game> currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameDraw().endsWith("A")).findFirst();
+        final Game gameDraw = currentGameDraw.get();
         Session savedSession = sessionRepository.findBySequenceID(s.getSequenceID());
-        savedSession.setCurrentGame(AppConstants.PERM);
+        savedSession.setGameId(gameDraw.getGameId());
+        savedSession.setGameTypeId(gameDraw.getGameDraw());
+        savedSession.setBetTypeCode(AppConstants.PERM);
         updateSession(savedSession, false);
         if (savedSession.getGameType() == THIRD && savedSession.getPosition() == FIRST) {
             StringBuilder builder = new StringBuilder();
@@ -314,21 +319,34 @@ public class UssdController {
             });
             message = builder.toString();
         } else if (savedSession.getGameType() == THIRD && savedSession.getPosition() == SECOND) {
-            savedSession.setGameTypeCode(Integer.parseInt(s.getData()));
-            List<String> ranges = new ArrayList<>();
-            for (AbstractMap.SimpleEntry<Integer, Integer> permRange : AppConstants.permRanges) {
+            String currentGame = permGames.get(Integer.parseInt(s.getData()) - 1).toString();
+            savedSession.setCurrentGame(currentGame);
+            List<org.gh.afriluck.afriluckussd.dto.Pair<Integer, Integer>> ranges = AppConstants.ranges;
 
-            }
-            message = """
-                    Choose %s or not more than %s numbers\n
-                    between 1 & 57 separated by space\n
-                    99. More info
-                    """;
+            String template = s.getData() == ""? "Wrong input" : AppConstants.RANGE_CHOICE_TEMPLATE;
+
+            savedSession.setGameTypeCode(Integer.parseInt(s.getData()));
+
+            message  = switch (savedSession.getData()) {
+                case "1" -> String.format(template, ranges.get(0).getKey(), ranges.get(0).getValue());
+                case "2" -> String.format(template, ranges.get(1).getKey(), ranges.get(1).getValue());
+                case "3" -> String.format(template, ranges.get(2).getKey(), ranges.get(2).getValue());
+                case "4" -> String.format(template, ranges.get(3).getKey(), ranges.get(3).getValue());
+                case "5" -> String.format(template, ranges.get(4).getKey(), ranges.get(4).getValue());
+                default -> "";
+            };
+            updateSession(savedSession, false);
         }else if (savedSession.getGameType() == THIRD && savedSession.getPosition() == THIRD) {
+            savedSession.setSelectedNumbers(s.getData());
+
             message = """
                     Type Amount to Start (1 - 20):
                     """;
+            updateSession(savedSession, false);
         }else if (savedSession.getGameType() == THIRD && savedSession.getPosition() == FOURTH) {
+            savedSession.setAmount(Double.parseDouble(s.getData()));
+            System.out.printf("Amount => ", savedSession.getData());
+            String total = calculatePermAmount(savedSession);
             String ticketInfo = """
                     Tck info:
                     Lucky 70 M %s
@@ -340,12 +358,27 @@ public class UssdController {
                     \s
                     0) to cancel.
                     \s""";
-            s.setAmount(Double.parseDouble(s.getData()));
-            message = String.format(ticketInfo, s.getCurrentGame(), s.getSelectedNumbers(), s.getAmount());
+            message = String.format(ticketInfo, s.getCurrentGame(), s.getSelectedNumbers(), total);
+            savedSession.setAmount(Double.valueOf(total));
             updateSession(s, false);
         }else if (gameType == THIRD && position == FIFTH) {
+            updateSession(savedSession, false);
             continueFlag = 1;
             message = AppConstants.PAYMENT_INIT_MESSAGE;
+            System.out.printf("Perm session => ",savedSession.toString());
+            Runnable paymentTask = () -> {
+                Transaction t = mapper.mapTransactionFromSessionPerm(s);
+                System.out.println(t.toString());
+                ResponseEntity<String> response = handler.client()
+                        .post()
+                        .uri("/api/V1/place-bet")
+                        .body(t)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .retrieve()
+                        .toEntity(String.class);
+                System.out.println(response.getBody());
+            };
+            Thread task = paymentThread.start(paymentTask);
         }
         return menuResponse(savedSession, continueFlag, message);
     }
@@ -368,6 +401,21 @@ public class UssdController {
                 .retrieve()
                 .toEntity(RecentTickets.class);
         return response.getBody();
+    }
+
+    private String calculatePermAmount(Session session) {
+        ResponseEntity<String> response = handler.client()
+                .post()
+                .uri("/api/V1/request-bet-amount")
+                .body(String.format("{\"amount\":\"%s\",\"selected_numbers\":\"%s\",\"bet_type_code\":\"%s\",\"bet_type\":\"%s\"}"
+                        , session.getAmount(), session.getSelectedNumbers(), session.getGameType(), "perm"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .toEntity(String.class);
+        String json = response.getBody();
+        JSONObject object = new JSONObject(json);
+        String total = object.get("total").toString();
+        return total;
     }
 
 

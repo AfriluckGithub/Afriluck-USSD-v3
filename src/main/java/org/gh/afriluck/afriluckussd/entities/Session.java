@@ -225,6 +225,7 @@ public class Session {
                 ", network='" + network + '\'' +
                 ", data='" + data + '\'' +
                 ", position=" + position +
+                ", amount=" + amount +
                 ", gameType=" + gameType +
                 ", selectedNumbers='" + selectedNumbers + '\'' +
                 ", timeStamp='" + timeStamp + '\'' +
