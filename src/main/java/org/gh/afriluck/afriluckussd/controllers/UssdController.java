@@ -128,7 +128,62 @@ public class UssdController {
         return menuResponse(savedSession, continueFlag, message);
     }
 
-    private String banker(Session savedSession, String message) {
+    private String banker(Session s, String title) {
+        String message = null;
+        int continueFlag = 0;
+        Session savedSession = sessionRepository.findBySequenceID(s.getSequenceID());
+        if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == FIRST) {
+            message = AppConstants.BANKER_MENU_MESSAGE;
+            updateSession(savedSession, false);
+        }else if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == SECOND) {
+            message = """
+                    %s
+                    Choose a number between 1 and 56
+                    99. More info
+                    """;
+            message = String.format(message, "Banker-2");
+        }else if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == THIRD) {
+            message = """
+                    Type Amount to Start (1 - 20):
+                    """;
+            savedSession.setBetTypeCode("2");
+            savedSession.setCurrentGame("banker");
+            updateSession(savedSession, false);
+        } else if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == FOURTH) {
+            String total = calculateAmountAPI(savedSession, "banker");
+            String ticketInfo = """
+                    Tck info:
+                    --
+                    Lucky 70 M %s
+                    Your No: %s
+                    \s
+                    1) to pay %s GHS on momo.
+                    \s
+                    2) to apply coupon code.
+                    \s
+                    0) to cancel.
+                    \s""";
+            message = String.format(ticketInfo, s.getCurrentGame(), s.getSelectedNumbers(), total);
+            savedSession.setAmount(Double.valueOf(total));
+            updateSession(s, false);
+        }else {
+            message = AppConstants.PAYMENT_INIT_MESSAGE;
+            Runnable paymentTask = () -> {
+                Transaction t = mapper.mapTransactionFromSession(s, null);
+                System.out.println(t.toString());
+                ResponseEntity<String> response = handler.client()
+                        .post()
+                        .uri("/api/V1/place-bet")
+                        .body(t)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .retrieve()
+                        .toEntity(String.class);
+                System.out.println(response.getBody());
+            };
+            Thread task = paymentThread.start(paymentTask);
+            System.out.println(task.threadId());
+        }
+
         return menuResponse(savedSession, 1, message);
     }
 
@@ -206,7 +261,7 @@ public class UssdController {
             };
             String ticketInfo = """
                     Tck info:
-                    ---------
+                    --
                     Lucky 70 M Mega Jackpot
                     Your numbers: %s
                     \s
@@ -287,6 +342,7 @@ public class UssdController {
         } else if (gameType == SECOND && position == FOURTH) {
             String ticketInfo = """
                     Tck info:
+                    --
                     Lucky 70 M %s
                     Your No: %s
                     \s
@@ -371,9 +427,10 @@ public class UssdController {
         } else if (savedSession.getGameType() == THIRD && savedSession.getPosition() == FOURTH) {
             savedSession.setAmount(Double.parseDouble(s.getData()));
             System.out.printf("Amount => ", savedSession.getData());
-            String total = calculatePermAmount(savedSession);
+            String total = calculateAmountAPI(savedSession, "perm");
             String ticketInfo = """
                     Tck info:
+                    --
                     Lucky 70 M %s
                     Your No: %s
                     \s
@@ -428,12 +485,12 @@ public class UssdController {
         return response.getBody();
     }
 
-    private String calculatePermAmount(Session session) {
+    private String calculateAmountAPI(Session session, String type) {
         ResponseEntity<String> response = handler.client()
                 .post()
                 .uri("/api/V1/request-bet-amount")
                 .body(String.format("{\"amount\":\"%s\",\"selected_numbers\":\"%s\",\"bet_type_code\":\"%s\",\"bet_type\":\"%s\"}"
-                        , session.getAmount(), session.getSelectedNumbers(), session.getGameType(), "perm"))
+                        , session.getAmount(), session.getSelectedNumbers(), session.getGameType(), type))
                 .contentType(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .toEntity(String.class);
