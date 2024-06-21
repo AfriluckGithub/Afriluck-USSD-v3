@@ -24,6 +24,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @RestController("/")
 public class UssdController {
@@ -158,20 +160,35 @@ public class UssdController {
             message = AppConstants.MEGA_OPTIONS_CHOICE_MESSAGE;
             //updateSession(savedSession, true);
         } else if (savedSession.getGameType() == FIRST && savedSession.getPosition() == SECOND) {
-            StringBuilder messageBuilder = new StringBuilder(AppConstants.AMOUNT_TO_STAKE_MESSAGE);
 
-            games = gameRepository.findAll().stream().distinct().filter(game -> !game.getGameDraw().endsWith("A"))
-                    .sorted(Comparator.comparing(Game::getGameDraw)).toList();
+            int len = savedSession.getData().replace(" ", "").length();
+            List<Integer> numbers = extractNumbers(savedSession.getData());
+            Set<Integer> repeatedNumbers = findRepeatedNumbers(numbers);
 
-            games.stream().forEachOrdered(game -> {
-                int currentIndex = index.getAndIncrement();
-                messageBuilder.append(String.format("%s) %s\n", currentIndex, game.getAmount()));
-            });
+            System.out.println(repeatedNumbers);
 
-            message = messageBuilder.toString();
-            savedSession.setSelectedNumbers(s.getData());
-            s.setGameTypeCode(Integer.parseInt("1"));
-            updateSession(savedSession, true);
+            if (len == AppConstants.MAX_MEGA) {
+                StringBuilder messageBuilder = new StringBuilder(AppConstants.AMOUNT_TO_STAKE_MESSAGE);
+
+                games = gameRepository.findAll().stream().distinct().filter(game -> !game.getGameDraw().endsWith("A"))
+                        .sorted(Comparator.comparing(Game::getGameDraw)).toList();
+
+                games.stream().forEachOrdered(game -> {
+                    int currentIndex = index.getAndIncrement();
+                    messageBuilder.append(String.format("%s) %s\n", currentIndex, game.getAmount()));
+                });
+
+                message = messageBuilder.toString();
+                savedSession.setSelectedNumbers(s.getData());
+                s.setGameTypeCode(Integer.parseInt("1"));
+                updateSession(savedSession, true);
+            } else {
+                message = "Numbers must be a total of 6.\n 0) Back";
+            }
+
+            if(!repeatedNumbers.isEmpty()) {
+                message = "Numbers selected must be unique.\n 0) Back";
+            }
         } else if (savedSession.getGameType() == FIRST && savedSession.getPosition() == FOURTH) {
             int amount = 0;
             amount = switch (s.getData()) {
@@ -236,14 +253,14 @@ public class UssdController {
         AtomicInteger index = new AtomicInteger(1);
         List<String> directGames = AppConstants.DIRECT_GAMES;
         updateSession(savedSession, false);
-        if (savedSession.getGameType()  == SECOND && savedSession.getPosition()  == FIRST) {
+        if (savedSession.getGameType() == SECOND && savedSession.getPosition() == FIRST) {
             StringBuilder builder = new StringBuilder();
             directGames.stream().forEachOrdered(game -> {
                 int currentIndex = index.getAndIncrement();
                 builder.append(String.format("%s) %s\n", currentIndex, game.toString()));
             });
             message = builder.toString();
-        } else if (savedSession.getGameType()  == SECOND && savedSession.getPosition()  == SECOND) {
+        } else if (savedSession.getGameType() == SECOND && savedSession.getPosition() == SECOND) {
             String currentGame = directGames.get(Integer.parseInt(s.getData()) - 1).toString();
             message = """
                     %s
@@ -255,7 +272,7 @@ public class UssdController {
             s.setGameTypeCode(Integer.parseInt(s.getData()));
             s.setCurrentGame(currentGame);
             updateSession(s, false);
-        } else if (gameType == savedSession.getGameType()  && savedSession.getPosition()  == THIRD) {
+        } else if (gameType == savedSession.getGameType() && savedSession.getPosition() == THIRD) {
             message = "Type Amount to Start (1 - 20)";
             savedSession.setSelectedNumbers(s.getData());
             updateSession(savedSession, false);
@@ -276,7 +293,7 @@ public class UssdController {
             //s.setCurrentGame(directGameName);
             message = String.format(ticketInfo, s.getCurrentGame(), s.getSelectedNumbers(), s.getAmount());
             updateSession(s, false);
-        } else if (savedSession.getGameType()  == SECOND && savedSession.getPosition()  == FIFTH) {
+        } else if (savedSession.getGameType() == SECOND && savedSession.getPosition() == FIFTH) {
             savedSession.setCurrentGame("direct");
             updateSession(s, true);
             message = AppConstants.PAYMENT_INIT_MESSAGE;
@@ -323,11 +340,11 @@ public class UssdController {
             savedSession.setCurrentGame(currentGame);
             List<org.gh.afriluck.afriluckussd.dto.Pair<Integer, Integer>> ranges = AppConstants.ranges;
 
-            String template = s.getData() == ""? "Wrong input" : AppConstants.RANGE_CHOICE_TEMPLATE;
+            String template = s.getData() == "" ? "Wrong input" : AppConstants.RANGE_CHOICE_TEMPLATE;
 
             savedSession.setGameTypeCode(Integer.parseInt(s.getData()));
 
-            message  = switch (savedSession.getData()) {
+            message = switch (savedSession.getData()) {
                 case "1" -> String.format(template, ranges.get(0).getKey(), ranges.get(0).getValue());
                 case "2" -> String.format(template, ranges.get(1).getKey(), ranges.get(1).getValue());
                 case "3" -> String.format(template, ranges.get(2).getKey(), ranges.get(2).getValue());
@@ -336,14 +353,14 @@ public class UssdController {
                 default -> "";
             };
             updateSession(savedSession, false);
-        }else if (savedSession.getGameType() == THIRD && savedSession.getPosition() == THIRD) {
+        } else if (savedSession.getGameType() == THIRD && savedSession.getPosition() == THIRD) {
             savedSession.setSelectedNumbers(s.getData());
 
             message = """
                     Type Amount to Start (1 - 20):
                     """;
             updateSession(savedSession, false);
-        }else if (savedSession.getGameType() == THIRD && savedSession.getPosition() == FOURTH) {
+        } else if (savedSession.getGameType() == THIRD && savedSession.getPosition() == FOURTH) {
             savedSession.setAmount(Double.parseDouble(s.getData()));
             System.out.printf("Amount => ", savedSession.getData());
             String total = calculatePermAmount(savedSession);
@@ -361,11 +378,11 @@ public class UssdController {
             message = String.format(ticketInfo, s.getCurrentGame(), s.getSelectedNumbers(), total);
             savedSession.setAmount(Double.valueOf(total));
             updateSession(s, false);
-        }else if (gameType == THIRD && position == FIFTH) {
+        } else if (gameType == THIRD && position == FIFTH) {
             updateSession(savedSession, false);
             continueFlag = 1;
             message = AppConstants.PAYMENT_INIT_MESSAGE;
-            System.out.printf("Perm session => ",savedSession.toString());
+            System.out.printf("Perm session => ", savedSession.toString());
             Runnable paymentTask = () -> {
                 Transaction t = mapper.mapTransactionFromSessionPerm(s);
                 System.out.println(t.toString());
@@ -443,5 +460,30 @@ public class UssdController {
         json.addProperty("message", message);
         json.addProperty("continueFlag", continueFlag);
         return json.toString();
+    }
+
+    private static List<Integer> extractNumbers(String input) {
+        List<Integer> numbers = new ArrayList<>();
+        Pattern pattern = Pattern.compile("\\d+");
+        Matcher matcher = pattern.matcher(input);
+
+        while (matcher.find()) {
+            numbers.add(Integer.parseInt(matcher.group()));
+        }
+
+        return numbers;
+    }
+
+    private static Set<Integer> findRepeatedNumbers(List<Integer> numbers) {
+        Set<Integer> seenNumbers = new HashSet<>();
+        Set<Integer> repeatedNumbers = new HashSet<>();
+
+        for (Integer number : numbers) {
+            if (!seenNumbers.add(number)) {
+                repeatedNumbers.add(number);
+            }
+        }
+
+        return repeatedNumbers;
     }
 }
