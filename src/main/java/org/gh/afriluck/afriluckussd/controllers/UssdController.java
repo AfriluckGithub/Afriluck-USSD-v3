@@ -142,7 +142,7 @@ public class UssdController {
         }else if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == SECOND) {
             message = """
                     %s
-                    Choose a number between 1 and 56
+                    Choose a number between 1 and 57
                     99. More info
                     """;
             message = String.format(message, "Banker-2");
