@@ -55,13 +55,13 @@ public class TransactionMapper {
     public Transaction mapTransactionFromSessionBanker(Session session) {
         Transaction t = new Transaction();
         t.setGameId(session.getGameId());
-        t.setBetType(AppConstants.PERM);
+        t.setBetType(AppConstants.BANKER);
         t.setSelectedNumbers(session.getSelectedNumbers());
         t.setEntryAmount(session.getAmount());
         t.setMsisdn(session.getMsisdn());
         t.setChannel(session.getNetwork());
         t.setTotalAmount(session.getAmount());
-        t.setBetTypeCode(1);
+        t.setBetTypeCode(4);
         t.setDrawCode(session.getGameTypeId());
         return t;
     }

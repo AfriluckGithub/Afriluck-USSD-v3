@@ -18,6 +18,7 @@ public class AppConstants {
     public static final String MEGA = "MEGA";
     public static final String DIRECT = "DIRECT";
     public static final String PERM = "PERM";
+    public static final String BANKER = "BANKER";
     public static final Integer MAX_MEGA = 6;
 
     public static List<String> DIRECT_GAMES = List.of(

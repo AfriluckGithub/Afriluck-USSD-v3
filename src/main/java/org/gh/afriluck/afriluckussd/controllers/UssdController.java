@@ -132,6 +132,10 @@ public class UssdController {
         String message = null;
         int continueFlag = 0;
         Session savedSession = sessionRepository.findBySequenceID(s.getSequenceID());
+        Optional<Game> currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameDraw().endsWith("A")).findFirst();
+        final Game gameDraw = currentGameDraw.get();
+        savedSession.setGameId(gameDraw.getGameId());
+        savedSession.setGameTypeId(gameDraw.getGameDraw());
         if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == FIRST) {
             message = AppConstants.BANKER_MENU_MESSAGE;
             updateSession(savedSession, false);
@@ -151,9 +155,9 @@ public class UssdController {
             updateSession(savedSession, false);
         } else if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == FOURTH) {
             savedSession.setAmount(Double.valueOf(s.getData()));
-            savedSession.setGameType(2);
+            savedSession.setGameType(4);
             // updateSession(savedSession, false);
-            String total = calculateAmountAPI(savedSession, "banker");
+            String total = calculateAmountBankerAPI(savedSession, "banker");
             String ticketInfo = """
                     Tck info:
                     --
@@ -170,6 +174,7 @@ public class UssdController {
             savedSession.setAmount(Double.valueOf(total));
             updateSession(s, false);
         }else {
+            updateSession(savedSession, false);
             continueFlag = 1;
             message = AppConstants.PAYMENT_INIT_MESSAGE;
             Runnable paymentTask = () -> {
@@ -356,7 +361,6 @@ public class UssdController {
                     \s
                     0) to cancel.
                     \s""";
-            //String directGameName = s.getCurrentGame();
             s.setAmount(Double.parseDouble(s.getData()));
             //s.setCurrentGame(directGameName);
             message = String.format(ticketInfo, s.getCurrentGame(), s.getSelectedNumbers(), s.getAmount());
@@ -405,12 +409,13 @@ public class UssdController {
             message = builder.toString();
         } else if (savedSession.getGameType() == THIRD && savedSession.getPosition() == SECOND) {
             String currentGame = permGames.get(Integer.parseInt(s.getData()) - 1).toString();
+            //System.out.printf("Number => %s", s.getData());
             savedSession.setCurrentGame(currentGame);
+            savedSession.setBetTypeCode(String.valueOf(Integer.parseInt(s.getData())+1));
+            savedSession.setGameTypeCode(Integer.parseInt(s.getData()));
             List<org.gh.afriluck.afriluckussd.dto.Pair<Integer, Integer>> ranges = AppConstants.ranges;
 
             String template = s.getData() == "" ? "Wrong input" : AppConstants.RANGE_CHOICE_TEMPLATE;
-
-            savedSession.setGameTypeCode(Integer.parseInt(s.getData()));
 
             message = switch (savedSession.getData()) {
                 case "1" -> String.format(template, ranges.get(0).getKey(), ranges.get(0).getValue());
@@ -492,6 +497,24 @@ public class UssdController {
     private String calculateAmountAPI(Session session, String type) {
         String body = String.format("{\"amount\":\"%s\",\"selected_numbers\":\"%s\",\"bet_type_code\":\"%s\",\"bet_type\":\"%s\"}"
                 , session.getAmount(), session.getSelectedNumbers(), session.getGameType(), type);
+        System.out.println(body);
+        ResponseEntity<String> response = handler.client()
+                .post()
+                .uri("/api/V1/request-bet-amount")
+                .body(body)
+                .contentType(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .toEntity(String.class);
+        String json = response.getBody();
+        JSONObject object = new JSONObject(json);
+        String total = object.get("total").toString();
+        return total;
+    }
+
+
+    private String calculateAmountBankerAPI(Session session, String type) {
+        String body = String.format("{\"amount\":\"%s\",\"selected_numbers\":\"%s\",\"bet_type_code\":\"%s\",\"bet_type\":\"%s\"}"
+                , session.getAmount(), session.getSelectedNumbers(), 2, type);
         System.out.println(body);
         ResponseEntity<String> response = handler.client()
                 .post()
