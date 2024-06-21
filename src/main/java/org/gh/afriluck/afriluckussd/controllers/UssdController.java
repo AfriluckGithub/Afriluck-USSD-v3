@@ -391,6 +391,7 @@ public class UssdController {
     public String permGameOptions(int gameType, int position, Session s) {
         int continueFlag = 0;
         String message = null;
+        int codeType = 0;
         List<String> permGames = AppConstants.PERM_GAMES;
         AtomicReference<Integer> index = new AtomicReference<>(0);
         Optional<Game> currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameDraw().endsWith("A")).findFirst();
@@ -398,7 +399,7 @@ public class UssdController {
         Session savedSession = sessionRepository.findBySequenceID(s.getSequenceID());
         savedSession.setGameId(gameDraw.getGameId());
         savedSession.setGameTypeId(gameDraw.getGameDraw());
-        savedSession.setBetTypeCode(AppConstants.PERM);
+        //savedSession.setBetTypeCode(AppConstants.PERM);
         updateSession(savedSession, false);
         if (savedSession.getGameType() == THIRD && savedSession.getPosition() == FIRST) {
             StringBuilder builder = new StringBuilder();
@@ -410,10 +411,20 @@ public class UssdController {
         } else if (savedSession.getGameType() == THIRD && savedSession.getPosition() == SECOND) {
             String currentGame = permGames.get(Integer.parseInt(s.getData()) - 1).toString();
             //System.out.printf("Number => %s", s.getData());
+            codeType = switch (s.getData()) {
+                case "1" -> 2;
+                case "2" -> 3;
+                case "3" -> 4;
+                case "4" -> 5;
+                case "5" -> 6;
+                case "6" -> 7;
+                default -> throw new IllegalStateException("Unexpected value: " + s.getData());
+            };
             savedSession.setCurrentGame(currentGame);
-            savedSession.setBetTypeCode(String.valueOf(Integer.parseInt(s.getData())+1));
-            savedSession.setGameTypeCode(Integer.parseInt(s.getData()));
-            List<org.gh.afriluck.afriluckussd.dto.Pair<Integer, Integer>> ranges = AppConstants.ranges;
+            savedSession.setBetTypeCode(String.valueOf(codeType));
+            savedSession.setGameTypeCode(codeType);
+            System.out.printf("Bet Code Type => %s", codeType);
+            List<Pair<Integer, Integer>> ranges = AppConstants.ranges;
 
             String template = s.getData() == "" ? "Wrong input" : AppConstants.RANGE_CHOICE_TEMPLATE;
 
@@ -436,7 +447,7 @@ public class UssdController {
         } else if (savedSession.getGameType() == THIRD && savedSession.getPosition() == FOURTH) {
             savedSession.setAmount(Double.parseDouble(s.getData()));
             System.out.printf("Amount => ", savedSession.getData());
-            String total = calculateAmountAPI(savedSession, "perm");
+            String total = calculateAmountPermAPI(savedSession, "perm");
             String ticketInfo = """
                     Tck info:
                     --
@@ -453,6 +464,7 @@ public class UssdController {
             savedSession.setAmount(Double.valueOf(total));
             updateSession(s, false);
         } else if (gameType == THIRD && position == FIFTH) {
+            savedSession.setBetTypeCode(AppConstants.PERM);
             updateSession(savedSession, false);
             continueFlag = 1;
             message = AppConstants.PAYMENT_INIT_MESSAGE;
@@ -497,6 +509,24 @@ public class UssdController {
     private String calculateAmountAPI(Session session, String type) {
         String body = String.format("{\"amount\":\"%s\",\"selected_numbers\":\"%s\",\"bet_type_code\":\"%s\",\"bet_type\":\"%s\"}"
                 , session.getAmount(), session.getSelectedNumbers(), session.getGameType(), type);
+        System.out.println(body);
+        ResponseEntity<String> response = handler.client()
+                .post()
+                .uri("/api/V1/request-bet-amount")
+                .body(body)
+                .contentType(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .toEntity(String.class);
+        String json = response.getBody();
+        JSONObject object = new JSONObject(json);
+        String total = object.get("total").toString();
+        return total;
+    }
+
+
+    private String calculateAmountPermAPI(Session session, String type) {
+        String body = String.format("{\"amount\":\"%s\",\"selected_numbers\":\"%s\",\"bet_type_code\":\"%s\",\"bet_type\":\"%s\"}"
+                , session.getAmount(), session.getSelectedNumbers(), session.getBetTypeCode(), type);
         System.out.println(body);
         ResponseEntity<String> response = handler.client()
                 .post()
