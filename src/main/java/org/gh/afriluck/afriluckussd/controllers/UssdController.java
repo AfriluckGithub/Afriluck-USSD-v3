@@ -167,6 +167,7 @@ public class UssdController {
             savedSession.setAmount(Double.valueOf(total));
             updateSession(s, false);
         }else {
+            continueFlag = 1;
             message = AppConstants.PAYMENT_INIT_MESSAGE;
             Runnable paymentTask = () -> {
                 Transaction t = mapper.mapTransactionFromSession(s, null);
@@ -184,7 +185,7 @@ public class UssdController {
             System.out.println(task.threadId());
         }
 
-        return menuResponse(savedSession, 1, message);
+        return menuResponse(savedSession, continueFlag, message);
     }
 
 
