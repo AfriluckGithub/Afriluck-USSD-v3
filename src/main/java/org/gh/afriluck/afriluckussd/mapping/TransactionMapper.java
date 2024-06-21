@@ -61,7 +61,7 @@ public class TransactionMapper {
         t.setMsisdn(session.getMsisdn());
         t.setChannel(session.getNetwork());
         t.setTotalAmount(session.getAmount());
-        t.setBetTypeCode(session.getGameTypeCode());
+        t.setBetTypeCode(1);
         t.setDrawCode(session.getGameTypeId());
         return t;
     }
