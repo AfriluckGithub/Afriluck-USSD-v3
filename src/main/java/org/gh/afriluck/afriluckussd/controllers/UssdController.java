@@ -173,7 +173,7 @@ public class UssdController {
             continueFlag = 1;
             message = AppConstants.PAYMENT_INIT_MESSAGE;
             Runnable paymentTask = () -> {
-                Transaction t = mapper.mapTransactionFromSession(s, null);
+                Transaction t = mapper.mapTransactionFromSessionBanker(s);
                 System.out.println(t.toString());
                 ResponseEntity<String> response = handler.client()
                         .post()
@@ -366,7 +366,7 @@ public class UssdController {
             updateSession(s, true);
             message = AppConstants.PAYMENT_INIT_MESSAGE;
             Runnable paymentTask = () -> {
-                Transaction t = mapper.mapTransactionFromSessionBanker(s);
+                Transaction t = mapper.mapTransactionFromSession(s, gameDraw);
                 System.out.println(t.toString());
                 ResponseEntity<String> response = handler.client()
                         .post()
