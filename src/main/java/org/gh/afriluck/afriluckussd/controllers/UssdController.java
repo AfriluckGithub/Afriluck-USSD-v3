@@ -146,10 +146,13 @@ public class UssdController {
             message = """
                     Type Amount to Start (1 - 20):
                     """;
-            savedSession.setBetTypeCode("2");
             savedSession.setCurrentGame("banker");
+            savedSession.setSelectedNumbers(s.getData());
             updateSession(savedSession, false);
         } else if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == FOURTH) {
+            savedSession.setAmount(Double.valueOf(s.getData()));
+            savedSession.setGameType(2);
+            // updateSession(savedSession, false);
             String total = calculateAmountAPI(savedSession, "banker");
             String ticketInfo = """
                     Tck info:
@@ -363,7 +366,7 @@ public class UssdController {
             updateSession(s, true);
             message = AppConstants.PAYMENT_INIT_MESSAGE;
             Runnable paymentTask = () -> {
-                Transaction t = mapper.mapTransactionFromSession(s, gameDraw);
+                Transaction t = mapper.mapTransactionFromSessionBanker(s);
                 System.out.println(t.toString());
                 ResponseEntity<String> response = handler.client()
                         .post()
@@ -487,11 +490,13 @@ public class UssdController {
     }
 
     private String calculateAmountAPI(Session session, String type) {
+        String body = String.format("{\"amount\":\"%s\",\"selected_numbers\":\"%s\",\"bet_type_code\":\"%s\",\"bet_type\":\"%s\"}"
+                , session.getAmount(), session.getSelectedNumbers(), session.getGameType(), type);
+        System.out.println(body);
         ResponseEntity<String> response = handler.client()
                 .post()
                 .uri("/api/V1/request-bet-amount")
-                .body(String.format("{\"amount\":\"%s\",\"selected_numbers\":\"%s\",\"bet_type_code\":\"%s\",\"bet_type\":\"%s\"}"
-                        , session.getAmount(), session.getSelectedNumbers(), session.getGameType(), type))
+                .body(body)
                 .contentType(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .toEntity(String.class);

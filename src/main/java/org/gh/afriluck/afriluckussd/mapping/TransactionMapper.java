@@ -52,4 +52,18 @@ public class TransactionMapper {
         return t;
     }
 
+    public Transaction mapTransactionFromSessionBanker(Session session) {
+        Transaction t = new Transaction();
+        t.setGameId(session.getGameId());
+        t.setBetType(AppConstants.PERM);
+        t.setSelectedNumbers(session.getSelectedNumbers());
+        t.setEntryAmount(session.getAmount());
+        t.setMsisdn(session.getMsisdn());
+        t.setChannel(session.getNetwork());
+        t.setTotalAmount(session.getAmount());
+        t.setBetTypeCode(session.getGameTypeCode());
+        t.setDrawCode(session.getGameTypeId());
+        return t;
+    }
+
 }
