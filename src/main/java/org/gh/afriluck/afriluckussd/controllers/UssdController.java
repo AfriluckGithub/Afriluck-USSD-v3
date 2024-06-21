@@ -189,15 +189,11 @@ public class UssdController {
                 updateSession(savedSession, true);
             } else {
                 message = "Numbers must be a total of 6.\n 0) Back";
-                savedSession.setPosition(0);
-                savedSession.setGameType(0);
                 deleteSession(savedSession);
             }
 
             if(!repeatedNumbers.isEmpty()) {
                 message = "Numbers selected must be unique.\n 0) Back";
-                savedSession.setPosition(0);
-                savedSession.setGameType(0);
                 deleteSession(savedSession);
             }
         } else if (savedSession.getGameType() == FIRST && savedSession.getPosition() == FOURTH) {
@@ -210,6 +206,7 @@ public class UssdController {
             };
             String ticketInfo = """
                     Tck info:
+                    ---------
                     Lucky 70 M Mega Jackpot
                     Your numbers: %s
                     \s
