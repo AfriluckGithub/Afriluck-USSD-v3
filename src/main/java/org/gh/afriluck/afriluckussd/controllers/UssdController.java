@@ -145,7 +145,7 @@ public class UssdController {
                     Choose a number between 1 and 57
                     99. More info
                     """;
-            message = String.format(message, "Banker-2");
+            message = String.format(message, "Banker");
         }else if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == SECOND) {
             message = """
                     Type Amount to Start (1 - 20):
