@@ -107,6 +107,9 @@ public class UssdController {
             String json = null;
             JSONObject oj = null;
             switch (savedSession.getData()) {
+                case "0":
+                    deleteSession(savedSession);
+                    continueFlag = 0;
                 case "3":
                     continueFlag = 1;
                     response = getDrawResults(savedSession);
@@ -137,23 +140,20 @@ public class UssdController {
         savedSession.setGameId(gameDraw.getGameId());
         savedSession.setGameTypeId(gameDraw.getGameDraw());
         if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == FIRST) {
-            message = AppConstants.BANKER_MENU_MESSAGE;
-            updateSession(savedSession, false);
-        }else if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == SECOND) {
             message = """
                     %s
                     Choose a number between 1 and 57
                     99. More info
                     """;
             message = String.format(message, "Banker-2");
-        }else if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == THIRD) {
+        }else if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == SECOND) {
             message = """
                     Type Amount to Start (1 - 20):
                     """;
             savedSession.setCurrentGame("banker");
             savedSession.setSelectedNumbers(s.getData());
             updateSession(savedSession, false);
-        } else if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == FOURTH) {
+        }else if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == THIRD) {
             savedSession.setAmount(Double.valueOf(s.getData()));
             savedSession.setGameType(4);
             // updateSession(savedSession, false);
@@ -173,7 +173,7 @@ public class UssdController {
             message = String.format(ticketInfo, s.getCurrentGame(), s.getSelectedNumbers(), total);
             savedSession.setAmount(Double.valueOf(total));
             updateSession(s, false);
-        }else {
+        } else {
             updateSession(savedSession, false);
             continueFlag = 1;
             message = AppConstants.PAYMENT_INIT_MESSAGE;

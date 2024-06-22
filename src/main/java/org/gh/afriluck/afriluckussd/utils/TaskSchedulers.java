@@ -19,7 +19,7 @@ public class TaskSchedulers implements Runnable {
     }
 
     @Override
-    @Scheduled(cron = "0 */5 * * * *", zone = "GMT")
+    @Scheduled(cron = "0 */1 * * * *", zone = "GMT")
     //@Scheduled(cron = "0 14 20 * * *", zone = "GMT")
     public void run() {
         System.out.println("Cron running...");
