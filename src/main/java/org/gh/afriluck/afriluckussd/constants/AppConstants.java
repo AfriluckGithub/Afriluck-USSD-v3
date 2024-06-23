@@ -15,10 +15,10 @@ public class AppConstants {
 
     public static final String MEGA_OPTIONS_CHOICE_MESSAGE = "Choose 6 numbers between 1 and 57 separated by space";
     public static final String AMOUNT_TO_STAKE_MESSAGE = "Choose stake amount\n";
-    public static final String MEGA = "MEGA";
-    public static final String DIRECT = "DIRECT";
-    public static final String PERM = "PERM";
-    public static final String BANKER = "BANKER";
+    public static final String MEGA = "mega";
+    public static final String DIRECT = "direct";
+    public static final String PERM = "perm";
+    public static final String BANKER = "banker";
     public static final Integer MAX_MEGA = 6;
 
     public static List<String> DIRECT_GAMES = List.of(
