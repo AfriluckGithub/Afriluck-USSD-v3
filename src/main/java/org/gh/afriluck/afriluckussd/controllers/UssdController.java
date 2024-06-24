@@ -235,13 +235,19 @@ public class UssdController {
             //updateSession(savedSession, true);
         } else if (savedSession.getGameType() == FIRST && savedSession.getPosition() == SECOND) {
 
-            int len = savedSession.getData().replace(" ", "").length();
             List<Integer> numbers = extractNumbers(savedSession.getData());
             Set<Integer> repeatedNumbers = findRepeatedNumbers(numbers);
+            boolean exceeds = anyNumberExceedsLimit(s.getData(), ",", 57);
 
             System.out.println(repeatedNumbers);
+            String[] selectedNumbers = splitNumbers(s.getData());
+            int len = selectedNumbers.length;
 
-            if (len == AppConstants.MAX_MEGA) {
+            System.out.printf("Len => %s\n", len);
+
+            System.out.println(exceeds);
+
+            if (len == AppConstants.MAX_MEGA && !exceeds) {
                 StringBuilder messageBuilder = new StringBuilder(AppConstants.AMOUNT_TO_STAKE_MESSAGE);
 
                 games = gameRepository.findAll().stream().distinct().filter(game -> !game.getGameDraw().endsWith("A"))
@@ -257,12 +263,12 @@ public class UssdController {
                 s.setGameTypeCode(Integer.parseInt("1"));
                 updateSession(savedSession, true);
             } else {
-                message = "Numbers must be a total of 6.\n 0) Back";
+                message = exceeds? "Numbers must be between 1 and 57\n 0) Back": "Numbers must be a total of 6.\n 0) Back";
                 deleteSession(savedSession);
             }
 
             if(!repeatedNumbers.isEmpty()) {
-                message = "Numbers selected must be unique.\n 0) Back";
+                message = exceeds? "Numbers must be between 1 and 57\n 0) Back": "Numbers selected must be unique.\n 0) Back";
                 deleteSession(savedSession);
             }
         } else if (savedSession.getGameType() == FIRST && savedSession.getPosition() == FOURTH) {
@@ -353,12 +359,14 @@ public class UssdController {
             updateSession(s, false);
         } else if (gameType == savedSession.getGameType() && savedSession.getPosition() == THIRD) {
             int max = s.getData().replace(" ", "").length();
+            boolean exceeds = anyNumberExceedsLimit(s.getData(), ",", 57);
             System.out.printf("Max => %s", max);
-            if (savedSession.getMax() < max || savedSession.getMax() > max) {
-                message = AppConstants.INVALID_TRAN_MESSAGE;
+            System.out.println(exceeds);
+            if ((savedSession.getMax() < max || savedSession.getMax() > max) && (!exceeds)) {
+                message = exceeds? "Numbers must be between 1 and 57": AppConstants.INVALID_TRAN_MESSAGE;
                 continueFlag = 1;
             }else {
-                message = "Type Amount to Start (1 - 20)";
+                message = exceeds? "Numbers must be between 1 and 57": "Type Amount to Start (1 - 20)";
                 savedSession.setSelectedNumbers(s.getData());
                 updateSession(savedSession, false);
                 continueFlag = 0;
@@ -459,8 +467,6 @@ public class UssdController {
         } else if (savedSession.getGameType() == THIRD && savedSession.getPosition() == THIRD) {
             savedSession.setSelectedNumbers(s.getData());
             int selectedNumbersLen = s.getData().replace(" ", "").length();
-            System.out.printf("Max => %s", selectedNumbersLen);
-            System.out.printf("Max Saved => %s", savedSession.getMax());
 
             if (!isBetween(selectedNumbersLen, savedSession.getMin(), savedSession.getMax())) {
                 message = AppConstants.INVALID_TRAN_MESSAGE;
@@ -644,5 +650,28 @@ public class UssdController {
             throw new IllegalArgumentException("Minimum value cannot be greater than maximum value");
         }
         return number >= min && number <= max;
+    }
+
+    public static boolean anyNumberExceedsLimit(String numbersString, String delimiter, int limit) {
+        // Split the string into an array of number strings
+        String[] numberStrings = numbersString.trim().split("\\s+");
+
+        // Iterate through the number strings
+        for (String numberString : numberStrings) {
+            // Trim any whitespace and parse the number
+            int number = Integer.parseInt(numberString.trim());
+
+            // Check if the number exceeds the limit
+            if (number > limit) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static String[] splitNumbers(String numbersString) {
+        // Trim the input string and split by one or more spaces
+        return numbersString.trim().split("\\s+");
     }
 }

@@ -48,7 +48,7 @@ public class AppConstants {
 
     public static final String RANGE_CHOICE_TEMPLATE = """
             Choose %s or not more than %s numbers
-            between 1 & 57 separated by space
+            between 1 and 57 separated by space
             99. More info
             """;
 
