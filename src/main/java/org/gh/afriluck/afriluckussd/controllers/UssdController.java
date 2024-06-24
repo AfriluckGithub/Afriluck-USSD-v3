@@ -109,7 +109,7 @@ public class UssdController {
             switch (savedSession.getData()) {
                 case "0":
                     deleteSession(savedSession);
-                    continueFlag = 0;
+                    // continueFlag = 0;
                 case "3":
                     continueFlag = 1;
                     response = getDrawResults(savedSession);
@@ -482,6 +482,7 @@ public class UssdController {
                 System.out.println(response.getBody());
             };
             Thread task = paymentThread.start(paymentTask);
+            System.out.println(task.getName());
         }
         return menuResponse(savedSession, continueFlag, message);
     }
