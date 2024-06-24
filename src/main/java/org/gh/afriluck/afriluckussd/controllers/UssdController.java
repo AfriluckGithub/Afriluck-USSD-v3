@@ -467,10 +467,14 @@ public class UssdController {
             updateSession(savedSession, false);
         } else if (savedSession.getGameType() == THIRD && savedSession.getPosition() == THIRD) {
             savedSession.setSelectedNumbers(s.getData());
-            int selectedNumbersLen = s.getData().replace(" ", "").length();
-
-            if (!isBetween(selectedNumbersLen, savedSession.getMin(), savedSession.getMax())) {
-                message = AppConstants.INVALID_TRAN_MESSAGE;
+            String[] selectedNumbers = splitNumbers(s.getData());
+            int len = selectedNumbers.length;
+            boolean exceeds = anyNumberExceedsLimit(s.getData(), ",", 57);
+            System.out.printf("Len => %s\n", len);
+            System.out.printf("Max => %s Min => %s", savedSession.getMax(), savedSession.getMin());
+            System.out.println(exceeds);
+            if (!isBetween(len, savedSession.getMin(), savedSession.getMax()) || exceeds) {
+                message = exceeds? "Numbers must be between 1 and 57": AppConstants.INVALID_TRAN_MESSAGE;
                 continueFlag = 1;
             }else {
                 message = """
