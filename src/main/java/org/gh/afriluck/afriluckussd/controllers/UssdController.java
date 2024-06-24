@@ -148,12 +148,16 @@ public class UssdController {
                     """;
             message = String.format(message, "Banker");
         }else if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == SECOND) {
-            message = """
-                    Type Amount to Start (1 - 20):
-                    """;
-            savedSession.setCurrentGame("banker");
-            savedSession.setSelectedNumbers(s.getData());
-            updateSession(savedSession, false);
+            if (s.getData().length() > 1) {
+                message = AppConstants.INVALID_TRAN_MESSAGE;
+            }else {
+                message = """
+                        Type Amount to Start (1 - 20):
+                        """;
+                savedSession.setCurrentGame("banker");
+                savedSession.setSelectedNumbers(s.getData());
+                updateSession(savedSession, false);
+            }
         }else if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == THIRD) {
             savedSession.setAmount(Double.valueOf(s.getData()));
             savedSession.setGameType(4);
@@ -351,7 +355,7 @@ public class UssdController {
             int max = s.getData().replace(" ", "").length();
             System.out.printf("Max => %s", max);
             if (savedSession.getMax() < max || savedSession.getMax() > max) {
-                message = "Numbers selected do not match game type";
+                message = AppConstants.INVALID_TRAN_MESSAGE;
                 continueFlag = 1;
             }else {
                 message = "Type Amount to Start (1 - 20)";
@@ -434,8 +438,12 @@ public class UssdController {
             savedSession.setCurrentGame(currentGame);
             savedSession.setBetTypeCode(String.valueOf(codeType));
             savedSession.setGameTypeCode(codeType);
-            System.out.printf("Bet Code Type => %s", codeType);
+            System.out.printf("Bet Code Type => %s\n", codeType);
             List<Pair<Integer, Integer>> ranges = AppConstants.ranges;
+            Pair<Integer, Integer> currentPair = ranges.get(Integer.parseInt(s.getData()) - 1);
+            savedSession.setMax(currentPair.getValue());
+            savedSession.setMin(currentPair.getKey());
+            System.out.printf("Max => %s Min => %s\n", savedSession.getMax(), savedSession.getMin());
 
             String template = s.getData() == "" ? "Wrong input" : AppConstants.RANGE_CHOICE_TEMPLATE;
 
@@ -450,11 +458,19 @@ public class UssdController {
             updateSession(savedSession, false);
         } else if (savedSession.getGameType() == THIRD && savedSession.getPosition() == THIRD) {
             savedSession.setSelectedNumbers(s.getData());
+            int selectedNumbersLen = s.getData().replace(" ", "").length();
+            System.out.printf("Max => %s", selectedNumbersLen);
+            System.out.printf("Max Saved => %s", savedSession.getMax());
 
-            message = """
-                    Type Amount to Start (1 - 20):
-                    """;
-            updateSession(savedSession, false);
+            if (!isBetween(selectedNumbersLen, savedSession.getMin(), savedSession.getMax())) {
+                message = AppConstants.INVALID_TRAN_MESSAGE;
+                continueFlag = 1;
+            }else {
+                message = """
+                        Type Amount to Start (1 - 20):
+                        """;
+                updateSession(savedSession, false);
+            }
         } else if (savedSession.getGameType() == THIRD && savedSession.getPosition() == FOURTH) {
             savedSession.setAmount(Double.parseDouble(s.getData()));
             System.out.printf("Amount => ", savedSession.getData());
@@ -621,5 +637,12 @@ public class UssdController {
         }
 
         return repeatedNumbers;
+    }
+
+    public static boolean isBetween(int number, int min, int max) {
+        if (min > max) {
+            throw new IllegalArgumentException("Minimum value cannot be greater than maximum value");
+        }
+        return number >= min && number <= max;
     }
 }

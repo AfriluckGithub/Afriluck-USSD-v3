@@ -45,12 +45,13 @@ public class Session {
     private LocalDateTime createdDate;
 
     private int max;
+    private int min;
 
     private LocalDateTime updatedDate;
 
     public Session() {};
 
-    public Session(Integer id, String message, String sequenceID, String network, String msisdn, String data, Integer position, Integer gameType, String selectedNumbers, Double amount, String gameTypeId,  String timeStamp, String gameId, String betTypeCode, Integer gameTypeCode, String currentGame, int max) {
+    public Session(Integer id, String message, String sequenceID, String network, String msisdn, String data, Integer position, Integer gameType, String selectedNumbers, Double amount, String gameTypeId,  String timeStamp, String gameId, String betTypeCode, Integer gameTypeCode, String currentGame, int max, int min) {
         this.id = id;
         this.sequenceID = sequenceID;
         this.network = network;
@@ -68,6 +69,7 @@ public class Session {
         this.currentGame = currentGame;
         this.message = message;
         this.max = max;
+        this.min = min;
     }
 
     @PrePersist
@@ -225,6 +227,14 @@ public class Session {
 
     public void setMax(int max) {
         this.max = max;
+    }
+
+    public int getMin() {
+        return min;
+    }
+
+    public void setMin(int min) {
+        this.min = min;
     }
 
     @Override

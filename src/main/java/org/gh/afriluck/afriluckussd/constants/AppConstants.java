@@ -20,6 +20,7 @@ public class AppConstants {
     public static final String PERM = "perm";
     public static final String BANKER = "banker";
     public static final Integer MAX_MEGA = 6;
+    public static final String INVALID_TRAN_MESSAGE =  "Numbers selected do not match game type\n 0) Back";
 
     public static List<String> DIRECT_GAMES = List.of(
             "Direct-1(Match first no.)",
