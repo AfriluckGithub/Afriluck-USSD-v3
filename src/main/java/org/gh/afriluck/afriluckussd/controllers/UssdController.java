@@ -35,6 +35,7 @@ public class UssdController {
     private static final int THIRD = 3;
     private static final int FOURTH = 4;
     private static final int FIFTH = 5;
+    private static final int ZERO = 0;
     private final CustomerSessionRepository sessionRepository;
     private final AfriluckCallHandler handler;
     private final TransactionMapper mapper;
@@ -334,6 +335,8 @@ public class UssdController {
             message = builder.toString();
         } else if (savedSession.getGameType() == SECOND && savedSession.getPosition() == SECOND) {
             String currentGame = directGames.get(Integer.parseInt(s.getData()) - 1).toString();
+            int currentMax = Integer.parseInt(s.getData());
+            savedSession.setMax(currentMax);
             message = """
                     %s
                     Choose a number between 1 and 57
@@ -345,9 +348,17 @@ public class UssdController {
             s.setCurrentGame(currentGame);
             updateSession(s, false);
         } else if (gameType == savedSession.getGameType() && savedSession.getPosition() == THIRD) {
-            message = "Type Amount to Start (1 - 20)";
-            savedSession.setSelectedNumbers(s.getData());
-            updateSession(savedSession, false);
+            int max = s.getData().replace(" ", "").length();
+            System.out.printf("Max => %s", max);
+            if (savedSession.getMax() < max || savedSession.getMax() > max) {
+                message = "Numbers selected do not match game type";
+                continueFlag = 1;
+            }else {
+                message = "Type Amount to Start (1 - 20)";
+                savedSession.setSelectedNumbers(s.getData());
+                updateSession(savedSession, false);
+                continueFlag = 0;
+            }
         } else if (gameType == SECOND && position == FOURTH) {
             String ticketInfo = """
                     Tck info:
@@ -365,7 +376,7 @@ public class UssdController {
             //s.setCurrentGame(directGameName);
             message = String.format(ticketInfo, s.getCurrentGame(), s.getSelectedNumbers(), s.getAmount());
             updateSession(s, false);
-        } else if (savedSession.getGameType() == SECOND && savedSession.getPosition() == FIFTH) {
+        }else if (savedSession.getGameType() == SECOND && savedSession.getPosition() == FIFTH) {
             savedSession.setCurrentGame("direct");
             updateSession(s, true);
             message = AppConstants.PAYMENT_INIT_MESSAGE;
