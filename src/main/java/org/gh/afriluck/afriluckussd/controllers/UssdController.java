@@ -85,8 +85,8 @@ public class UssdController {
                 case 5 -> account(savedSession);
                 case 6 -> tnCsMessage(savedSession);
                 case 99 -> contactUsMessage(savedSession);
-                case 0-> menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE);
-                default -> menuResponse(session,0, "Invalid input");
+                case 0 -> menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE);
+                default -> menuResponse(session, 0, "Invalid input");
 
             };
         } else {
@@ -147,10 +147,14 @@ public class UssdController {
                     99. More info
                     """;
             message = String.format(message, "Banker");
-        }else if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == SECOND) {
-            if (s.getData().length() > 1) {
-                message = AppConstants.INVALID_TRAN_MESSAGE;
-            }else {
+        } else if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == SECOND) {
+            String[] selectedNumbers = splitNumbers(s.getData());
+            int len = selectedNumbers.length;
+            boolean exceeds = anyNumberExceedsLimit(s.getData(), ",", 57);
+            if (len > 1 || exceeds) {
+                message = exceeds ? AppConstants.EXCEEDS_NUMBER_LIMIT_MESSAGE : AppConstants.INVALID_TRAN_MESSAGE;
+                deleteSession(savedSession);
+            } else {
                 message = """
                         Type Amount to Start (1 - 20):
                         """;
@@ -158,7 +162,7 @@ public class UssdController {
                 savedSession.setSelectedNumbers(s.getData());
                 updateSession(savedSession, false);
             }
-        }else if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == THIRD) {
+        } else if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == THIRD) {
             savedSession.setAmount(Double.valueOf(s.getData()));
             savedSession.setGameType(4);
             // updateSession(savedSession, false);
@@ -204,13 +208,18 @@ public class UssdController {
 
     private void updateSession(Session session, boolean increment) {
         Session savedSession = sessionRepository.findBySequenceID(session.getSequenceID());
-        savedSession.setData(session.getData());
-        if (increment) {
-            savedSession.setPosition(savedSession.getPosition() + 1);
-        }
+        try {
+            savedSession.setData(session.getData());
 
-        if (savedSession.getPosition() == 1) {
-            savedSession.setGameType(Integer.parseInt(session.getData()));
+            if (increment) {
+                savedSession.setPosition(savedSession.getPosition() + 1);
+            }
+
+            if (savedSession.getPosition() == 1) {
+                savedSession.setGameType(Integer.parseInt(session.getData()));
+            }
+        } catch (Exception e) {
+            System.out.println(e);
         }
         System.out.println(savedSession);
         sessionRepository.save(savedSession);
@@ -243,10 +252,6 @@ public class UssdController {
             String[] selectedNumbers = splitNumbers(s.getData());
             int len = selectedNumbers.length;
 
-            System.out.printf("Len => %s\n", len);
-
-            System.out.println(exceeds);
-
             if (len == AppConstants.MAX_MEGA && !exceeds) {
                 StringBuilder messageBuilder = new StringBuilder(AppConstants.AMOUNT_TO_STAKE_MESSAGE);
 
@@ -263,12 +268,12 @@ public class UssdController {
                 s.setGameTypeCode(Integer.parseInt("1"));
                 updateSession(savedSession, true);
             } else {
-                message = exceeds? "Numbers must be between 1 and 57\n 0) Back": "Numbers must be a total of 6.\n 0) Back";
+                message = exceeds ? AppConstants.EXCEEDS_NUMBER_LIMIT_MESSAGE : "Numbers must be a total of 6.\n 0) Back";
                 deleteSession(savedSession);
             }
 
-            if(!repeatedNumbers.isEmpty()) {
-                message = exceeds? "Numbers must be between 1 and 57\n 0) Back": "Numbers selected must be unique.\n 0) Back";
+            if (!repeatedNumbers.isEmpty()) {
+                message = exceeds ? AppConstants.EXCEEDS_NUMBER_LIMIT_MESSAGE : "Numbers selected must be unique.\n 0) Back";
                 deleteSession(savedSession);
             }
         } else if (savedSession.getGameType() == FIRST && savedSession.getPosition() == FOURTH) {
@@ -361,16 +366,14 @@ public class UssdController {
             String[] selectedNumbers = splitNumbers(s.getData());
             int len = selectedNumbers.length;
             boolean exceeds = anyNumberExceedsLimit(s.getData(), ",", 57);
-            System.out.printf("Max => %s", len);
-            System.out.println(exceeds);
-            if ((savedSession.getMax() < len || savedSession.getMax() > len) && (!exceeds)) {
-                message = exceeds? "Numbers must be between 1 and 57": AppConstants.INVALID_TRAN_MESSAGE;
-                continueFlag = 1;
-            }else {
-                message = exceeds? "Numbers must be between 1 and 57": "Type Amount to Start (1 - 20)";
+
+            if (savedSession.getMax() < len || savedSession.getMax() > len || exceeds) {
+                message = exceeds ? AppConstants.EXCEEDS_NUMBER_LIMIT_MESSAGE : AppConstants.INVALID_TRAN_MESSAGE;
+                deleteSession(savedSession);
+            } else {
+                message = "Type Amount to Start (1 - 20)";
                 savedSession.setSelectedNumbers(s.getData());
                 updateSession(savedSession, false);
-                continueFlag = 0;
             }
         } else if (gameType == SECOND && position == FOURTH) {
             String ticketInfo = """
@@ -389,7 +392,7 @@ public class UssdController {
             //s.setCurrentGame(directGameName);
             message = String.format(ticketInfo, s.getCurrentGame(), s.getSelectedNumbers(), s.getAmount());
             updateSession(s, false);
-        }else if (savedSession.getGameType() == SECOND && savedSession.getPosition() == FIFTH) {
+        } else if (savedSession.getGameType() == SECOND && savedSession.getPosition() == FIFTH) {
             savedSession.setCurrentGame("direct");
             updateSession(s, true);
             message = AppConstants.PAYMENT_INIT_MESSAGE;
@@ -452,7 +455,6 @@ public class UssdController {
             Pair<Integer, Integer> currentPair = ranges.get(Integer.parseInt(s.getData()) - 1);
             savedSession.setMax(currentPair.getValue());
             savedSession.setMin(currentPair.getKey());
-            System.out.printf("Max => %s Min => %s\n", savedSession.getMax(), savedSession.getMin());
 
             String template = s.getData() == "" ? "Wrong input" : AppConstants.RANGE_CHOICE_TEMPLATE;
 
@@ -470,13 +472,13 @@ public class UssdController {
             String[] selectedNumbers = splitNumbers(s.getData());
             int len = selectedNumbers.length;
             boolean exceeds = anyNumberExceedsLimit(s.getData(), ",", 57);
-            System.out.printf("Len => %s\n", len);
-            System.out.printf("Max => %s Min => %s", savedSession.getMax(), savedSession.getMin());
-            System.out.println(exceeds);
+
+            System.out.printf("Len => %s Min => %s Max => %s Exceeds => %s\n", len, savedSession.getMin(), savedSession.getMax(), exceeds);
+
             if (!isBetween(len, savedSession.getMin(), savedSession.getMax()) || exceeds) {
-                message = exceeds? "Numbers must be between 1 and 57": AppConstants.INVALID_TRAN_MESSAGE;
-                continueFlag = 1;
-            }else {
+                message = exceeds ? AppConstants.EXCEEDS_NUMBER_LIMIT_MESSAGE : AppConstants.INVALID_TRAN_MESSAGE;
+                deleteSession(savedSession);
+            } else {
                 message = """
                         Type Amount to Start (1 - 20):
                         """;
@@ -484,7 +486,6 @@ public class UssdController {
             }
         } else if (savedSession.getGameType() == THIRD && savedSession.getPosition() == FOURTH) {
             savedSession.setAmount(Double.parseDouble(s.getData()));
-            System.out.printf("Amount => ", savedSession.getData());
             String total = calculateAmountPermAPI(savedSession, "perm");
             String ticketInfo = """
                     Tck info:

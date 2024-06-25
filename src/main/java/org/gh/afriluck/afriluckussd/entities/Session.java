@@ -44,14 +44,14 @@ public class Session {
 
     private LocalDateTime createdDate;
 
-    private int max;
-    private int min;
+    private Integer max;
+    private Integer min;
 
     private LocalDateTime updatedDate;
 
     public Session() {};
 
-    public Session(Integer id, String message, String sequenceID, String network, String msisdn, String data, Integer position, Integer gameType, String selectedNumbers, Double amount, String gameTypeId,  String timeStamp, String gameId, String betTypeCode, Integer gameTypeCode, String currentGame, int max, int min) {
+    public Session(Integer id, String message, String sequenceID, String network, String msisdn, String data, Integer position, Integer gameType, String selectedNumbers, Double amount, String gameTypeId,  String timeStamp, String gameId, String betTypeCode, Integer gameTypeCode, String currentGame, Integer max, Integer min) {
         this.id = id;
         this.sequenceID = sequenceID;
         this.network = network;
@@ -221,19 +221,19 @@ public class Session {
         this.currentGame = currentGame;
     }
 
-    public int getMax() {
+    public Integer getMax() {
         return max;
     }
 
-    public void setMax(int max) {
+    public void setMax(Integer max) {
         this.max = max;
     }
 
-    public int getMin() {
+    public Integer getMin() {
         return min;
     }
 
-    public void setMin(int min) {
+    public void setMin(Integer min) {
         this.min = min;
     }
 
