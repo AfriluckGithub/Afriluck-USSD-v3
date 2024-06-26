@@ -10,7 +10,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
-      - "8000"
+      - "8000:8000"
 
     environment:
       - POSTGRES_USER=postgres
