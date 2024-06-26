@@ -88,19 +88,18 @@ public class UssdController {
         if (min > max) {
             throw new IllegalArgumentException("Minimum value cannot be greater than maximum value");
         }
-        return number > min && number < max;
+        return number >= min && number <= max;
     }
 
     public static boolean anyNumberExceedsLimit(String numbersString, String delimiter, int limit) {
         // Split the string into an array of number strings
         String[] numberStrings = numbersString.trim().split("[\\s\\W]+");
 
-        // Iterate through the number strings
-        for (String numberString : numberStrings) {
-            // Trim any whitespace and parse the number
-            int number = Integer.parseInt(numberString.trim());
+        System.out.println(numbersString);
 
-            // Check if the number exceeds the limit
+        for (String numberString : numberStrings) {
+            int number = Integer.parseInt(numberString.trim());
+            System.out.printf("Number => %s Limit => %s\n", number, limit);
             if (number > limit) {
                 return true;
             }
@@ -112,6 +111,23 @@ public class UssdController {
     public static String[] splitNumbers(String numbersString) {
         // Trim the input string and split by one or more spaces
         return numbersString.trim().split("[\\s\\W]+");
+    }
+
+    public static boolean containsSingularZero(String input) {
+        // Define the regex pattern to match spaces or special characters
+        String regex = "[\\s\\W]+";
+
+        // Trim the input string and split it using the regex pattern
+        String[] parts = input.trim().split(regex);
+
+        // Check if any part is a singular zero
+        for (String part : parts) {
+            if (part.equals("0")) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public static boolean containsAnyLetters(String input) {
@@ -241,7 +257,7 @@ public class UssdController {
                 String[] selectedNumbers = splitNumbers(input);
                 int len = selectedNumbers.length;
                 boolean exceeds = anyNumberExceedsLimit(input, ",", 57);
-                boolean containsZero = input.contains("0");
+                boolean containsZero = containsSingularZero(input);
                 if (len > 1 || exceeds || containsZero) {
                     message = exceeds ? AppConstants.EXCEEDS_NUMBER_LIMIT_MESSAGE : AppConstants.INVALID_TRAN_MESSAGE;
                     deleteSession(savedSession);
@@ -375,7 +391,7 @@ public class UssdController {
                 System.out.println(repeatedNumbers);
                 String[] selectedNumbers = splitNumbers(input);
                 int len = selectedNumbers.length;
-                boolean containsZero = input.contains("0");
+                boolean containsZero = containsSingularZero(input);
 
                 if (len == AppConstants.MAX_MEGA && !exceeds && !containsZero) {
                     StringBuilder messageBuilder = new StringBuilder(AppConstants.AMOUNT_TO_STAKE_MESSAGE);
@@ -527,7 +543,7 @@ public class UssdController {
                 String[] selectedNumbers = splitNumbers(input);
                 int len = selectedNumbers.length;
                 boolean exceeds = anyNumberExceedsLimit(input, ",", 57);
-                boolean containsZero = s.getData().contains("0");
+                boolean containsZero = containsSingularZero(input);
                 List<Integer> numbers = extractNumbers(input);
                 Set<Integer> repeatedNumbers = findRepeatedNumbers(numbers);
 
@@ -698,7 +714,7 @@ public class UssdController {
                 String[] selectedNumbers = splitNumbers(input);
                 int len = selectedNumbers.length;
                 boolean exceeds = anyNumberExceedsLimit(input, ",", 57);
-                boolean containsZero = s.getData().contains("0");
+                boolean containsZero = containsSingularZero(input);
                 List<Integer> numbers = extractNumbers(input);
                 Set<Integer> repeatedNumbers = findRepeatedNumbers(numbers);
 
