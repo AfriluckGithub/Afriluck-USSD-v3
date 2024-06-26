@@ -448,7 +448,11 @@ public class UssdController {
                                 """;
                         message = String.format(ticketInfo, response.getAmount());
                     } else {
-
+                        String ticketInfo = """
+                                Invalid coupon code. Amount to pay: %s GHS.\n
+                                Enter 1 to proceed with payment or 0 to cancel.
+                                """;
+                        message = String.format(ticketInfo, response.getAmount());
                     }
                 } else {
                     gameDraw = new Game();
@@ -857,7 +861,6 @@ public class UssdController {
                 .uri(String.format("/api/V1/calculate-discount?amount=%s&code=%s", amount, coupon))
                 .retrieve()
                 .toEntity(DiscountResponse.class);
-        System.out.println(response.getBody());
-        return null;
+        return response.getBody();
     }
 }
