@@ -43,15 +43,15 @@ public class Session {
     private Integer min;
     private String callBackMessage;
     private Boolean couponApplied;
+    private Double discountedAmount;
 
     private LocalDateTime updatedDate;
 
     public Session() {
     }
 
-    ;
 
-    public Session(Integer id, String message, String sequenceID, String network, String msisdn, String data, Integer position, Integer gameType, String selectedNumbers, Double amount, String gameTypeId, String timeStamp, String gameId, String betTypeCode, Integer gameTypeCode, String currentGame, Integer max, Integer min, String callBackMessage, Boolean couponApplied) {
+    public Session(Integer id, String message, String sequenceID, String network, String msisdn, String data, Integer position, Integer gameType, String selectedNumbers, Double amount, String gameTypeId, String timeStamp, String gameId, String betTypeCode, Integer gameTypeCode, String currentGame, Integer max, Integer min, String callBackMessage, Boolean couponApplied, Double discountedAmount) {
         this.id = id;
         this.sequenceID = sequenceID;
         this.network = network;
@@ -72,6 +72,7 @@ public class Session {
         this.min = min;
         this.callBackMessage = callBackMessage;
         this.couponApplied = couponApplied;
+        this.discountedAmount = discountedAmount;
     }
 
     @PrePersist
@@ -255,6 +256,14 @@ public class Session {
         this.couponApplied = couponApplied;
     }
 
+    public Double getDiscountedAmount() {
+        return discountedAmount;
+    }
+
+    public void setDiscountedAmount(Double discountedAmount) {
+        this.discountedAmount = discountedAmount;
+    }
+
     @Override
     public String toString() {
         return "Session{" +
@@ -269,6 +278,7 @@ public class Session {
                 ", selectedNumbers='" + selectedNumbers + '\'' +
                 ", callBackMessage='" + callBackMessage + '\'' +
                 ", couponApplied='" + couponApplied + '\'' +
+                ", discountedAmount='" + discountedAmount + '\'' +
                 ", timeStamp='" + timeStamp + '\'' +
                 '}';
     }

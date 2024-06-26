@@ -24,18 +24,21 @@ public class TransactionMapper {
     public Transaction mapTransactionFromSession(Session session, Game game) {
         Transaction t = new Transaction();
         t.setGameId(session.getGameId());
-        String result = session.getGameType() == 1? "mega": (session.getGameType() == 2? "direct" : "perm");
+        String result = session.getGameType() == 1 ? "mega" : (session.getGameType() == 2 ? "direct" : "perm");
         t.setBetType(result);
         t.setSelectedNumbers(session.getSelectedNumbers());
         t.setEntryAmount(session.getAmount());
         t.setMsisdn(session.getMsisdn());
         t.setChannel(session.getNetwork());
         t.setTotalAmount(session.getAmount());
-        int betTypeCode = result == "mega"? 1: session.getGameTypeCode();
+        int betTypeCode = result == "mega" ? 1 : session.getGameTypeCode();
         t.setBetTypeCode(betTypeCode);
         t.setDrawCode(session.getGameTypeId());
+        t.setDiscountedAmount(session.getDiscountedAmount());
         return t;
-    };
+    }
+
+    ;
 
 
     public Transaction mapTransactionFromSessionPerm(Session session) {
@@ -49,6 +52,7 @@ public class TransactionMapper {
         t.setTotalAmount(session.getAmount());
         t.setBetTypeCode(session.getGameTypeCode());
         t.setDrawCode(session.getGameTypeId());
+        t.setDiscountedAmount(session.getDiscountedAmount());
         return t;
     }
 
@@ -63,6 +67,7 @@ public class TransactionMapper {
         t.setTotalAmount(session.getAmount());
         t.setBetTypeCode(2);
         t.setDrawCode(session.getGameTypeId());
+        t.setDiscountedAmount(session.getDiscountedAmount());
         return t;
     }
 

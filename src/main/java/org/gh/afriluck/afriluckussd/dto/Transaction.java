@@ -24,11 +24,13 @@ public class Transaction {
     private String selectedNumbers;
     @JsonProperty("channel")
     private String channel;
+    @JsonProperty("discounted_amount")
+    private Double discountedAmount;
 
     public Transaction() {
     }
 
-    public Transaction(String msisdn, Double totalAmount, String gameId, String drawCode, Double entryAmount, Integer betTypeCode, String betType, String selectedNumbers, String channel) {
+    public Transaction(String msisdn, Double totalAmount, String gameId, String drawCode, Double entryAmount, Integer betTypeCode, String betType, String selectedNumbers, String channel, Double discountedAmount) {
         this.msisdn = msisdn;
         this.totalAmount = totalAmount;
         this.gameId = gameId;
@@ -38,6 +40,7 @@ public class Transaction {
         this.betType = betType;
         this.selectedNumbers = selectedNumbers;
         this.channel = channel;
+        this.discountedAmount = discountedAmount;
     }
 
     public String getMsisdn() {
@@ -112,6 +115,14 @@ public class Transaction {
         this.channel = channel;
     }
 
+    public Double getDiscountedAmount() {
+        return discountedAmount;
+    }
+
+    public void setDiscountedAmount(Double discountedAmount) {
+        this.discountedAmount = discountedAmount;
+    }
+
     @Override
     public String toString() {
         return "Transaction{" +
@@ -124,6 +135,7 @@ public class Transaction {
                 ", betType='" + betType + '\'' +
                 ", selectedNumbers='" + selectedNumbers + '\'' +
                 ", channel='" + channel + '\'' +
+                ", discountedAmount='" + discountedAmount + '\'' +
                 '}';
     }
 }

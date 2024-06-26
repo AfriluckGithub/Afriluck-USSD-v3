@@ -228,7 +228,7 @@ public class UssdController {
         final Game gameDraw = currentGameDraw.get();
         savedSession.setGameId(gameDraw.getGameId());
         savedSession.setGameTypeId(gameDraw.getGameDraw());
-        boolean containsLetters = containsAnyLetters(s.getData());
+        boolean containsLetters = s.getPosition() != 5 ? containsAnyLetters(s.getData()) : false;
         if (!containsLetters) {
             if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == FIRST) {
                 message = """
@@ -280,19 +280,30 @@ public class UssdController {
                     updateSession(s, false);
                 }
             } else {
-                if (s.getData().equals("0")) {
+                String choice = s.getData();
+                if (choice.equals("0")) {
                     continueFlag = 0;
                     deleteSession(savedSession);
                     savedSession.setData("0");
                     savedSession.setMsisdn(s.getMsisdn());
                     sessionRepository.save(savedSession);
                     return menuResponse(savedSession, continueFlag, AppConstants.WELCOME_MENU_MESSAGE);
+                } else if (choice.equals("2")) {
+                    message = AppConstants.DISCOUNT_PROMPT_MESSAGE;
+                } else if (savedSession.getPosition() == 5) {
+                    DiscountResponse response = applyCoupon(s.getAmount(), s.getData());
+                    System.out.printf("Discount => ", response);
+                    message = discountMessage(response);
+                    if (response.getValid()) {
+                        savedSession.setDiscountedAmount(response.getAmount());
+                        updateSession(savedSession, false);
+                    }
                 } else {
                     updateSession(savedSession, false);
                     continueFlag = 1;
                     message = AppConstants.PAYMENT_INIT_MESSAGE;
                     Runnable paymentTask = () -> {
-                        Transaction t = mapper.mapTransactionFromSessionBanker(s);
+                        Transaction t = mapper.mapTransactionFromSessionBanker(savedSession);
                         System.out.println(t.toString());
                         ResponseEntity<String> response = handler.client()
                                 .post()
@@ -437,22 +448,14 @@ public class UssdController {
                     sessionRepository.save(savedSession);
                     return menuResponse(savedSession, continueFlag, AppConstants.WELCOME_MENU_MESSAGE);
                 } else if (choice.equals("2") && savedSession.getPosition() == 6) {
-                    message = "Enter your coupon code:";
+                    message = AppConstants.DISCOUNT_PROMPT_MESSAGE;
                 } else if (savedSession.getPosition() == 7) {
                     DiscountResponse response = applyCoupon(s.getAmount(), s.getData());
                     System.out.printf("Discount => ", response);
+                    message = discountMessage(response);
                     if (response.getValid()) {
-                        String ticketInfo = """
-                                Coupon applied. New amount to pay: %s GHS.\n
-                                Enter 1 to proceed with payment or 0 to cancel.
-                                """;
-                        message = String.format(ticketInfo, response.getAmount());
-                    } else {
-                        String ticketInfo = """
-                                Invalid coupon code. Amount to pay: %s GHS.\n
-                                Enter 1 to proceed with payment or 0 to cancel.
-                                """;
-                        message = String.format(ticketInfo, response.getAmount());
+                        savedSession.setDiscountedAmount(response.getAmount());
+                        updateSession(savedSession, false);
                     }
                 } else {
                     gameDraw = new Game();
@@ -496,7 +499,7 @@ public class UssdController {
         AtomicInteger index = new AtomicInteger(1);
         List<String> directGames = AppConstants.DIRECT_GAMES;
         updateSession(savedSession, false);
-        boolean containsLetters = containsAnyLetters(s.getData());
+        boolean containsLetters = savedSession.getPosition() != 6 ? containsAnyLetters(s.getData()) : false;
         if (!containsLetters) {
             if (savedSession.getGameType() == SECOND && savedSession.getPosition() == FIRST) {
                 StringBuilder builder = new StringBuilder();
@@ -564,13 +567,16 @@ public class UssdController {
                     updateSession(s, false);
                 }
             } else if (savedSession.getGameType() == SECOND && savedSession.getPosition() == FIFTH) {
-                if (s.getData().equals("0")) {
+                String choice = s.getData();
+                if (choice.equals("0")) {
                     continueFlag = 0;
                     deleteSession(savedSession);
                     savedSession.setData("0");
                     savedSession.setMsisdn(s.getMsisdn());
                     sessionRepository.save(savedSession);
                     return menuResponse(savedSession, continueFlag, AppConstants.WELCOME_MENU_MESSAGE);
+                } else if (choice.equals("2") && savedSession.getPosition() == 5) {
+                    message = AppConstants.DISCOUNT_PROMPT_MESSAGE;
                 } else {
                     savedSession.setCurrentGame("direct");
                     updateSession(s, true);
@@ -594,6 +600,36 @@ public class UssdController {
                     System.out.println(task.threadId());
                     continueFlag = 1;
                 }
+            } else if (savedSession.getPosition() == SIX) {
+                DiscountResponse response = applyCoupon(s.getAmount(), s.getData());
+                System.out.printf("Discount => ", response);
+                message = discountMessage(response);
+                if (response.getValid()) {
+                    savedSession.setDiscountedAmount(response.getAmount());
+                    updateSession(savedSession, false);
+                }
+            } else {
+                savedSession.setCurrentGame("direct");
+                updateSession(s, true);
+                message = AppConstants.PAYMENT_INIT_MESSAGE;
+                Runnable paymentTask = () -> {
+                    Transaction t = mapper.mapTransactionFromSession(savedSession, gameDraw);
+                    System.out.println(t.toString());
+                    ResponseEntity<String> response = handler.client()
+                            .post()
+                            .uri("/api/V1/place-bet")
+                            .body(t)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .retrieve()
+                            .toEntity(String.class);
+                    System.out.println(response.getBody());
+
+                    sessionRepository.deleteById(savedSession.getId());
+                    System.out.println("--- Deleting Session ---");
+                };
+                Thread task = paymentThread.start(paymentTask);
+                System.out.println(task.threadId());
+                continueFlag = 1;
             }
         } else {
             deleteSession(savedSession);
@@ -615,7 +651,7 @@ public class UssdController {
         savedSession.setGameTypeId(gameDraw.getGameDraw());
         //savedSession.setBetTypeCode(AppConstants.PERM);
         updateSession(savedSession, false);
-        boolean containsLetters = containsAnyLetters(s.getData());
+        boolean containsLetters = savedSession.getPosition() != 6 ? containsAnyLetters(s.getData()) : false;
         if (!containsLetters) {
             if (savedSession.getGameType() == THIRD && savedSession.getPosition() == FIRST) {
                 StringBuilder builder = new StringBuilder();
@@ -705,13 +741,16 @@ public class UssdController {
                     updateSession(s, false);
                 }
             } else if (gameType == THIRD && position == FIFTH) {
-                if (s.getData().equals("0")) {
+                String choice = s.getData();
+                if (choice.equals("0")) {
                     continueFlag = 0;
                     deleteSession(savedSession);
                     savedSession.setData("0");
                     savedSession.setMsisdn(s.getMsisdn());
                     sessionRepository.save(savedSession);
                     return menuResponse(savedSession, continueFlag, AppConstants.WELCOME_MENU_MESSAGE);
+                } else if (choice.equals("2") && savedSession.getPosition() == 5) {
+                    message = AppConstants.DISCOUNT_PROMPT_MESSAGE;
                 } else {
                     savedSession.setBetTypeCode(AppConstants.PERM);
                     updateSession(savedSession, false);
@@ -736,6 +775,36 @@ public class UssdController {
                     Thread task = paymentThread.start(paymentTask);
                     System.out.println(task.getName());
                 }
+            } else if (savedSession.getPosition() == SIX) {
+                DiscountResponse response = applyCoupon(s.getAmount(), s.getData());
+                System.out.printf("Discount => ", response);
+                message = discountMessage(response);
+                if (response.getValid()) {
+                    savedSession.setDiscountedAmount(response.getAmount());
+                    updateSession(savedSession, false);
+                }
+            } else {
+                savedSession.setCurrentGame("direct");
+                updateSession(s, true);
+                message = AppConstants.PAYMENT_INIT_MESSAGE;
+                Runnable paymentTask = () -> {
+                    Transaction t = mapper.mapTransactionFromSession(savedSession, gameDraw);
+                    System.out.println(t.toString());
+                    ResponseEntity<String> response = handler.client()
+                            .post()
+                            .uri("/api/V1/place-bet")
+                            .body(t)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .retrieve()
+                            .toEntity(String.class);
+                    System.out.println(response.getBody());
+
+                    sessionRepository.deleteById(savedSession.getId());
+                    System.out.println("--- Deleting Session ---");
+                };
+                Thread task = paymentThread.start(paymentTask);
+                System.out.println(task.threadId());
+                continueFlag = 1;
             }
         } else {
             deleteSession(savedSession);
@@ -862,5 +931,23 @@ public class UssdController {
                 .retrieve()
                 .toEntity(DiscountResponse.class);
         return response.getBody();
+    }
+
+    public String discountMessage(DiscountResponse response) {
+        String message = null;
+        String ticketInfo;
+        if (response.getValid()) {
+            ticketInfo = """
+                    Coupon applied. New amount to pay: %s GHS.\n
+                    Enter 1 to proceed with payment or 0 to cancel.
+                    """;
+        } else {
+            ticketInfo = """
+                    Invalid coupon code. Amount to pay: %s GHS.\n
+                    Enter 1 to proceed with payment or 0 to cancel.
+                    """;
+        }
+        message = String.format(ticketInfo, response.getAmount());
+        return message;
     }
 }

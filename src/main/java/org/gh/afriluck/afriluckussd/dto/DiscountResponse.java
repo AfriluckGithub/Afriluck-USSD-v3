@@ -2,19 +2,19 @@ package org.gh.afriluck.afriluckussd.dto;
 
 public class DiscountResponse {
 
-    private Integer amount;
+    private Double amount;
     private Boolean isValid;
 
-    public DiscountResponse(Integer amount, Boolean isValid) {
+    public DiscountResponse(Double amount, Boolean isValid) {
         this.amount = amount;
         this.isValid = isValid;
     }
 
-    public Integer getAmount() {
+    public Double getAmount() {
         return amount;
     }
 
-    public void setAmount(Integer amount) {
+    public void setAmount(Double amount) {
         this.amount = amount;
     }
 
