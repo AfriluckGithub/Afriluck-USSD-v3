@@ -158,7 +158,7 @@ public class UssdController {
                 case 6 -> tnCsMessage(savedSession);
                 case 99 -> contactUsMessage(savedSession);
                 case 0 -> menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE);
-                default -> menuResponse(session, 0, "Invalid input");
+                default -> silentDelete(savedSession);
 
             };
         } else {
@@ -222,7 +222,7 @@ public class UssdController {
             if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == FIRST) {
                 message = """
                         %s
-                        Choose a number between 1 and 57
+                        Choose one number between 1 and 57
                         """;
                 message = String.format(message, "Banker");
             } else if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == SECOND) {
@@ -235,7 +235,7 @@ public class UssdController {
                     deleteSession(savedSession);
                 } else {
                     message = """
-                            Type Amount to Start (1 - 20):
+                            Type amount to Start (1 - 20):
                             """;
                     savedSession.setCurrentGame("banker");
                     savedSession.setSelectedNumbers(s.getData());
@@ -490,7 +490,7 @@ public class UssdController {
                     message = exceeds ? AppConstants.EXCEEDS_NUMBER_LIMIT_MESSAGE : AppConstants.INVALID_TRAN_MESSAGE;
                     deleteSession(savedSession);
                 } else {
-                    message = "Type Amount to Start (1 - 20)";
+                    message = "Type amount to Start (1 - 20)";
                     savedSession.setSelectedNumbers(s.getData());
                     updateSession(savedSession, false);
                 }
@@ -621,7 +621,7 @@ public class UssdController {
                     deleteSession(savedSession);
                 } else {
                     message = """
-                            Type Amount to Start (1 - 20):
+                            Type amount to Start (1 - 20):
                             """;
                     updateSession(savedSession, false);
                 }
@@ -790,5 +790,10 @@ public class UssdController {
         json.addProperty("message", message);
         json.addProperty("continueFlag", continueFlag);
         return json.toString();
+    }
+
+    public String silentDelete(Session savedSession) {
+        deleteSession(savedSession);
+        return menuResponse(savedSession, 0, "Enter a valid menu option\n 0) Back");
     }
 }
