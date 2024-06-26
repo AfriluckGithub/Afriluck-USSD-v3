@@ -659,11 +659,16 @@ public class UssdController {
                 int len = selectedNumbers.length;
                 boolean exceeds = anyNumberExceedsLimit(input, ",", 57);
                 boolean containsZero = s.getData().contains("0");
+                List<Integer> numbers = extractNumbers(input);
+                Set<Integer> repeatedNumbers = findRepeatedNumbers(numbers);
 
                 // System.out.printf("Len => %s Min => %s Max => %s Exceeds => %s\n", len, savedSession.getMin(), savedSession.getMax(), exceeds);
 
-                if (!isBetween(len, savedSession.getMin(), savedSession.getMax()) || exceeds || containsZero) {
+                if (!isBetween(len, savedSession.getMin(), savedSession.getMax()) || exceeds || containsZero || !repeatedNumbers.isEmpty()) {
                     message = exceeds ? AppConstants.EXCEEDS_NUMBER_LIMIT_MESSAGE : AppConstants.INVALID_TRAN_MESSAGE;
+                    if (!repeatedNumbers.isEmpty()) {
+                        message = "Duplicate numbers entered\n 0) Back";
+                    }
                     deleteSession(savedSession);
                 } else {
                     message = """
