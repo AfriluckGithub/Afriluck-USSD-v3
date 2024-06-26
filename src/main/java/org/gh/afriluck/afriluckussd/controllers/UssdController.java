@@ -88,7 +88,7 @@ public class UssdController {
         if (min > max) {
             throw new IllegalArgumentException("Minimum value cannot be greater than maximum value");
         }
-        return number >= min && number <= max;
+        return number > min && number < max;
     }
 
     public static boolean anyNumberExceedsLimit(String numbersString, String delimiter, int limit) {

@@ -3,6 +3,8 @@ FROM openjdk:24-slim-bullseye
 
 COPY init.sql /docker-entrypoint-initdb.d/
 
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
 #RUN chmod +r /docker-entrypoint-initdb.d/init.sql
 
 #RUN echo '18.193.168.136 host.docker.internal' >> /etc/hosts
