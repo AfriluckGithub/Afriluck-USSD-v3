@@ -8,18 +8,13 @@ import java.time.LocalDateTime;
 @Table(name = "session")
 public class Session {
 
+    public String msisdn;
+    public String network;
+    public String message;
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
-
-    public String msisdn;
-
     private String sequenceID;
-
-    public String network;
-
-    public String message;
-
     private String data;
 
     private Integer position;
@@ -49,9 +44,12 @@ public class Session {
 
     private LocalDateTime updatedDate;
 
-    public Session() {};
+    public Session() {
+    }
 
-    public Session(Integer id, String message, String sequenceID, String network, String msisdn, String data, Integer position, Integer gameType, String selectedNumbers, Double amount, String gameTypeId,  String timeStamp, String gameId, String betTypeCode, Integer gameTypeCode, String currentGame, Integer max, Integer min) {
+    ;
+
+    public Session(Integer id, String message, String sequenceID, String network, String msisdn, String data, Integer position, Integer gameType, String selectedNumbers, Double amount, String gameTypeId, String timeStamp, String gameId, String betTypeCode, Integer gameTypeCode, String currentGame, Integer max, Integer min) {
         this.id = id;
         this.sequenceID = sequenceID;
         this.network = network;
@@ -85,12 +83,12 @@ public class Session {
         updatedDate = LocalDateTime.now();
     }
 
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
     public String getMessage() {
         return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 
     public Integer getId() {
@@ -236,6 +234,7 @@ public class Session {
     public void setMin(Integer min) {
         this.min = min;
     }
+
 
     @Override
     public String toString() {
