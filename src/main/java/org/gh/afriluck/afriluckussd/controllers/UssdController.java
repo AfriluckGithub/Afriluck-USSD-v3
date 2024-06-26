@@ -90,7 +90,7 @@ public class UssdController {
 
     public static boolean anyNumberExceedsLimit(String numbersString, String delimiter, int limit) {
         // Split the string into an array of number strings
-        String[] numberStrings = numbersString.trim().split("\\s+");
+        String[] numberStrings = numbersString.trim().split("[\\s\\W]+");
 
         // Iterate through the number strings
         for (String numberString : numberStrings) {
@@ -108,7 +108,7 @@ public class UssdController {
 
     public static String[] splitNumbers(String numbersString) {
         // Trim the input string and split by one or more spaces
-        return numbersString.trim().split("\\s+");
+        return numbersString.trim().split("[\\s\\W]+");
     }
 
     public static boolean containsAnyLetters(String input) {
@@ -123,6 +123,14 @@ public class UssdController {
 
         // Return whether the input contains any letters
         return matcher.find();
+    }
+
+    public static String removeSpecialCharacters(String input) {
+        // Define the regex pattern to match special characters
+        String regex = "[^a-zA-Z0-9\\s]";
+
+        // Replace special characters with an empty string
+        return input.replaceAll(regex, " ");
     }
 
     @PostMapping(path = "/ussd")
@@ -226,10 +234,11 @@ public class UssdController {
                         """;
                 message = String.format(message, "Banker");
             } else if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == SECOND) {
-                String[] selectedNumbers = splitNumbers(s.getData());
+                String input = removeSpecialCharacters(s.getData());
+                String[] selectedNumbers = splitNumbers(input);
                 int len = selectedNumbers.length;
-                boolean exceeds = anyNumberExceedsLimit(s.getData(), ",", 57);
-                boolean containsZero = s.getData().contains("0");
+                boolean exceeds = anyNumberExceedsLimit(input, ",", 57);
+                boolean containsZero = input.contains("0");
                 if (len > 1 || exceeds || containsZero) {
                     message = exceeds ? AppConstants.EXCEEDS_NUMBER_LIMIT_MESSAGE : AppConstants.INVALID_TRAN_MESSAGE;
                     deleteSession(savedSession);
@@ -342,14 +351,15 @@ public class UssdController {
                 //updateSession(savedSession, true);
             } else if (savedSession.getGameType() == FIRST && savedSession.getPosition() == SECOND) {
 
-                List<Integer> numbers = extractNumbers(savedSession.getData());
+                String input = removeSpecialCharacters(s.getData());
+                List<Integer> numbers = extractNumbers(input);
                 Set<Integer> repeatedNumbers = findRepeatedNumbers(numbers);
-                boolean exceeds = anyNumberExceedsLimit(s.getData(), ",", 57);
+                boolean exceeds = anyNumberExceedsLimit(input, ",", 57);
 
                 System.out.println(repeatedNumbers);
-                String[] selectedNumbers = splitNumbers(s.getData());
+                String[] selectedNumbers = splitNumbers(input);
                 int len = selectedNumbers.length;
-                boolean containsZero = s.getData().contains("0");
+                boolean containsZero = input.contains("0");
 
                 if (len == AppConstants.MAX_MEGA && !exceeds && !containsZero) {
                     StringBuilder messageBuilder = new StringBuilder(AppConstants.AMOUNT_TO_STAKE_MESSAGE);
@@ -481,9 +491,10 @@ public class UssdController {
                 s.setCurrentGame(currentGame);
                 updateSession(s, false);
             } else if (gameType == savedSession.getGameType() && savedSession.getPosition() == THIRD) {
-                String[] selectedNumbers = splitNumbers(s.getData());
+                String input = removeSpecialCharacters(s.getData());
+                String[] selectedNumbers = splitNumbers(input);
                 int len = selectedNumbers.length;
-                boolean exceeds = anyNumberExceedsLimit(s.getData(), ",", 57);
+                boolean exceeds = anyNumberExceedsLimit(input, ",", 57);
                 boolean containsZero = s.getData().contains("0");
 
                 if (savedSession.getMax() < len || savedSession.getMax() > len || exceeds || containsZero) {
@@ -608,10 +619,11 @@ public class UssdController {
                 };
                 updateSession(savedSession, false);
             } else if (savedSession.getGameType() == THIRD && savedSession.getPosition() == THIRD) {
-                savedSession.setSelectedNumbers(s.getData());
-                String[] selectedNumbers = splitNumbers(s.getData());
+                String input = removeSpecialCharacters(s.getData());
+                savedSession.setSelectedNumbers(input);
+                String[] selectedNumbers = splitNumbers(input);
                 int len = selectedNumbers.length;
-                boolean exceeds = anyNumberExceedsLimit(s.getData(), ",", 57);
+                boolean exceeds = anyNumberExceedsLimit(input, ",", 57);
                 boolean containsZero = s.getData().contains("0");
 
                 // System.out.printf("Len => %s Min => %s Max => %s Exceeds => %s\n", len, savedSession.getMin(), savedSession.getMax(), exceeds);
