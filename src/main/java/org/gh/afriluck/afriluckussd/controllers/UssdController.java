@@ -2,6 +2,7 @@ package org.gh.afriluck.afriluckussd.controllers;
 
 import com.google.gson.JsonObject;
 import org.gh.afriluck.afriluckussd.constants.AppConstants;
+import org.gh.afriluck.afriluckussd.dto.DiscountResponse;
 import org.gh.afriluck.afriluckussd.dto.Pair;
 import org.gh.afriluck.afriluckussd.dto.RecentTickets;
 import org.gh.afriluck.afriluckussd.dto.Transaction;
@@ -36,6 +37,8 @@ public class UssdController {
     private static final int THIRD = 3;
     private static final int FOURTH = 4;
     private static final int FIFTH = 5;
+    private static final int SIX = 6;
+    private static final int SEVEN = 7;
     private static final int ZERO = 0;
     private final CustomerSessionRepository sessionRepository;
     private final AfriluckCallHandler handler;
@@ -299,6 +302,9 @@ public class UssdController {
                                 .retrieve()
                                 .toEntity(String.class);
                         System.out.println(response.getBody());
+
+                        sessionRepository.deleteById(savedSession.getId());
+                        System.out.println("--- Deleting Session ---");
                     };
                     Thread task = paymentThread.start(paymentTask);
                     System.out.println(task.threadId());
@@ -344,11 +350,10 @@ public class UssdController {
         savedSession.setCurrentGame(AppConstants.MEGA);
         updateSession(savedSession, false);
         System.out.println(savedSession.toString());
-        boolean containsLetters = containsAnyLetters(s.getData());
+        boolean containsLetters = savedSession.getPosition() != 7 ? containsAnyLetters(s.getData()) : false;
         if (!containsLetters) {
             if (savedSession.getGameType() == FIRST && savedSession.getPosition() == FIRST) {
                 message = AppConstants.MEGA_OPTIONS_CHOICE_MESSAGE;
-                //updateSession(savedSession, true);
             } else if (savedSession.getGameType() == FIRST && savedSession.getPosition() == SECOND) {
 
                 String input = removeSpecialCharacters(s.getData());
@@ -421,13 +426,30 @@ public class UssdController {
                     updateSession(s, true);
                 }
             } else {
-                if (s.getData().equals("0")) {
+
+                String choice = s.getData();
+
+                if (choice.equals("0")) {
                     continueFlag = 0;
                     deleteSession(savedSession);
                     savedSession.setData("0");
                     savedSession.setMsisdn(s.getMsisdn());
                     sessionRepository.save(savedSession);
                     return menuResponse(savedSession, continueFlag, AppConstants.WELCOME_MENU_MESSAGE);
+                } else if (choice.equals("2") && savedSession.getPosition() == 6) {
+                    message = "Enter your coupon code:";
+                } else if (savedSession.getPosition() == 7) {
+                    DiscountResponse response = applyCoupon(s.getAmount(), s.getData());
+                    System.out.printf("Discount => ", response);
+                    if (response.getValid()) {
+                        String ticketInfo = """
+                                Coupon applied. New amount to pay: %s GHS.\n
+                                Enter 1 to proceed with payment or 0 to cancel.
+                                """;
+                        message = String.format(ticketInfo, response.getAmount());
+                    } else {
+
+                    }
                 } else {
                     gameDraw = new Game();
                     message = AppConstants.PAYMENT_INIT_MESSAGE;
@@ -442,6 +464,9 @@ public class UssdController {
                                 .retrieve()
                                 .toEntity(String.class);
                         System.out.println(response.getBody());
+
+                        sessionRepository.deleteById(savedSession.getId());
+                        System.out.println("--- Deleting Session ---");
                     };
                     Thread task = paymentThread.start(paymentTask);
                     System.out.println(task.threadId());
@@ -496,9 +521,15 @@ public class UssdController {
                 int len = selectedNumbers.length;
                 boolean exceeds = anyNumberExceedsLimit(input, ",", 57);
                 boolean containsZero = s.getData().contains("0");
+                List<Integer> numbers = extractNumbers(input);
+                Set<Integer> repeatedNumbers = findRepeatedNumbers(numbers);
 
-                if (savedSession.getMax() < len || savedSession.getMax() > len || exceeds || containsZero) {
+
+                if (savedSession.getMax() < len || savedSession.getMax() > len || exceeds || containsZero || !repeatedNumbers.isEmpty()) {
                     message = exceeds ? AppConstants.EXCEEDS_NUMBER_LIMIT_MESSAGE : AppConstants.INVALID_TRAN_MESSAGE;
+                    if (!repeatedNumbers.isEmpty()) {
+                        message = "Duplicate numbers entered\n 0) Back";
+                    }
                     deleteSession(savedSession);
                 } else {
                     message = "Type amount to Start (1 - 20)";
@@ -551,6 +582,9 @@ public class UssdController {
                                 .retrieve()
                                 .toEntity(String.class);
                         System.out.println(response.getBody());
+
+                        sessionRepository.deleteById(savedSession.getId());
+                        System.out.println("--- Deleting Session ---");
                     };
                     Thread task = paymentThread.start(paymentTask);
                     System.out.println(task.threadId());
@@ -686,6 +720,9 @@ public class UssdController {
                                 .retrieve()
                                 .toEntity(String.class);
                         System.out.println(response.getBody());
+
+                        sessionRepository.deleteById(savedSession.getId());
+                        System.out.println("--- Deleting Session ---");
                     };
                     Thread task = paymentThread.start(paymentTask);
                     System.out.println(task.getName());
@@ -807,5 +844,15 @@ public class UssdController {
     public String silentDelete(Session savedSession) {
         deleteSession(savedSession);
         return menuResponse(savedSession, 0, "Enter a valid menu option\n 0) Back");
+    }
+
+    public DiscountResponse applyCoupon(double amount, String coupon) {
+        ResponseEntity<DiscountResponse> response = handler.client()
+                .get()
+                .uri(String.format("/api/V1/calculate-discount?amount=%s&code=%s", amount, coupon))
+                .retrieve()
+                .toEntity(DiscountResponse.class);
+        System.out.println(response.getBody());
+        return null;
     }
 }

@@ -41,6 +41,8 @@ public class Session {
 
     private Integer max;
     private Integer min;
+    private String callBackMessage;
+    private Boolean couponApplied;
 
     private LocalDateTime updatedDate;
 
@@ -49,7 +51,7 @@ public class Session {
 
     ;
 
-    public Session(Integer id, String message, String sequenceID, String network, String msisdn, String data, Integer position, Integer gameType, String selectedNumbers, Double amount, String gameTypeId, String timeStamp, String gameId, String betTypeCode, Integer gameTypeCode, String currentGame, Integer max, Integer min) {
+    public Session(Integer id, String message, String sequenceID, String network, String msisdn, String data, Integer position, Integer gameType, String selectedNumbers, Double amount, String gameTypeId, String timeStamp, String gameId, String betTypeCode, Integer gameTypeCode, String currentGame, Integer max, Integer min, String callBackMessage, Boolean couponApplied) {
         this.id = id;
         this.sequenceID = sequenceID;
         this.network = network;
@@ -68,6 +70,8 @@ public class Session {
         this.message = message;
         this.max = max;
         this.min = min;
+        this.callBackMessage = callBackMessage;
+        this.couponApplied = couponApplied;
     }
 
     @PrePersist
@@ -235,6 +239,21 @@ public class Session {
         this.min = min;
     }
 
+    public String getCallBackMessage() {
+        return callBackMessage;
+    }
+
+    public void setCallBackMessage(String callBackMessage) {
+        this.callBackMessage = callBackMessage;
+    }
+
+    public Boolean getCouponApplied() {
+        return couponApplied;
+    }
+
+    public void setCouponApplied(Boolean couponApplied) {
+        this.couponApplied = couponApplied;
+    }
 
     @Override
     public String toString() {
@@ -248,6 +267,8 @@ public class Session {
                 ", amount=" + amount +
                 ", gameType=" + gameType +
                 ", selectedNumbers='" + selectedNumbers + '\'' +
+                ", callBackMessage='" + callBackMessage + '\'' +
+                ", couponApplied='" + couponApplied + '\'' +
                 ", timeStamp='" + timeStamp + '\'' +
                 '}';
     }
