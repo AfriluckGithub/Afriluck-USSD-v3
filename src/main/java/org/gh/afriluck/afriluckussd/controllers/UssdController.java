@@ -226,7 +226,7 @@ public class UssdController {
                     response = getLastFiveTransactions(savedSession, savedSession.getMsisdn());
                     json = menuResponse(savedSession, continueFlag, response);
                     oj = new JSONObject(json);
-                    message = oj.get("message").toString();
+                    message = oj.get("message").toString().replace("{", "").replace("}", "").replace("\"", "");
                     break;
                 default:
                     deleteSession(savedSession);
