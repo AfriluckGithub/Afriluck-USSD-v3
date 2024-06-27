@@ -224,8 +224,9 @@ public class UssdController {
                 case "2":
                     continueFlag = 1;
                     response = getLastFiveTransactions(savedSession, savedSession.getMsisdn());
-                    message = menuResponse(savedSession, continueFlag, response);
-                    System.out.println(message);
+                    json = menuResponse(savedSession, continueFlag, response);
+                    oj = new JSONObject(json);
+                    message = oj.get("message").toString();
                     break;
                 default:
                     deleteSession(savedSession);
