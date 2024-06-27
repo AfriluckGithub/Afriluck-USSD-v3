@@ -46,6 +46,7 @@ public class UssdController {
     private final GameRepository gameRepository;
     List<Game> games = null;
     Thread.Builder paymentThread = Thread.ofVirtual().name("Payment Thread");
+    Thread.Builder sessionThread = Thread.ofVirtual().name("Session Thread");
 
     public UssdController(
             CustomerSessionRepository sessionRepository,
@@ -236,7 +237,7 @@ public class UssdController {
         return menuResponse(savedSession, continueFlag, message);
     }
 
-    private String banker(Session s, String title) {
+    private String banker(Session s, String title) throws InterruptedException {
         String message = null;
         int continueFlag = 0;
         Session savedSession = sessionRepository.findBySequenceID(s.getSequenceID());
@@ -329,12 +330,14 @@ public class UssdController {
                                 .retrieve()
                                 .toEntity(String.class);
                         System.out.println(response.getBody());
-
+                        System.out.println("--- Running Payment ---");
+                    };
+                    Runnable sessionTask = () -> {
                         sessionRepository.deleteById(savedSession.getId());
                         System.out.println("--- Deleting Session ---");
                     };
-                    Thread task = paymentThread.start(paymentTask);
-                    System.out.println(task.threadId());
+                    paymentThread.start(paymentTask).join();
+                    sessionThread.start(sessionTask);
                 }
             }
         } else {
@@ -489,10 +492,14 @@ public class UssdController {
                         System.out.println(response.getBody());
 
                         sessionRepository.deleteById(savedSession.getId());
-                        System.out.println("--- Deleting Session ---");
+                        System.out.println("Payment Thread running...");
                     };
-                    Thread task = paymentThread.start(paymentTask);
-                    System.out.println(task.threadId());
+                    Runnable sessionTask = () -> {
+                        sessionRepository.deleteById(savedSession.getId());
+                        System.out.println("Session Thread running...");
+                    };
+                    paymentThread.start(paymentTask).join();
+                    sessionThread.start(sessionTask);
                     continueFlag = 1;
                 }
             }
@@ -610,10 +617,14 @@ public class UssdController {
                         System.out.println(response.getBody());
 
                         sessionRepository.deleteById(savedSession.getId());
-                        System.out.println("--- Deleting Session ---");
+                        System.out.println("Payment Thread running...");
                     };
-                    Thread task = paymentThread.start(paymentTask);
-                    System.out.println(task.threadId());
+                    Runnable sessionTask = () -> {
+                        sessionRepository.deleteById(savedSession.getId());
+                        System.out.println("Session Thread running...");
+                    };
+                    paymentThread.start(paymentTask).join();
+                    sessionThread.start(sessionTask);
                     continueFlag = 1;
                 }
             } else if (savedSession.getPosition() == SIX) {
@@ -639,12 +650,16 @@ public class UssdController {
                             .retrieve()
                             .toEntity(String.class);
                     System.out.println(response.getBody());
-
-                    sessionRepository.deleteById(savedSession.getId());
-                    System.out.println("--- Deleting Session ---");
+                    System.out.println("Payment Thread running...");
                 };
-                Thread task = paymentThread.start(paymentTask);
-                System.out.println(task.threadId());
+
+                Runnable sessionTask = () -> {
+                    sessionRepository.deleteById(savedSession.getId());
+                    System.out.println("Session Thread running...");
+                };
+                paymentThread.start(paymentTask).join();
+                sessionThread.start(sessionTask);
+
                 continueFlag = 1;
             }
         } else {
@@ -654,7 +669,7 @@ public class UssdController {
         return menuResponse(savedSession, continueFlag, message);
     }
 
-    public String permGameOptions(int gameType, int position, Session s) {
+    public String permGameOptions(int gameType, int position, Session s) throws InterruptedException {
         int continueFlag = 0;
         String message = null;
         int codeType = 0;
@@ -786,10 +801,15 @@ public class UssdController {
                         System.out.println(response.getBody());
 
                         sessionRepository.deleteById(savedSession.getId());
-                        System.out.println("--- Deleting Session ---");
+                        System.out.println("Payment Thread running...");
                     };
-                    Thread task = paymentThread.start(paymentTask);
-                    System.out.println(task.getName());
+
+                    Runnable sessionTask = () -> {
+                        sessionRepository.deleteById(savedSession.getId());
+                        System.out.println("Session Thread running...");
+                    };
+                    paymentThread.start(paymentTask).join();
+                    sessionThread.start(sessionTask);
                 }
             } else if (savedSession.getPosition() == SIX) {
                 DiscountResponse response = applyCoupon(s.getAmount(), s.getData());
@@ -816,10 +836,14 @@ public class UssdController {
                     System.out.println(response.getBody());
 
                     sessionRepository.deleteById(savedSession.getId());
-                    System.out.println("--- Deleting Session ---");
+                    System.out.println("Payment Thread running...");
                 };
-                Thread task = paymentThread.start(paymentTask);
-                System.out.println(task.threadId());
+                Runnable sessionTask = () -> {
+                    sessionRepository.deleteById(savedSession.getId());
+                    System.out.println("Session Thread running...");
+                };
+                paymentThread.start(paymentTask).join();
+                sessionThread.start(sessionTask);
                 continueFlag = 1;
             }
         } else {
@@ -900,18 +924,9 @@ public class UssdController {
         return total;
     }
 
-    public String applyDiscount(Session savedSession) {
-        try {
-
-        } catch (Exception e) {
-            System.out.println(e);
-        }
-        return null;
-    }
-
     private String tnCsMessage(Session session) {
         return menuResponse(session, 1, """
-                                TnCs
+                TnCs
                 You can read here: http://www.afriluck.com/#/
                 page-details/terms-and-conditions
                 """);
