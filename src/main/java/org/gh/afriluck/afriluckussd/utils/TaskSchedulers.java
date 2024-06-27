@@ -22,12 +22,13 @@ public class TaskSchedulers implements Runnable {
     @Scheduled(cron = "0 */5 * * * *", zone = "GMT")
     //@Scheduled(cron = "0 14 20 * * *", zone = "GMT")
     public void run() {
-        System.out.println("Cron running...");
-        String game = handler.client().get().uri("/api/V1/game-info").retrieve().body(String.class);
-        // System.out.println(game);
-        ObjectMapper mapper = new ObjectMapper();
-        gameRepository.deleteAll();
         try {
+            System.out.println("Cron running...");
+            String game = handler.client().get().uri("/api/V1/game-info").retrieve().body(String.class);
+            // System.out.println(game);
+            ObjectMapper mapper = new ObjectMapper();
+            gameRepository.deleteAll();
+
             Game[] games = mapper.readValue(game, Game[].class);
 
             for (Game g : games) {

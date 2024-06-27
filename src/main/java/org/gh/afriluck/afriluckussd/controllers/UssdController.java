@@ -15,6 +15,7 @@ import org.gh.afriluck.afriluckussd.utils.AfriluckCallHandler;
 import org.json.JSONObject;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -222,10 +223,8 @@ public class UssdController {
                     break;
                 case "4":
                     continueFlag = 1;
-                    response = getLastFiveTransactions(savedSession, savedSession.getMsisdn()).ticket;
-                    json = menuResponse(savedSession, continueFlag, response);
-                    oj = new JSONObject(json);
-                    message = oj.get("message").toString();
+                    response = getLastFiveTransactions(savedSession, savedSession.getMsisdn());
+                    message = menuResponse(savedSession, continueFlag, response);
                     System.out.println(message);
                     break;
                 default:
@@ -853,6 +852,7 @@ public class UssdController {
         return menuResponse(savedSession, continueFlag, message);
     }
 
+    @Async
     private String getDrawResults(Session session) {
         ResponseEntity<String> response = handler.client()
                 .get()
@@ -862,14 +862,15 @@ public class UssdController {
         return response.getBody();
     }
 
-    private RecentTickets getLastFiveTransactions(Session session, String msisdn) {
-        ResponseEntity<RecentTickets> response = handler.client()
+    @Async
+    private String getLastFiveTransactions(Session session, String msisdn) {
+        ResponseEntity<String> response = handler.client()
                 .get()
                 .uri("/api/V1/recent-tickets")
                 //.body(String.format("{\"msisdn\":\"%s\"}", msisdn))
                 //.contentType(MediaType.APPLICATION_JSON)
                 .retrieve()
-                .toEntity(RecentTickets.class);
+                .toEntity(String.class);
         return response.getBody();
     }
 
@@ -890,6 +891,7 @@ public class UssdController {
         return total;
     }
 
+    @Async
     private String calculateAmountPermAPI(Session session, String type) {
         String body = String.format("{\"amount\":\"%s\",\"selected_numbers\":\"%s\",\"bet_type_code\":\"%s\",\"bet_type\":\"%s\"}"
                 , session.getAmount(), session.getSelectedNumbers(), session.getBetTypeCode(), type);
@@ -907,6 +909,7 @@ public class UssdController {
         return total;
     }
 
+    @Async
     private String calculateAmountBankerAPI(Session session, String type) {
         String body = String.format("{\"amount\":\"%s\",\"selected_numbers\":\"%s\",\"bet_type_code\":\"%s\",\"bet_type\":\"%s\"}"
                 , session.getAmount(), session.getSelectedNumbers(), 2, type);
@@ -955,6 +958,7 @@ public class UssdController {
         return menuResponse(savedSession, 0, "Enter a valid menu option\n 0) Back");
     }
 
+    @Async
     public DiscountResponse applyCoupon(double amount, String coupon) {
         ResponseEntity<DiscountResponse> response = handler.client()
                 .get()

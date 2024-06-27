@@ -3,7 +3,7 @@ FROM openjdk:24-slim-bullseye
 
 COPY init.sql /docker-entrypoint-initdb.d/
 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+#COPY nginx.conf /nginx.conf:/etc/nginx/
 
 #RUN chmod +r /docker-entrypoint-initdb.d/init.sql
 
