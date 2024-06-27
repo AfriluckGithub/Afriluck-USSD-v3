@@ -213,7 +213,7 @@ public class UssdController {
                     deleteSession(savedSession);
                     continueFlag = 0;
                     break;
-                case "3":
+                case "1":
                     continueFlag = 1;
                     response = getDrawResults(savedSession);
                     json = menuResponse(savedSession, continueFlag, response);
@@ -221,7 +221,7 @@ public class UssdController {
                     message = oj.get("message").toString();
                     System.out.println(message);
                     break;
-                case "4":
+                case "2":
                     continueFlag = 1;
                     response = getLastFiveTransactions(savedSession, savedSession.getMsisdn());
                     message = menuResponse(savedSession, continueFlag, response);
