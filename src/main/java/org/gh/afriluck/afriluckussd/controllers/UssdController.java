@@ -867,7 +867,7 @@ public class UssdController {
     private String getLastFiveTransactions(Session session, String msisdn) {
         ResponseEntity<String> response = handler.client()
                 .get()
-                .uri("/api/V1/recent-tickets")
+                .uri("/api/V1/recent-tickets?msisdn=" + msisdn)
                 //.body(String.format("{\"msisdn\":\"%s\"}", msisdn))
                 //.contentType(MediaType.APPLICATION_JSON)
                 .retrieve()
