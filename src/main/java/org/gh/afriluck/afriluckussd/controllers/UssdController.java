@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
@@ -134,16 +135,31 @@ public class UssdController {
         return input.replaceAll(regex, " ");
     }
 
+    public boolean isBetweenGameTime() {
+        int startHour = 19;
+        int startMinute = 2;
+        int endHour = 20;
+        int endMinute = 15;
+
+        int dayOfWeekNumber = LocalDate.now().getDayOfWeek().getValue();
+
+        // 0 represents Sunday
+        if (dayOfWeekNumber == 7) {
+            startHour = 17;
+            startMinute = 33;
+            endHour = 20;
+            endMinute = 15;
+        }
+        int currentTime = LocalTime.now().getHour() * 60 + LocalTime.now().getMinute();
+        int startTime = startHour * 60 + startMinute;
+        int endTime = endHour * 60 + endMinute;
+        return currentTime >= startTime && currentTime <= endTime;
+    }
+
     @PostMapping(path = "/ussd")
     public String index(@RequestBody Session session) throws ExecutionException, InterruptedException {
 
         String message = null;
-        LocalTime targetTime = LocalTime.of(19, 2);
-        LocalTime currentTime = LocalTime.now();
-        int currentHour = currentTime.getHour();
-        int currentMinute = currentTime.getMinute();
-        String closeTime = String.format("%s:%s", currentHour, currentMinute);
-
         SimpleDateFormat formatter = new SimpleDateFormat(AppConstants.GLOBAL_DATE_FORMAT);
         String timeStamp = formatter.format(new Date());
 
@@ -159,7 +175,7 @@ public class UssdController {
             updateSession(session, true);
         }
 
-        if (closeTime.equals(targetTime.toString())) {
+        if (isBetweenGameTime()) {
             message = menuResponse(session, 0, AppConstants.GAME_CLOSED_MESSAGE);
         }else {
             if (savedSession != null) {
