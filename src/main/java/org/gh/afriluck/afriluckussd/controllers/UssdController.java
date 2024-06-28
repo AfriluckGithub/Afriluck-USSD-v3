@@ -94,11 +94,8 @@ public class UssdController {
     }
 
     public static boolean anyNumberExceedsLimit(String numbersString, String delimiter, int limit) {
-        // Split the string into an array of number strings
         String[] numberStrings = numbersString.trim().split("[\\s\\W]+");
-
         System.out.println(numbersString);
-
         for (String numberString : numberStrings) {
             int number = Integer.parseInt(numberString.trim());
             System.out.printf("Number => %s Limit => %s\n", number, limit);
@@ -106,51 +103,33 @@ public class UssdController {
                 return true;
             }
         }
-
         return false;
     }
 
     public static String[] splitNumbers(String numbersString) {
-        // Trim the input string and split by one or more spaces
         return numbersString.trim().split("[\\s\\W]+");
     }
 
     public static boolean containsSingularZero(String input) {
-        // Define the regex pattern to match spaces or special characters
         String regex = "[\\s\\W]+";
-
-        // Trim the input string and split it using the regex pattern
         String[] parts = input.trim().split(regex);
-
-        // Check if any part is a singular zero
         for (String part : parts) {
             if (part.equals("0")) {
                 return true;
             }
         }
-
         return false;
     }
 
     public static boolean containsAnyLetters(String input) {
-        // Define the regex pattern to match any letter
         String regex = "[a-zA-Z]";
-
-        // Compile the regex into a pattern
         Pattern pattern = Pattern.compile(regex);
-
-        // Match the pattern against the input string
         Matcher matcher = pattern.matcher(input);
-
-        // Return whether the input contains any letters
         return matcher.find();
     }
 
     public static String removeSpecialCharacters(String input) {
-        // Define the regex pattern to match special characters
         String regex = "[^a-zA-Z0-9\\s]";
-
-        // Replace special characters with an empty string
         return input.replaceAll(regex, " ");
     }
 
@@ -164,9 +143,6 @@ public class UssdController {
 
         session.setTimeStamp(timeStamp);
         Session savedSession = sessionRepository.findBySequenceID(session.getSequenceID());
-
-        //System.out.println("--- Initial Request ---");
-        //System.out.println(session.toString());
 
         if (savedSession == null) {
             session.setPosition(0);
@@ -212,7 +188,10 @@ public class UssdController {
                 case "0":
                     deleteSession(savedSession);
                     continueFlag = 0;
-                    break;
+                    savedSession.setData("0");
+                    savedSession.setMsisdn(savedSession.getMsisdn());
+                    sessionRepository.save(savedSession);
+                    return menuResponse(savedSession, continueFlag, AppConstants.WELCOME_MENU_MESSAGE);
                 case "1":
                     continueFlag = 1;
                     response = getDrawResults(savedSession);
