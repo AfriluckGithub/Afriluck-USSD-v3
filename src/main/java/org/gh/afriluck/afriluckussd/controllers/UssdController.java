@@ -836,6 +836,13 @@ public class UssdController {
                     savedSession.setDiscountedAmount(response.getAmount());
                     updateSession(savedSession, false);
                 }
+            }else if(savedSession.getPosition() == 7 && savedSession.getData().equals("0")) {
+                    deleteSession(savedSession);
+                    continueFlag = 0;
+                    savedSession.setData("0");
+                    savedSession.setMsisdn(s.getMsisdn());
+                    sessionRepository.save(savedSession);
+                    return menuResponse(savedSession, continueFlag, AppConstants.WELCOME_MENU_MESSAGE);
             } else {
                 savedSession.setCurrentGame("direct");
                 updateSession(s, true);
