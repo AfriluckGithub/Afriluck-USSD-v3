@@ -10,7 +10,7 @@ public class AppConstants {
     public static final int SECOND = 2;
     public static final int THIRD = 3;
 
-    public static final String WELCOME_MENU_MESSAGE = "Welcome to Afriluck NLA\n1. Mega Jackpot\n2. Direct Game\n3. Perm Game\n4. Banker\n5. Account\n6. TnCs\n99. Contact Us".trim();
+    public static final String WELCOME_MENU_MESSAGE = "Welcome to Afriluck-NLA\n1. Mega Jackpot\n2. Direct Game\n3. Perm Game\n4. Banker\n5. Account\n6. TnCs\n99. Contact Us".trim();
     public static final String ACCOUNT_MENU_MESSAGE = "1) Last Draw Results\n2) Recent Transactions\n 0) Back";
     public static final String BANKER_MENU_MESSAGE = "1) Banker";
     public static final String MEGA_VALIDATION_MESSAGE = "Numbers must be a total of 6 starting from 1 to 57.\n 0) Back";
