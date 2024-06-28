@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -137,6 +138,12 @@ public class UssdController {
     public String index(@RequestBody Session session) throws ExecutionException, InterruptedException {
 
         String message = null;
+        //LocalTime targetTime = LocalTime.of(19, 2);
+        LocalTime targetTime = LocalTime.of(13, 39);
+        LocalTime currentTime = LocalTime.now();
+        int currentHour = currentTime.getHour();
+        int currentMinute = currentTime.getMinute();
+        String closeTime = String.format("%s:%s", currentHour, currentMinute);
 
         SimpleDateFormat formatter = new SimpleDateFormat(AppConstants.GLOBAL_DATE_FORMAT);
         String timeStamp = formatter.format(new Date());
@@ -153,23 +160,28 @@ public class UssdController {
             updateSession(session, true);
         }
 
-        if (savedSession != null) {
-            message = switch (savedSession.getGameType()) {
-                case 1 -> megaGameOptions(savedSession.getGameType(), savedSession.getPosition(), savedSession);
-                case 2 -> directGameOptions(savedSession.getGameType(), savedSession.getPosition(), savedSession);
-                case 3 -> permGameOptions(savedSession.getGameType(), savedSession.getPosition(), savedSession);
-                case 4 -> banker(savedSession, "Banker");
-                case 5 -> account(savedSession);
-                case 6 -> tnCsMessage(savedSession);
-                case 99 -> contactUsMessage(savedSession);
-                case 0 -> menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE);
-                default -> silentDelete(savedSession);
+        if (closeTime.equals(targetTime.toString())) {
+            message = menuResponse(session, 0, AppConstants.GAME_CLOSED_MESSAGE);
+        }else {
+            if (savedSession != null) {
+                message = switch (savedSession.getGameType()) {
+                    case 1 -> megaGameOptions(savedSession.getGameType(), savedSession.getPosition(), savedSession);
+                    case 2 -> directGameOptions(savedSession.getGameType(), savedSession.getPosition(), savedSession);
+                    case 3 -> permGameOptions(savedSession.getGameType(), savedSession.getPosition(), savedSession);
+                    case 4 -> banker(savedSession, "Banker");
+                    case 5 -> account(savedSession);
+                    case 6 -> tnCsMessage(savedSession);
+                    case 99 -> contactUsMessage(savedSession);
+                    case 0 -> menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE);
+                    default -> silentDelete(savedSession);
 
-            };
-        } else {
-            System.out.println("--- Initial Menu ---");
-            message = menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE);
-            System.out.printf("Session => %s", session.getMessage());
+                };
+            } else {
+                System.out.println("--- Initial Menu ---");
+                message = menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE);
+                System.out.printf("Session => %s", session.getMessage());
+
+            }
         }
         return message;
     }
@@ -277,7 +289,7 @@ public class UssdController {
                             \s""";
                     message = String.format(ticketInfo, s.getCurrentGame(), s.getSelectedNumbers(), total);
                     savedSession.setAmount(Double.valueOf(total));
-                    updateSession(s, false);
+                    updateSession(savedSession, false);
                 }
             } else {
                 String choice = s.getData();
@@ -436,7 +448,7 @@ public class UssdController {
                     savedSession.setAmount(Double.parseDouble(gameDraw.getAmount().toString()));
                     savedSession.setGameId(gameDraw.getGameId());
                     savedSession.setBetTypeCode("1");
-                    updateSession(s, true);
+                    updateSession(savedSession, true);
                 }
             } else {
 
