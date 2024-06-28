@@ -138,8 +138,7 @@ public class UssdController {
     public String index(@RequestBody Session session) throws ExecutionException, InterruptedException {
 
         String message = null;
-        //LocalTime targetTime = LocalTime.of(19, 2);
-        LocalTime targetTime = LocalTime.of(13, 39);
+        LocalTime targetTime = LocalTime.of(19, 2);
         LocalTime currentTime = LocalTime.now();
         int currentHour = currentTime.getHour();
         int currentMinute = currentTime.getMinute();
