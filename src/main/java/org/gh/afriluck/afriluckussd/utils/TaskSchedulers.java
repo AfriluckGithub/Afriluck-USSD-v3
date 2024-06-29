@@ -19,11 +19,11 @@ public class TaskSchedulers implements Runnable {
     }
 
     @Override
-    @Scheduled(cron = "0 */5 * * * *", zone = "GMT")
-    //@Scheduled(cron = "0 14 20 * * *", zone = "GMT")
+    //@Scheduled(cron = "0 */5 * * * *", zone = "GMT")
+    @Scheduled(cron = "0 15 20 * * *", zone = "GMT")
     public void run() {
         try {
-            System.out.println("Cron running...");
+            System.out.println("Calling game options...");
             String game = handler.client().get().uri("/api/V1/game-info").retrieve().body(String.class);
             // System.out.println(game);
             ObjectMapper mapper = new ObjectMapper();
