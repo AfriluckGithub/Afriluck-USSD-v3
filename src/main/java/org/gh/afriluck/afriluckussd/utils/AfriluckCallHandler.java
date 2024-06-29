@@ -13,7 +13,7 @@ public class AfriluckCallHandler {
         return RestClient.builder()
                 .requestFactory(new HttpComponentsClientHttpRequestFactory())
                 .messageConverters(converters -> converters.add(new StringHttpMessageConverter()))
-                .baseUrl("http://18.193.168.136")
+                .baseUrl("http://5.75.226.153")
                 .defaultHeader("Content-Type", "application/text")
                 .build();
     }
