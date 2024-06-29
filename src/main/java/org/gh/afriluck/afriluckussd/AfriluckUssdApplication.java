@@ -37,7 +37,6 @@ public class AfriluckUssdApplication {
             try {
                 System.out.println("Calling initial game options...");
                 String game = handler.client().get().uri("/api/V1/game-info").retrieve().body(String.class);
-                // System.out.println(game);
                 ObjectMapper mapper = new ObjectMapper();
                 gameRepository.deleteAll();
 
