@@ -284,7 +284,6 @@ public class UssdController {
             } else if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == THIRD) {
                 Number amount = parseNumber(s.getData());
                 boolean isDecimal = isDecimal(amount.doubleValue());
-                System.out.printf("Is Decimal => %s", isDecimal);
                 if (!isDecimal) {
                     if (amount.intValue() > 20 || amount.intValue() < 1) {
                         deleteSession(savedSession);
@@ -587,26 +586,33 @@ public class UssdController {
                 }
             } else if (gameType == SECOND && position == FOURTH) {
                 Number amount = parseNumber(s.getData());
-                if (amount.intValue() > 20 || amount.intValue() < 1) {
+                boolean isDecimal = isDecimal(amount.doubleValue());
+                if (!isDecimal) {
+                    if (amount.intValue() > 20 || amount.intValue() < 1) {
+                        deleteSession(savedSession);
+                        message = "Amount should be between 1GHS and 20GHS \n 0 Back";
+                    } else {
+                        String ticketInfo = """
+                                Tck info:
+                                --
+                                Lucky 70 M %s
+                                Your No: %s
+                                \s
+                                1) to pay %s GHS on momo.
+                                \s
+                                2) to apply coupon code.
+                                \s
+                                0) to cancel.
+                                \s""";
+                        s.setAmount(Double.parseDouble(s.getData()));
+                        //s.setCurrentGame(directGameName);
+                        message = String.format(ticketInfo, s.getCurrentGame(), s.getSelectedNumbers(), s.getAmount());
+                        updateSession(s, false);
+                    }
+                }else {
                     deleteSession(savedSession);
-                    message = "Amount should be between 1GHS and 20GHS \n 0 Back";
-                } else {
-                    String ticketInfo = """
-                            Tck info:
-                            --
-                            Lucky 70 M %s
-                            Your No: %s
-                            \s
-                            1) to pay %s GHS on momo.
-                            \s
-                            2) to apply coupon code.
-                            \s
-                            0) to cancel.
-                            \s""";
-                    s.setAmount(Double.parseDouble(s.getData()));
-                    //s.setCurrentGame(directGameName);
-                    message = String.format(ticketInfo, s.getCurrentGame(), s.getSelectedNumbers(), s.getAmount());
-                    updateSession(s, false);
+                    message = "Invalid amount. Enter a round figure.\n 0) Back";
+                    continueFlag = 0;
                 }
             } else if (savedSession.getGameType() == SECOND && savedSession.getPosition() == FIFTH) {
                 String choice = s.getData();
@@ -775,27 +781,34 @@ public class UssdController {
                 }
             } else if (savedSession.getGameType() == THIRD && savedSession.getPosition() == FOURTH) {
                 Number amount = parseNumber(s.getData());
-                if (amount.intValue() > 20 || amount.intValue() < 1) {
+                boolean isDecimal = isDecimal(amount.doubleValue());
+                if (!isDecimal) {
+                    if (amount.intValue() > 20 || amount.intValue() < 1) {
+                        deleteSession(savedSession);
+                        message = "Amount should be between 1GHS and 20GHS \n 0 Back";
+                    } else {
+                        savedSession.setAmount(Double.parseDouble(s.getData()));
+                        String total = calculateAmountPermAPI(savedSession, "perm");
+                        String ticketInfo = """
+                                Tck info:
+                                --
+                                Lucky 70 M %s
+                                Your No: %s
+                                \s
+                                1) to pay %s GHS on momo.
+                                \s
+                                2) to apply coupon code.
+                                \s
+                                0) to cancel.
+                                \s""";
+                        message = String.format(ticketInfo, s.getCurrentGame(), s.getSelectedNumbers(), total);
+                        savedSession.setAmount(Double.valueOf(total));
+                        updateSession(s, false);
+                    }
+                }else{
                     deleteSession(savedSession);
-                    message = "Amount should be between 1GHS and 20GHS \n 0 Back";
-                } else {
-                    savedSession.setAmount(Double.parseDouble(s.getData()));
-                    String total = calculateAmountPermAPI(savedSession, "perm");
-                    String ticketInfo = """
-                            Tck info:
-                            --
-                            Lucky 70 M %s
-                            Your No: %s
-                            \s
-                            1) to pay %s GHS on momo.
-                            \s
-                            2) to apply coupon code.
-                            \s
-                            0) to cancel.
-                            \s""";
-                    message = String.format(ticketInfo, s.getCurrentGame(), s.getSelectedNumbers(), total);
-                    savedSession.setAmount(Double.valueOf(total));
-                    updateSession(s, false);
+                    message = "Invalid amount. Enter a round figure.\n 0) Back";
+                    continueFlag = 0;
                 }
             } else if (gameType == THIRD && position == FIFTH) {
                 String choice = s.getData();
