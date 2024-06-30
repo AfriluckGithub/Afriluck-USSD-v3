@@ -177,7 +177,7 @@ public class UssdController {
         }
 
         if (isBetweenGameTime()) {
-            message = menuResponse(session, 0, AppConstants.GAME_CLOSED_MESSAGE);
+            message = menuResponse(session, 1, AppConstants.GAME_CLOSED_MESSAGE);
         }else {
             if (savedSession != null) {
                 message = switch (savedSession.getGameType()) {
