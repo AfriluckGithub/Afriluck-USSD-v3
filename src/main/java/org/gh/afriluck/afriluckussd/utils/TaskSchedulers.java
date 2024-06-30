@@ -19,7 +19,6 @@ public class TaskSchedulers implements Runnable {
     }
 
     @Override
-    //@Scheduled(cron = "0 */5 * * * *", zone = "GMT")
     @Scheduled(cron = "0 15 20 * * *", zone = "GMT")
     public void run() {
         try {
