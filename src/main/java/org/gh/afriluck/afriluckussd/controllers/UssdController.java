@@ -283,29 +283,37 @@ public class UssdController {
                 }
             } else if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == THIRD) {
                 Number amount = parseNumber(s.getData());
-                if (amount.intValue() > 20 || amount.intValue() < 1) {
+                boolean isDecimal = isDecimal(amount.doubleValue());
+                System.out.printf("Is Decimal => %s", isDecimal);
+                if (!isDecimal) {
+                    if (amount.intValue() > 20 || amount.intValue() < 1) {
+                        deleteSession(savedSession);
+                        message = "Amount should be between 1GHS and 20GHS \n 0 Back";
+                    } else {
+                        savedSession.setAmount(Double.valueOf(s.getData()));
+                        savedSession.setGameType(4);
+                        // updateSession(savedSession, false);
+                        String total = calculateAmountBankerAPI(savedSession, "banker");
+                        String ticketInfo = """
+                                Tck info:
+                                --
+                                Lucky 70 M %s
+                                Your No: %s
+                                \s
+                                1) to pay %s GHS on momo.
+                                \s
+                                2) to apply coupon code.
+                                \s
+                                0) to cancel.
+                                \s""";
+                        message = String.format(ticketInfo, s.getCurrentGame(), s.getSelectedNumbers(), total);
+                        savedSession.setAmount(Double.valueOf(total));
+                        updateSession(savedSession, false);
+                    }
+                }else{
                     deleteSession(savedSession);
-                    message = "Amount should be between 1GHS and 20GHS \n 0 Back";
-                } else {
-                    savedSession.setAmount(Double.valueOf(s.getData()));
-                    savedSession.setGameType(4);
-                    // updateSession(savedSession, false);
-                    String total = calculateAmountBankerAPI(savedSession, "banker");
-                    String ticketInfo = """
-                            Tck info:
-                            --
-                            Lucky 70 M %s
-                            Your No: %s
-                            \s
-                            1) to pay %s GHS on momo.
-                            \s
-                            2) to apply coupon code.
-                            \s
-                            0) to cancel.
-                            \s""";
-                    message = String.format(ticketInfo, s.getCurrentGame(), s.getSelectedNumbers(), total);
-                    savedSession.setAmount(Double.valueOf(total));
-                    updateSession(savedSession, false);
+                    message = "Invalid amount. Enter a round figure.\n 0) Back";
+                    continueFlag = 0;
                 }
             } else {
                 String choice = s.getData();
@@ -1022,5 +1030,9 @@ public class UssdController {
                 throw new NumberFormatException("Input string is not a valid number: " + str);
             }
         }
+    }
+
+    public static boolean isDecimal(double number) {
+        return number % 1 != 0;
     }
 }
