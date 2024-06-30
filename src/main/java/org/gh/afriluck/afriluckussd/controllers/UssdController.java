@@ -258,7 +258,8 @@ public class UssdController {
                             .replace("{", "")
                             .replace("}", "")
                             .replace("\"", "")
-                            .replace("]", "");
+                            .replace("]", "")
+                            .replace("[", "");
                     break;
                 default:
                     deleteSession(savedSession);
