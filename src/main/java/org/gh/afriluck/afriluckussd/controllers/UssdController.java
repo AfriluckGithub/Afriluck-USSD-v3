@@ -746,7 +746,14 @@ public class UssdController {
                 });
                 message = builder.toString();
             } else if (savedSession.getGameType() == THIRD && savedSession.getPosition() == SECOND) {
-                String currentGame = permGames.get(Integer.parseInt(s.getData()) - 1).toString();
+                String currentGame = null;
+                try {
+                    currentGame = permGames.get(parseNumber(s.getData()).intValue() - 1).toString();
+                } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
+                    System.out.println(e);
+                    deleteSession(savedSession);
+                    return menuResponse(savedSession, 0, "Invalid input \n 0) Back");
+                }
                 //System.out.printf("Number => %s", s.getData());
                 codeType = switch (s.getData()) {
                     case "1" -> 2;
