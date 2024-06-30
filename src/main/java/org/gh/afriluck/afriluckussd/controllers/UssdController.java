@@ -66,11 +66,12 @@ public class UssdController {
 
     private static List<Integer> extractNumbers(String input) {
         List<Integer> numbers = new ArrayList<>();
-        Pattern pattern = Pattern.compile("\\d+");
+        //Pattern pattern = Pattern.compile("\\d+");
+        Pattern pattern = Pattern.compile("\\d+(\\.\\d+)?");
         Matcher matcher = pattern.matcher(input);
 
         while (matcher.find()) {
-            numbers.add(Integer.parseInt(matcher.group()));
+            numbers.add(parseNumber(matcher.group()).intValue());
         }
 
         return numbers;
@@ -97,43 +98,63 @@ public class UssdController {
     }
 
     public static boolean anyNumberExceedsLimit(String numbersString, String delimiter, int limit) {
-        String[] numberStrings = numbersString.trim().split("[\\s\\W]+");
-        System.out.println(numbersString);
-        for (String numberString : numberStrings) {
-            int number = Integer.parseInt(numberString.trim());
-            System.out.printf("Number => %s Limit => %s\n", number, limit);
-            if (number > limit) {
-                return true;
+        try {
+            String[] numberStrings = numbersString.trim().split("[\\s\\W]+");
+            System.out.println(numbersString);
+            for (String numberString : numberStrings) {
+                Number number = parseNumber(numberString.trim());
+                System.out.printf("Number => %s Limit => %s\n", number, limit);
+                if (number.intValue() > limit) {
+                    return true;
+                }
             }
+        } catch (NumberFormatException e) {
+            throw new RuntimeException(e);
         }
         return false;
     }
 
     public static String[] splitNumbers(String numbersString) {
-        return numbersString.trim().split("[\\s\\W]+");
+        try {
+            return numbersString.trim().split("[\\s\\W]+");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static boolean containsSingularZero(String input) {
-        String regex = "[\\s\\W]+";
-        String[] parts = input.trim().split(regex);
-        for (String part : parts) {
-            if (part.equals("0")) {
-                return true;
+        try {
+            String regex = "[\\s\\W]+";
+            String[] parts = input.trim().split(regex);
+            for (String part : parts) {
+                if (part.equals("0")) {
+                    return true;
+                }
             }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
         return false;
     }
 
     public static boolean containsAnyLetters(String input) {
-        String regex = "[a-zA-Z]";
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(input);
-        return matcher.find();
+        try {
+            String regex = "[a-zA-Z]";
+            Pattern pattern = Pattern.compile(regex);
+            Matcher matcher = pattern.matcher(input);
+            return matcher.find();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static String removeSpecialCharacters(String input) {
-        String regex = "[^a-zA-Z0-9\\s]";
-        return input.replaceAll(regex, " ");
+        try {
+            String regex = "[^a-zA-Z0-9\\s]";
+            return input.replaceAll(regex, " ");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public boolean isBetweenGameTime() {
