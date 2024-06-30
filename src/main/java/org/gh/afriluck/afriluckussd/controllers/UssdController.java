@@ -572,19 +572,25 @@ public class UssdController {
                 });
                 message = builder.toString();
             } else if (savedSession.getGameType() == SECOND && savedSession.getPosition() == SECOND) {
-                String currentGame = directGames.get(Integer.parseInt(s.getData()) - 1).toString();
-                int currentMax = Integer.parseInt(s.getData());
-                savedSession.setMax(currentMax);
-                message = """
-                        %s
-                        Choose a number between 1 and 57
-                        99. More info
-                        """;
-                message = String.format(message, currentGame);
-                //s.setGameType(Integer.parseInt(s.getData()));
-                s.setGameTypeCode(Integer.parseInt(s.getData()));
-                s.setCurrentGame(currentGame);
-                updateSession(s, false);
+                try {
+                    String currentGame = directGames.get(parseNumber(s.getData()).intValue() - 1).toString();
+                    int currentMax = parseNumber(s.getData()).intValue();
+                    savedSession.setMax(currentMax);
+                    message = """
+                            %s
+                            Choose a number between 1 and 57
+                            99. More info
+                            """;
+                    message = String.format(message, currentGame);
+                    //s.setGameType(Integer.parseInt(s.getData()));
+                    s.setGameTypeCode(Integer.parseInt(s.getData()));
+                    s.setCurrentGame(currentGame);
+                    updateSession(s, false);
+                } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
+                    System.out.println(e);
+                    deleteSession(savedSession);
+                    return menuResponse(savedSession, 0, "Invalid input \n 0) Back");
+                }
             } else if (gameType == savedSession.getGameType() && savedSession.getPosition() == THIRD) {
                 String input = removeSpecialCharacters(s.getData());
                 String[] selectedNumbers = splitNumbers(input);
@@ -754,7 +760,6 @@ public class UssdController {
                     deleteSession(savedSession);
                     return menuResponse(savedSession, 0, "Invalid input \n 0) Back");
                 }
-                //System.out.printf("Number => %s", s.getData());
                 codeType = switch (s.getData()) {
                     case "1" -> 2;
                     case "2" -> 3;
