@@ -578,8 +578,8 @@ public class UssdController {
                     updateSession(savedSession, false);
                 }
             } else if (gameType == SECOND && position == FOURTH) {
-                int amount = Integer.parseInt(s.getData());
-                if (amount > 20 || amount < 1) {
+                Number amount = parseNumber(s.getData());
+                if (amount.intValue() > 20 || amount.intValue() < 1) {
                     deleteSession(savedSession);
                     message = "Amount should be between 1GHS and 20GHS \n 0 Back";
                 } else {
@@ -766,8 +766,8 @@ public class UssdController {
                     updateSession(savedSession, false);
                 }
             } else if (savedSession.getGameType() == THIRD && savedSession.getPosition() == FOURTH) {
-                int amount = Integer.parseInt(s.getData());
-                if (amount > 20 || amount < 1) {
+                Number amount = parseNumber(s.getData());
+                if (amount.intValue() > 20 || amount.intValue() < 1) {
                     deleteSession(savedSession);
                     message = "Amount should be between 1GHS and 20GHS \n 0 Back";
                 } else {
@@ -1010,5 +1010,17 @@ public class UssdController {
         }
         message = String.format(ticketInfo, response.getAmount());
         return message;
+    }
+
+    public static Number parseNumber(String str) throws NumberFormatException {
+        try {
+            return Integer.parseInt(str);
+        } catch (NumberFormatException e) {
+            try {
+                return Double.parseDouble(str);
+            } catch (NumberFormatException ex) {
+                throw new NumberFormatException("Input string is not a valid number: " + str);
+            }
+        }
     }
 }
