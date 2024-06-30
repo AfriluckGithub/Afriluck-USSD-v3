@@ -282,8 +282,8 @@ public class UssdController {
                     updateSession(savedSession, false);
                 }
             } else if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == THIRD) {
-                int amount = Integer.parseInt(s.getData());
-                if (amount > 20 || amount < 1) {
+                Number amount = parseNumber(s.getData());
+                if (amount.intValue() > 20 || amount.intValue() < 1) {
                     deleteSession(savedSession);
                     message = "Amount should be between 1GHS and 20GHS \n 0 Back";
                 } else {
