@@ -12,6 +12,7 @@ import org.gh.afriluck.afriluckussd.repositories.CustomerSessionRepository;
 import org.gh.afriluck.afriluckussd.entities.Session;
 import org.gh.afriluck.afriluckussd.repositories.GameRepository;
 import org.gh.afriluck.afriluckussd.utils.AfriluckCallHandler;
+import org.gh.afriluck.afriluckussd.utils.ValidationUtils;
 import org.json.JSONObject;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -64,120 +65,6 @@ public class UssdController {
         this.gameRepository = gameRepository;
     }
 
-    private static List<Integer> extractNumbers(String input) {
-        List<Integer> numbers = new ArrayList<>();
-        //Pattern pattern = Pattern.compile("\\d+");
-        Pattern pattern = Pattern.compile("\\d+(\\.\\d+)?");
-        Matcher matcher = pattern.matcher(input);
-
-        while (matcher.find()) {
-            numbers.add(parseNumber(matcher.group()).intValue());
-        }
-
-        return numbers;
-    }
-
-    private static Set<Integer> findRepeatedNumbers(List<Integer> numbers) {
-        Set<Integer> seenNumbers = new HashSet<>();
-        Set<Integer> repeatedNumbers = new HashSet<>();
-
-        for (Integer number : numbers) {
-            if (!seenNumbers.add(number)) {
-                repeatedNumbers.add(number);
-            }
-        }
-
-        return repeatedNumbers;
-    }
-
-    public static boolean isBetween(int number, int min, int max) {
-        if (min > max) {
-            throw new IllegalArgumentException("Minimum value cannot be greater than maximum value");
-        }
-        return number >= min && number <= max;
-    }
-
-    public static boolean anyNumberExceedsLimit(String numbersString, String delimiter, int limit) {
-        try {
-            String[] numberStrings = numbersString.trim().split("[\\s\\W]+");
-            System.out.println(numbersString);
-            for (String numberString : numberStrings) {
-                Number number = parseNumber(numberString.trim());
-                System.out.printf("Number => %s Limit => %s\n", number, limit);
-                if (number.intValue() > limit) {
-                    return true;
-                }
-            }
-        } catch (NumberFormatException e) {
-            throw new RuntimeException(e);
-        }
-        return false;
-    }
-
-    public static String[] splitNumbers(String numbersString) {
-        try {
-            return numbersString.trim().split("[\\s\\W]+");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static boolean containsSingularZero(String input) {
-        try {
-            String regex = "[\\s\\W]+";
-            String[] parts = input.trim().split(regex);
-            for (String part : parts) {
-                if (part.equals("0")) {
-                    return true;
-                }
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        return false;
-    }
-
-    public static boolean containsAnyLetters(String input) {
-        try {
-            String regex = "[a-zA-Z]";
-            Pattern pattern = Pattern.compile(regex);
-            Matcher matcher = pattern.matcher(input);
-            return matcher.find();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static String removeSpecialCharacters(String input) {
-        try {
-            String regex = "[^a-zA-Z0-9\\s]";
-            return input.replaceAll(regex, " ");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public boolean isBetweenGameTime() {
-        int startHour = 19;
-        int startMinute = 2;
-        int endHour = 20;
-        int endMinute = 15;
-
-        int dayOfWeekNumber = LocalDate.now().getDayOfWeek().getValue();
-
-        // 0 represents Sunday
-        if (dayOfWeekNumber == 7) {
-            startHour = 17;
-            startMinute = 33;
-            endHour = 20;
-            endMinute = 15;
-        }
-        int currentTime = LocalTime.now().getHour() * 60 + LocalTime.now().getMinute();
-        int startTime = startHour * 60 + startMinute;
-        int endTime = endHour * 60 + endMinute;
-        return currentTime >= startTime && currentTime <= endTime;
-    }
-
     @PostMapping(path = "/ussd")
     public String index(@RequestBody Session session) throws ExecutionException, InterruptedException {
 
@@ -197,7 +84,7 @@ public class UssdController {
             updateSession(session, true);
         }
 
-        if (isBetweenGameTime()) {
+        if (ValidationUtils.isBetweenGameTime()) {
             message = menuResponse(session, 1, AppConstants.GAME_CLOSED_MESSAGE);
         }else {
             if (savedSession != null) {
@@ -217,7 +104,6 @@ public class UssdController {
                 System.out.println("--- Initial Menu ---");
                 message = menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE);
                 System.out.printf("Session => %s", session.getMessage());
-
             }
         }
         return message;
@@ -278,7 +164,7 @@ public class UssdController {
         final Game gameDraw = currentGameDraw.get();
         savedSession.setGameId(gameDraw.getGameId());
         savedSession.setGameTypeId(gameDraw.getGameDraw());
-        boolean containsLetters = s.getPosition() != 5 ? containsAnyLetters(s.getData()) : false;
+        boolean containsLetters = s.getPosition() != 5 ? ValidationUtils.containsAnyLetters(s.getData()) : false;
         if (!containsLetters) {
             if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == FIRST) {
                 message = """
@@ -287,11 +173,11 @@ public class UssdController {
                         """;
                 message = String.format(message, "Banker");
             } else if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == SECOND) {
-                String input = removeSpecialCharacters(s.getData());
-                String[] selectedNumbers = splitNumbers(input);
+                String input = ValidationUtils.removeSpecialCharacters(s.getData());
+                String[] selectedNumbers = ValidationUtils.splitNumbers(input);
                 int len = selectedNumbers.length;
-                boolean exceeds = anyNumberExceedsLimit(input, ",", 57);
-                boolean containsZero = containsSingularZero(input);
+                boolean exceeds = ValidationUtils.anyNumberExceedsLimit(input, ",", 57);
+                boolean containsZero = ValidationUtils.containsSingularZero(input);
                 if (len > 1 || exceeds || containsZero) {
                     message = exceeds ? AppConstants.EXCEEDS_NUMBER_LIMIT_MESSAGE : AppConstants.INVALID_TRAN_MESSAGE;
                     deleteSession(savedSession);
@@ -304,8 +190,8 @@ public class UssdController {
                     updateSession(savedSession, false);
                 }
             } else if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == THIRD) {
-                Number amount = parseNumber(s.getData());
-                boolean isDecimal = isDecimal(amount.doubleValue());
+                Number amount = ValidationUtils.parseNumber(s.getData());
+                boolean isDecimal = ValidationUtils.isDecimal(amount.doubleValue());
                 if (!isDecimal) {
                     if (amount.intValue() > 20 || amount.intValue() < 1) {
                         deleteSession(savedSession);
@@ -420,21 +306,21 @@ public class UssdController {
         savedSession.setCurrentGame(AppConstants.MEGA);
         updateSession(savedSession, false);
         System.out.println(savedSession.toString());
-        boolean containsLetters = savedSession.getPosition() != 7 ? containsAnyLetters(s.getData()) : false;
+        boolean containsLetters = savedSession.getPosition() != 7 ? ValidationUtils.containsAnyLetters(s.getData()) : false;
         if (!containsLetters) {
             if (savedSession.getGameType() == FIRST && savedSession.getPosition() == FIRST) {
                 message = AppConstants.MEGA_OPTIONS_CHOICE_MESSAGE;
             } else if (savedSession.getGameType() == FIRST && savedSession.getPosition() == SECOND) {
 
-                String input = removeSpecialCharacters(s.getData());
-                List<Integer> numbers = extractNumbers(input);
-                Set<Integer> repeatedNumbers = findRepeatedNumbers(numbers);
-                boolean exceeds = anyNumberExceedsLimit(input, ",", 57);
+                String input = ValidationUtils.removeSpecialCharacters(s.getData());
+                List<Integer> numbers = ValidationUtils.extractNumbers(input);
+                Set<Integer> repeatedNumbers = ValidationUtils.findRepeatedNumbers(numbers);
+                boolean exceeds = ValidationUtils.anyNumberExceedsLimit(input, ",", 57);
 
                 System.out.println(repeatedNumbers);
-                String[] selectedNumbers = splitNumbers(input);
+                String[] selectedNumbers = ValidationUtils.splitNumbers(input);
                 int len = selectedNumbers.length;
-                boolean containsZero = containsSingularZero(input);
+                boolean containsZero = ValidationUtils.containsSingularZero(input);
 
                 if (len == AppConstants.MAX_MEGA && !exceeds && !containsZero) {
                     StringBuilder messageBuilder = new StringBuilder(AppConstants.AMOUNT_TO_STAKE_MESSAGE);
@@ -562,7 +448,7 @@ public class UssdController {
         AtomicInteger index = new AtomicInteger(1);
         List<String> directGames = AppConstants.DIRECT_GAMES;
         updateSession(savedSession, false);
-        boolean containsLetters = savedSession.getPosition() != 6 ? containsAnyLetters(s.getData()) : false;
+        boolean containsLetters = savedSession.getPosition() != 6 ? ValidationUtils.containsAnyLetters(s.getData()) : false;
         if (!containsLetters) {
             if (savedSession.getGameType() == SECOND && savedSession.getPosition() == FIRST) {
                 StringBuilder builder = new StringBuilder();
@@ -573,8 +459,8 @@ public class UssdController {
                 message = builder.toString();
             } else if (savedSession.getGameType() == SECOND && savedSession.getPosition() == SECOND) {
                 try {
-                    String currentGame = directGames.get(parseNumber(s.getData()).intValue() - 1).toString();
-                    int currentMax = parseNumber(s.getData()).intValue();
+                    String currentGame = directGames.get(ValidationUtils.parseNumber(s.getData()).intValue() - 1).toString();
+                    int currentMax = ValidationUtils.parseNumber(s.getData()).intValue();
                     savedSession.setMax(currentMax);
                     message = """
                             %s
@@ -592,13 +478,13 @@ public class UssdController {
                     return menuResponse(savedSession, 0, "Invalid input \n 0) Back");
                 }
             } else if (gameType == savedSession.getGameType() && savedSession.getPosition() == THIRD) {
-                String input = removeSpecialCharacters(s.getData());
-                String[] selectedNumbers = splitNumbers(input);
+                String input = ValidationUtils.removeSpecialCharacters(s.getData());
+                String[] selectedNumbers = ValidationUtils.splitNumbers(input);
                 int len = selectedNumbers.length;
-                boolean exceeds = anyNumberExceedsLimit(input, ",", 57);
-                boolean containsZero = containsSingularZero(input);
-                List<Integer> numbers = extractNumbers(input);
-                Set<Integer> repeatedNumbers = findRepeatedNumbers(numbers);
+                boolean exceeds = ValidationUtils.anyNumberExceedsLimit(input, ",", 57);
+                boolean containsZero = ValidationUtils.containsSingularZero(input);
+                List<Integer> numbers = ValidationUtils.extractNumbers(input);
+                Set<Integer> repeatedNumbers = ValidationUtils.findRepeatedNumbers(numbers);
 
 
                 if (savedSession.getMax() < len || savedSession.getMax() > len || exceeds || containsZero || !repeatedNumbers.isEmpty()) {
@@ -613,8 +499,8 @@ public class UssdController {
                     updateSession(savedSession, false);
                 }
             } else if (gameType == SECOND && position == FOURTH) {
-                Number amount = parseNumber(s.getData());
-                boolean isDecimal = isDecimal(amount.doubleValue());
+                Number amount = ValidationUtils.parseNumber(s.getData());
+                boolean isDecimal = ValidationUtils.isDecimal(amount.doubleValue());
                 if (!isDecimal) {
                     if (amount.intValue() > 20 || amount.intValue() < 1) {
                         deleteSession(savedSession);
@@ -742,7 +628,7 @@ public class UssdController {
         savedSession.setGameTypeId(gameDraw.getGameDraw());
         //savedSession.setBetTypeCode(AppConstants.PERM);
         updateSession(savedSession, false);
-        boolean containsLetters = savedSession.getPosition() != 6 ? containsAnyLetters(s.getData()) : false;
+        boolean containsLetters = savedSession.getPosition() != 6 ? ValidationUtils.containsAnyLetters(s.getData()) : false;
         if (!containsLetters) {
             if (savedSession.getGameType() == THIRD && savedSession.getPosition() == FIRST) {
                 StringBuilder builder = new StringBuilder();
@@ -754,7 +640,7 @@ public class UssdController {
             } else if (savedSession.getGameType() == THIRD && savedSession.getPosition() == SECOND) {
                 String currentGame = null;
                 try {
-                    currentGame = permGames.get(parseNumber(s.getData()).intValue() - 1).toString();
+                    currentGame = permGames.get(ValidationUtils.parseNumber(s.getData()).intValue() - 1).toString();
                 } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
                     System.out.println(e);
                     deleteSession(savedSession);
@@ -790,18 +676,18 @@ public class UssdController {
                 };
                 updateSession(savedSession, false);
             } else if (savedSession.getGameType() == THIRD && savedSession.getPosition() == THIRD) {
-                String input = removeSpecialCharacters(s.getData());
+                String input = ValidationUtils.removeSpecialCharacters(s.getData());
                 savedSession.setSelectedNumbers(input);
-                String[] selectedNumbers = splitNumbers(input);
+                String[] selectedNumbers = ValidationUtils.splitNumbers(input);
                 int len = selectedNumbers.length;
-                boolean exceeds = anyNumberExceedsLimit(input, ",", 57);
-                boolean containsZero = containsSingularZero(input);
-                List<Integer> numbers = extractNumbers(input);
-                Set<Integer> repeatedNumbers = findRepeatedNumbers(numbers);
+                boolean exceeds = ValidationUtils.anyNumberExceedsLimit(input, ",", 57);
+                boolean containsZero = ValidationUtils.containsSingularZero(input);
+                List<Integer> numbers = ValidationUtils.extractNumbers(input);
+                Set<Integer> repeatedNumbers = ValidationUtils.findRepeatedNumbers(numbers);
 
                 // System.out.printf("Len => %s Min => %s Max => %s Exceeds => %s\n", len, savedSession.getMin(), savedSession.getMax(), exceeds);
 
-                if (!isBetween(len, savedSession.getMin(), savedSession.getMax()) || exceeds || containsZero || !repeatedNumbers.isEmpty()) {
+                if (!ValidationUtils.isBetween(len, savedSession.getMin(), savedSession.getMax()) || exceeds || containsZero || !repeatedNumbers.isEmpty()) {
                     message = exceeds ? AppConstants.EXCEEDS_NUMBER_LIMIT_MESSAGE : AppConstants.INVALID_TRAN_MESSAGE;
                     if (!repeatedNumbers.isEmpty()) {
                         message = "Duplicate numbers entered\n 0) Back";
@@ -814,8 +700,8 @@ public class UssdController {
                     updateSession(savedSession, false);
                 }
             } else if (savedSession.getGameType() == THIRD && savedSession.getPosition() == FOURTH) {
-                Number amount = parseNumber(s.getData());
-                boolean isDecimal = isDecimal(amount.doubleValue());
+                Number amount = ValidationUtils.parseNumber(s.getData());
+                boolean isDecimal = ValidationUtils.isDecimal(amount.doubleValue());
                 if (!isDecimal) {
                     if (amount.intValue() > 20 || amount.intValue() < 1) {
                         deleteSession(savedSession);
@@ -955,23 +841,6 @@ public class UssdController {
         return response.getBody();
     }
 
-    private String calculateAmountAPI(Session session, String type) {
-        String body = String.format("{\"amount\":\"%s\",\"selected_numbers\":\"%s\",\"bet_type_code\":\"%s\",\"bet_type\":\"%s\"}"
-                , session.getAmount(), session.getSelectedNumbers(), session.getGameType(), type);
-        System.out.println(body);
-        ResponseEntity<String> response = handler.client()
-                .post()
-                .uri("/api/V1/request-bet-amount")
-                .body(body)
-                .contentType(MediaType.APPLICATION_JSON)
-                .retrieve()
-                .toEntity(String.class);
-        String json = response.getBody();
-        JSONObject object = new JSONObject(json);
-        String total = object.get("total").toString();
-        return total;
-    }
-
     @Async
     private String calculateAmountPermAPI(Session session, String type) {
         String body = String.format("{\"amount\":\"%s\",\"selected_numbers\":\"%s\",\"bet_type_code\":\"%s\",\"bet_type\":\"%s\"}"
@@ -1065,21 +934,5 @@ public class UssdController {
         }
         message = String.format(ticketInfo, response.getAmount());
         return message;
-    }
-
-    public static Number parseNumber(String str) throws NumberFormatException {
-        try {
-            return Integer.parseInt(str);
-        } catch (NumberFormatException e) {
-            try {
-                return Double.parseDouble(str);
-            } catch (NumberFormatException ex) {
-                throw new NumberFormatException("Input string is not a valid number: " + str);
-            }
-        }
-    }
-
-    public static boolean isDecimal(double number) {
-        return number % 1 != 0;
     }
 }
