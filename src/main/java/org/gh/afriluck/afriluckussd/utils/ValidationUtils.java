@@ -124,7 +124,7 @@ public class ValidationUtils {
         int startHour = 19;
         int startMinute = 2;
         int endHour = 20;
-        int endMinute = 15;
+        int endMinute = 20;
 
         int dayOfWeekNumber = LocalDate.now().getDayOfWeek().getValue();
 
@@ -133,7 +133,7 @@ public class ValidationUtils {
             startHour = 17;
             startMinute = 33;
             endHour = 20;
-            endMinute = 15;
+            endMinute = 20;
         }
         int currentTime = LocalTime.now().getHour() * 60 + LocalTime.now().getMinute();
         int startTime = startHour * 60 + startMinute;
