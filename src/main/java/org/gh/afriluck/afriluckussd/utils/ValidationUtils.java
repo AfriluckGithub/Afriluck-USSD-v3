@@ -124,7 +124,7 @@ public class ValidationUtils {
         int startHour = 19;
         int startMinute = 2;
         int endHour = 20;
-        int endMinute = 20;
+        int endMinute = 19;
 
         int dayOfWeekNumber = LocalDate.now().getDayOfWeek().getValue();
 
