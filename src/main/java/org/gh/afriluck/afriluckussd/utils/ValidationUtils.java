@@ -122,7 +122,7 @@ public class ValidationUtils {
 
     public static boolean isBetweenGameTime() {
         int startHour = 19;
-        int startMinute = 2;
+        int startMinute = 3;
         int endHour = 20;
         int endMinute = 19;
 
