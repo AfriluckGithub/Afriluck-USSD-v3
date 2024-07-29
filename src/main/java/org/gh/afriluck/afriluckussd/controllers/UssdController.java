@@ -53,6 +53,15 @@ public class UssdController {
     Thread.Builder paymentThread = Thread.ofVirtual().name("Payment Thread");
     Thread.Builder sessionThread = Thread.ofVirtual().name("Session Thread");
 
+    /**
+     *
+     * @param sessionRepository
+     * @param handler
+     * @param mapper
+     * @param gameRepository
+     * @since 2024-06-01
+     * @apiNote Autowiring of required dependencies
+     */
     public UssdController(
             CustomerSessionRepository sessionRepository,
             AfriluckCallHandler handler,
@@ -65,6 +74,14 @@ public class UssdController {
         this.gameRepository = gameRepository;
     }
 
+    /**
+     *
+     * @param session
+     * @return
+     * @throws ExecutionException
+     * @throws InterruptedException
+     * @apiNote A controller that serves the ussd application
+     */
     @PostMapping(path = "/ussd")
     public String index(@RequestBody Session session) throws ExecutionException, InterruptedException {
 
@@ -109,6 +126,11 @@ public class UssdController {
         return message;
     }
 
+    /**
+     *
+     * @param savedSession
+     * @return
+     */
     private String account(Session savedSession) {
         String message = null;
         int continueFlag = 0;
