@@ -114,7 +114,6 @@ public class UssdController {
                     case 99 -> contactUsMessage(savedSession);
                     case 0 -> menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE);
                     default -> silentDelete(savedSession);
-
                 };
             } else {
                 System.out.println("--- Initial Menu ---");
