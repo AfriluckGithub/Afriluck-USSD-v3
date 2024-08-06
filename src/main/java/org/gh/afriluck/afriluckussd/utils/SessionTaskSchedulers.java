@@ -18,8 +18,8 @@ public class SessionTaskSchedulers implements Runnable {
     }
 
     @Override
-    // @Scheduled(cron = "0 * * * *", zone = "GMT")
-    @Scheduled(cron = "0 * * * * *")
+    @Scheduled(cron = "0 * * * *", zone = "GMT")
+    //@Scheduled(cron = "0 * * * * *")
     public void run() {
         try {
             System.out.println("Cleaning Session...\n");
