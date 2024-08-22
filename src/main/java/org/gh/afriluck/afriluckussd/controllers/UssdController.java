@@ -171,15 +171,18 @@ public class UssdController {
             }
             return menuResponse(savedSession, continueFlag, message);
         } else if (savedSession.getGameType() == FIFTH && savedSession.getPosition() == THIRD) {
-            continueFlag = 1;
+            //continueFlag = 1;
             if (savedSession.getData().equals("1")) {
+                continueFlag=0;
                 message = "Enter amount to deposit\n";
             } else {
                 try {
                     CustomerBalanceDto balance = getCustomerBalance(savedSession.msisdn);
                     message = String.format("Your current balance is %s GHS", balance.balance);
+                    continueFlag=1;
                 } catch (Exception e) {
                     String response = e.getMessage();
+                    continueFlag=1;
                     int colonIndex = response.indexOf(":");
                     String messageAfterColon = response.substring(colonIndex + 1).trim()
                             .replace("{", "")
