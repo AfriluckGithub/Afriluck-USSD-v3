@@ -49,13 +49,6 @@ services:
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
-  adminer:
-    image: adminer
-    ports:
-      - "8081:8081"
-    networks:
-      - app-network
-
 networks:
   app-network:
     driver: bridge
