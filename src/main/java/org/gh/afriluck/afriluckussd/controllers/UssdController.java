@@ -2,10 +2,7 @@ package org.gh.afriluck.afriluckussd.controllers;
 
 import com.google.gson.JsonObject;
 import org.gh.afriluck.afriluckussd.constants.AppConstants;
-import org.gh.afriluck.afriluckussd.dto.DiscountResponse;
-import org.gh.afriluck.afriluckussd.dto.Pair;
-import org.gh.afriluck.afriluckussd.dto.RecentTickets;
-import org.gh.afriluck.afriluckussd.dto.Transaction;
+import org.gh.afriluck.afriluckussd.dto.*;
 import org.gh.afriluck.afriluckussd.entities.Game;
 import org.gh.afriluck.afriluckussd.mapping.TransactionMapper;
 import org.gh.afriluck.afriluckussd.repositories.CustomerSessionRepository;
@@ -53,13 +50,12 @@ public class UssdController {
     Thread.Builder sessionThread = Thread.ofVirtual().name("Session Thread");
 
     /**
-     *
      * @param sessionRepository
      * @param handler
      * @param mapper
      * @param gameRepository
-     * @since 2024-06-01
      * @apiNote Autowiring of required dependencies
+     * @since 2024-06-01
      */
     public UssdController(
             CustomerSessionRepository sessionRepository,
@@ -74,7 +70,6 @@ public class UssdController {
     }
 
     /**
-     *
      * @param session
      * @return
      * @throws ExecutionException
@@ -102,7 +97,7 @@ public class UssdController {
 
         if (ValidationUtils.isBetweenGameTime()) {
             message = menuResponse(session, 1, AppConstants.GAME_CLOSED_MESSAGE);
-        }else {
+        } else {
             if (savedSession != null) {
                 message = switch (savedSession.getGameType()) {
                     case 1 -> megaGameOptions(savedSession.getGameType(), savedSession.getPosition(), savedSession);
@@ -125,7 +120,6 @@ public class UssdController {
     }
 
     /**
-     *
      * @param savedSession
      * @return
      */
@@ -167,11 +161,42 @@ public class UssdController {
                             .replace("]", "")
                             .replace("[", "");
                     break;
+                case "3":
+                    continueFlag = 1;
+                    message = "1) Deposit\n 2) Balance Enquiry\n";
+                    break;
                 default:
                     deleteSession(savedSession);
                     break;
             }
             return menuResponse(savedSession, continueFlag, message);
+        } else if (savedSession.getGameType() == FIFTH && savedSession.getPosition() == THIRD) {
+            continueFlag = 1;
+            if (savedSession.getData().equals("1")) {
+                message = "Enter amount to deposit\n";
+            } else {
+                try {
+                    CustomerBalanceDto balance = getCustomerBalance(savedSession.msisdn);
+                    message = String.format("Your current balance is %s GHS", balance.balance);
+                } catch (Exception e) {
+                    String response = e.getMessage();
+                    int colonIndex = response.indexOf(":");
+                    String messageAfterColon = response.substring(colonIndex + 1).trim()
+                            .replace("{", "")
+                            .replace("}", "")
+                            .replace("\"error\"", "")
+                            .replace("\":\"", "")
+                            .replace(":", "")
+                            .replace("\"\"", "");
+                    //JSONObject oj = new JSONObject(messageAfterColon);
+                    message = messageAfterColon;
+                    System.out.println(messageAfterColon);
+
+                }
+            }
+        } else if (savedSession.getGameType() == FIFTH && savedSession.getPosition() == FOURTH) {
+            CustomerDepositResponseDto depositResponse = customerDeposit(savedSession.getMsisdn(), savedSession.getData(), savedSession.getNetwork());
+            message = depositResponse.success;
         }
         return menuResponse(savedSession, continueFlag, message);
     }
@@ -237,7 +262,7 @@ public class UssdController {
                         savedSession.setAmount(Double.valueOf(total));
                         updateSession(savedSession, false);
                     }
-                }else{
+                } else {
                     deleteSession(savedSession);
                     message = "Invalid amount. Enter a round figure.\n 0) Back";
                     continueFlag = 0;
@@ -251,22 +276,73 @@ public class UssdController {
                     savedSession.setMsisdn(s.getMsisdn());
                     sessionRepository.save(savedSession);
                     return menuResponse(savedSession, continueFlag, AppConstants.WELCOME_MENU_MESSAGE);
-                } else if (choice.equals("2")) {
+                } else if (choice.equals("2") && savedSession.getPosition() == 4) {
                     message = AppConstants.DISCOUNT_PROMPT_MESSAGE;
+                } else if (choice.equals("1") && savedSession.getPosition() == 4) {
+                    message = "Select payment method\n1) Mobile Money\n2) Afriluck Wallet";
                 } else if (savedSession.getPosition() == 5) {
-                    DiscountResponse response = applyCoupon(s.getAmount(), s.getData());
-                    System.out.printf("Discount => ", response);
-                    message = discountMessage(response);
-                    if (response.getValid()) {
-                        savedSession.setDiscountedAmount(response.getAmount());
+                    // Payment with MOMO
+                    if (savedSession.getData().equals("1") && savedSession.getPosition() == 5) {
                         updateSession(savedSession, false);
+                        continueFlag = 1;
+                        message = AppConstants.PAYMENT_INIT_MESSAGE;
+                        Runnable paymentTask = () -> {
+                            Transaction t = mapper.mapTransactionFromSessionBanker(savedSession, false);
+                            System.out.println(t.toString());
+                            ResponseEntity<String> response = handler.client()
+                                    .post()
+                                    .uri("/api/V1/place-bet")
+                                    .body(t)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .retrieve()
+                                    .toEntity(String.class);
+                            System.out.println(response.getBody());
+                            System.out.println("--- Running Payment ---");
+                        };
+                        Runnable sessionTask = () -> {
+                            sessionRepository.deleteById(savedSession.getId());
+                            System.out.println("--- Deleting Session ---");
+                        };
+                        paymentThread.start(paymentTask).join();
+                        sessionThread.start(sessionTask);
+                    } else if (savedSession.getData().equals("2") && savedSession.getPosition() == 5) {
+                        updateSession(savedSession, false);
+                        continueFlag = 1;
+                        message = AppConstants.PAYMENT_INIT_MESSAGE_WALLET;
+                        Runnable paymentTask = () -> {
+                            Transaction t = mapper.mapTransactionFromSessionBanker(savedSession, false);
+                            System.out.println(t.toString());
+                            ResponseEntity<String> response = handler.client()
+                                    .post()
+                                    .uri("/api/V1/place-bet")
+                                    .body(t)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .retrieve()
+                                    .toEntity(String.class);
+                            System.out.println(response.getBody());
+                            System.out.println("--- Running Payment ---");
+                        };
+                        Runnable sessionTask = () -> {
+                            sessionRepository.deleteById(savedSession.getId());
+                            System.out.println("--- Deleting Session ---");
+                        };
+                        paymentThread.start(paymentTask).join();
+                        sessionThread.start(sessionTask);
+                    } else {
+                        DiscountResponse response = applyCoupon(s.getAmount(), s.getData());
+                        System.out.printf("Discount => ", response);
+                        message = discountMessage(response);
+                        if (response.getValid()) {
+                            savedSession.setDiscountedAmount(response.getAmount());
+                            updateSession(savedSession, false);
+                        }
                     }
                 } else {
                     updateSession(savedSession, false);
                     continueFlag = 1;
                     message = AppConstants.PAYMENT_INIT_MESSAGE;
                     Runnable paymentTask = () -> {
-                        Transaction t = mapper.mapTransactionFromSessionBanker(savedSession);
+                        Transaction t = mapper.mapTransactionFromSessionBanker(savedSession, false);
                         System.out.println(t.toString());
                         ResponseEntity<String> response = handler.client()
                                 .post()
@@ -414,6 +490,59 @@ public class UssdController {
                     return menuResponse(savedSession, continueFlag, AppConstants.WELCOME_MENU_MESSAGE);
                 } else if (choice.equals("2") && savedSession.getPosition() == 6) {
                     message = AppConstants.DISCOUNT_PROMPT_MESSAGE;
+                } else if (choice.equals("1") && savedSession.getPosition() == 6) {
+                    message = "Select payment method\n1) Mobile Money\n2) Afriluck Wallet";
+                } else if (choice.equals("1") && savedSession.getPosition() == 7) {
+                    gameDraw = new Game();
+                    message = AppConstants.PAYMENT_INIT_MESSAGE;
+                    Runnable paymentTask = () -> {
+                        Transaction t = mapper.mapTransactionFromSession(s, gameDraw, false);
+                        System.out.println(t.toString());
+                        ResponseEntity<String> response = handler.client()
+                                .post()
+                                .uri("/api/V1/place-bet")
+                                .body(t)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .retrieve()
+                                .toEntity(String.class);
+                        System.out.println(response.getBody());
+
+                        sessionRepository.deleteById(savedSession.getId());
+                        System.out.println("Payment Thread running...");
+                    };
+                    Runnable sessionTask = () -> {
+                        sessionRepository.deleteById(savedSession.getId());
+                        System.out.println("Session Thread running...");
+                    };
+                    paymentThread.start(paymentTask).join();
+                    sessionThread.start(sessionTask);
+                    continueFlag = 1;
+                } else if (choice.equals("2") && savedSession.getPosition() == 7) {
+                    // System.out.println("NETWORK ===> " + savedSession.getNetwork());
+                    gameDraw = new Game();
+                    message = AppConstants.PAYMENT_INIT_MESSAGE;
+                    Runnable paymentTask = () -> {
+                        Transaction t = mapper.mapTransactionFromSession(s, gameDraw, true);
+                        System.out.println(t.toString());
+                        ResponseEntity<String> response = handler.client()
+                                .post()
+                                .uri("/api/V1/place-bet")
+                                .body(t)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .retrieve()
+                                .toEntity(String.class);
+                        System.out.println(response.getBody());
+
+                        sessionRepository.deleteById(savedSession.getId());
+                        System.out.println("Payment Thread running...");
+                    };
+                    Runnable sessionTask = () -> {
+                        sessionRepository.deleteById(savedSession.getId());
+                        System.out.println("Session Thread running...");
+                    };
+                    paymentThread.start(paymentTask).join();
+                    sessionThread.start(sessionTask);
+                    continueFlag = 1;
                 } else if (savedSession.getPosition() == 7) {
                     DiscountResponse response = applyCoupon(s.getAmount(), s.getData());
                     System.out.printf("Discount => ", response);
@@ -426,7 +555,7 @@ public class UssdController {
                     gameDraw = new Game();
                     message = AppConstants.PAYMENT_INIT_MESSAGE;
                     Runnable paymentTask = () -> {
-                        Transaction t = mapper.mapTransactionFromSession(s, gameDraw);
+                        Transaction t = mapper.mapTransactionFromSession(s, gameDraw, false);
                         System.out.println(t.toString());
                         ResponseEntity<String> response = handler.client()
                                 .post()
@@ -543,7 +672,7 @@ public class UssdController {
                         message = String.format(ticketInfo, s.getCurrentGame(), s.getSelectedNumbers(), s.getAmount());
                         updateSession(s, false);
                     }
-                }else {
+                } else {
                     deleteSession(savedSession);
                     message = "Invalid amount. Enter a round figure.\n 0) Back";
                     continueFlag = 0;
@@ -559,12 +688,14 @@ public class UssdController {
                     return menuResponse(savedSession, continueFlag, AppConstants.WELCOME_MENU_MESSAGE);
                 } else if (choice.equals("2") && savedSession.getPosition() == 5) {
                     message = AppConstants.DISCOUNT_PROMPT_MESSAGE;
+                } else if (choice.equals("1") && savedSession.getPosition() == 5) {
+                    message = "Select payment method\n1) Mobile Money\n2) Afriluck Wallet";
                 } else {
                     savedSession.setCurrentGame("direct");
                     updateSession(s, true);
                     message = AppConstants.PAYMENT_INIT_MESSAGE;
                     Runnable paymentTask = () -> {
-                        Transaction t = mapper.mapTransactionFromSession(s, gameDraw);
+                        Transaction t = mapper.mapTransactionFromSession(s, gameDraw, false);
                         System.out.println(t.toString());
                         ResponseEntity<String> response = handler.client()
                                 .post()
@@ -587,14 +718,66 @@ public class UssdController {
                     continueFlag = 1;
                 }
             } else if (savedSession.getPosition() == SIX) {
-                DiscountResponse response = applyCoupon(s.getAmount(), s.getData());
-                System.out.printf("Discount => ", response);
-                message = discountMessage(response);
-                if (response.getValid()) {
-                    savedSession.setDiscountedAmount(response.getAmount());
-                    updateSession(savedSession, false);
+                if (savedSession.getData().equals("1")) {
+                    // Pay with MOMO
+                    message = AppConstants.PAYMENT_INIT_MESSAGE;
+                    Runnable paymentTask = () -> {
+                        Transaction t = mapper.mapTransactionFromSession(s, gameDraw, false);
+                        System.out.println(t.toString());
+                        ResponseEntity<String> response = handler.client()
+                                .post()
+                                .uri("/api/V1/place-bet")
+                                .body(t)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .retrieve()
+                                .toEntity(String.class);
+                        System.out.println(response.getBody());
+
+                        sessionRepository.deleteById(savedSession.getId());
+                        System.out.println("Payment Thread running...");
+                    };
+                    Runnable sessionTask = () -> {
+                        sessionRepository.deleteById(savedSession.getId());
+                        System.out.println("Session Thread running...");
+                    };
+                    paymentThread.start(paymentTask).join();
+                    sessionThread.start(sessionTask);
+                    continueFlag = 1;
+                } else if (savedSession.getData().equals("2")) {
+                    // Pay with Wallet
+                    message = AppConstants.PAYMENT_INIT_MESSAGE;
+                    Runnable paymentTask = () -> {
+                        Transaction t = mapper.mapTransactionFromSession(s, gameDraw, true);
+                        System.out.println(t.toString());
+                        ResponseEntity<String> response = handler.client()
+                                .post()
+                                .uri("/api/V1/place-bet")
+                                .body(t)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .retrieve()
+                                .toEntity(String.class);
+                        System.out.println(response.getBody());
+
+                        sessionRepository.deleteById(savedSession.getId());
+                        System.out.println("Payment Thread running...");
+                    };
+                    Runnable sessionTask = () -> {
+                        sessionRepository.deleteById(savedSession.getId());
+                        System.out.println("Session Thread running...");
+                    };
+                    paymentThread.start(paymentTask).join();
+                    sessionThread.start(sessionTask);
+                    continueFlag = 1;
+                } else {
+                    DiscountResponse response = applyCoupon(s.getAmount(), s.getData());
+                    System.out.printf("Discount => ", response);
+                    message = discountMessage(response);
+                    if (response.getValid()) {
+                        savedSession.setDiscountedAmount(response.getAmount());
+                        updateSession(savedSession, false);
+                    }
                 }
-            }else if(savedSession.getPosition() == 7 && savedSession.getData().equals("0")) {
+            } else if (savedSession.getPosition() == 7 && savedSession.getData().equals("0")) {
                 deleteSession(savedSession);
                 continueFlag = 0;
                 savedSession.setData("0");
@@ -606,7 +789,7 @@ public class UssdController {
                 updateSession(s, true);
                 message = AppConstants.PAYMENT_INIT_MESSAGE;
                 Runnable paymentTask = () -> {
-                    Transaction t = mapper.mapTransactionFromSession(savedSession, gameDraw);
+                    Transaction t = mapper.mapTransactionFromSession(savedSession, gameDraw, false);
                     System.out.println(t.toString());
                     ResponseEntity<String> response = handler.client()
                             .post()
@@ -745,7 +928,7 @@ public class UssdController {
                         savedSession.setAmount(Double.valueOf(total));
                         updateSession(s, false);
                     }
-                }else{
+                } else {
                     deleteSession(savedSession);
                     message = "Invalid amount. Enter a round figure.\n 0) Back";
                     continueFlag = 0;
@@ -761,6 +944,8 @@ public class UssdController {
                     return menuResponse(savedSession, continueFlag, AppConstants.WELCOME_MENU_MESSAGE);
                 } else if (choice.equals("2") && savedSession.getPosition() == 5) {
                     message = AppConstants.DISCOUNT_PROMPT_MESSAGE;
+                } else if (choice.equals("1") && savedSession.getPosition() == 5) {
+                    message = "Select payment method\n1) Mobile Money\n2) Afriluck Wallet";
                 } else {
                     savedSession.setBetTypeCode(AppConstants.PERM);
                     updateSession(savedSession, false);
@@ -791,26 +976,82 @@ public class UssdController {
                     sessionThread.start(sessionTask);
                 }
             } else if (savedSession.getPosition() == SIX) {
-                DiscountResponse response = applyCoupon(s.getAmount(), s.getData());
-                System.out.printf("Discount => ", response);
-                message = discountMessage(response);
-                if (response.getValid()) {
-                    savedSession.setDiscountedAmount(response.getAmount());
-                    updateSession(savedSession, false);
+                if (savedSession.getData().equals("1")) {
+                    // Payment from MOMO
+                    savedSession.setCurrentGame("direct");
+                    updateSession(s, true);
+                    message = AppConstants.PAYMENT_INIT_MESSAGE;
+                    Runnable paymentTask = () -> {
+                        Transaction t = mapper.mapTransactionFromSession(savedSession, gameDraw, false);
+                        System.out.println(t.toString());
+                        ResponseEntity<String> response = handler.client()
+                                .post()
+                                .uri("/api/V1/place-bet")
+                                .body(t)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .retrieve()
+                                .toEntity(String.class);
+                        System.out.println(response.getBody());
+
+                        sessionRepository.deleteById(savedSession.getId());
+                        System.out.println("Payment Thread running...");
+                    };
+                    Runnable sessionTask = () -> {
+                        sessionRepository.deleteById(savedSession.getId());
+                        System.out.println("Session Thread running...");
+                    };
+                    paymentThread.start(paymentTask).join();
+                    sessionThread.start(sessionTask);
+                    continueFlag = 1;
+                } else if (savedSession.getData().equals("2")) {
+                    // Payment from Wallet
+                    savedSession.setCurrentGame("direct");
+                    updateSession(s, true);
+                    message = AppConstants.PAYMENT_INIT_MESSAGE;
+                    Runnable paymentTask = () -> {
+                        Transaction t = mapper.mapTransactionFromSession(savedSession, gameDraw, true);
+                        System.out.println(t.toString());
+                        ResponseEntity<String> response = handler.client()
+                                .post()
+                                .uri("/api/V1/place-bet")
+                                .body(t)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .retrieve()
+                                .toEntity(String.class);
+                        System.out.println(response.getBody());
+
+                        sessionRepository.deleteById(savedSession.getId());
+                        System.out.println("Payment Thread running...");
+                    };
+                    Runnable sessionTask = () -> {
+                        sessionRepository.deleteById(savedSession.getId());
+                        System.out.println("Session Thread running...");
+                    };
+                    paymentThread.start(paymentTask).join();
+                    sessionThread.start(sessionTask);
+                    continueFlag = 1;
+                } else {
+                    DiscountResponse response = applyCoupon(s.getAmount(), s.getData());
+                    System.out.printf("Discount => ", response);
+                    message = discountMessage(response);
+                    if (response.getValid()) {
+                        savedSession.setDiscountedAmount(response.getAmount());
+                        updateSession(savedSession, false);
+                    }
                 }
-            }else if(savedSession.getPosition() == 7 && savedSession.getData().equals("0")) {
-                    deleteSession(savedSession);
-                    continueFlag = 0;
-                    savedSession.setData("0");
-                    savedSession.setMsisdn(s.getMsisdn());
-                    sessionRepository.save(savedSession);
-                    return menuResponse(savedSession, continueFlag, AppConstants.WELCOME_MENU_MESSAGE);
+            } else if (savedSession.getPosition() == 7 && savedSession.getData().equals("0")) {
+                deleteSession(savedSession);
+                continueFlag = 0;
+                savedSession.setData("0");
+                savedSession.setMsisdn(s.getMsisdn());
+                sessionRepository.save(savedSession);
+                return menuResponse(savedSession, continueFlag, AppConstants.WELCOME_MENU_MESSAGE);
             } else {
                 savedSession.setCurrentGame("direct");
                 updateSession(s, true);
                 message = AppConstants.PAYMENT_INIT_MESSAGE;
                 Runnable paymentTask = () -> {
-                    Transaction t = mapper.mapTransactionFromSession(savedSession, gameDraw);
+                    Transaction t = mapper.mapTransactionFromSession(savedSession, gameDraw, false);
                     System.out.println(t.toString());
                     ResponseEntity<String> response = handler.client()
                             .post()
@@ -858,6 +1099,27 @@ public class UssdController {
                 //.contentType(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .toEntity(String.class);
+        return response.getBody();
+    }
+
+    private CustomerBalanceDto getCustomerBalance(String msisdn) {
+        ResponseEntity<CustomerBalanceDto> response = handler.client()
+                .get()
+                .uri("/api/V1/account/check-balance?msisdn=" + msisdn)
+                .retrieve()
+                .toEntity(CustomerBalanceDto.class);
+        return response.getBody();
+    }
+
+    private CustomerDepositResponseDto customerDeposit(String msisdn, String amount, String channel) {
+        String body = String.format("{\"msisdn\":\"%s\",\"amount\":\"%s\",\"channel\":\"%s\"}", msisdn, amount, channel);
+        ResponseEntity<CustomerDepositResponseDto> response = handler.client()
+                .post()
+                .uri("/api/V1/account/deposit")
+                .body(body)
+                .contentType(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .toEntity(CustomerDepositResponseDto.class);
         return response.getBody();
     }
 

@@ -140,4 +140,16 @@ public class ValidationUtils {
         int endTime = endHour * 60 + endMinute;
         return currentTime >= startTime && currentTime <= endTime;
     }
+
+
+    public static boolean isEveningGameTime() {
+        int startHour = 11;
+        int startMinute = 0;
+        int endHour = 19;
+        int endMinute = 3;
+        int currentTime = LocalTime.now().getHour() * 60 + LocalTime.now().getMinute();
+        int startTime = startHour * 60 + startMinute;
+        int endTime = endHour * 60 + endMinute;
+        return currentTime >= startTime && currentTime <= endTime;
+    }
 }

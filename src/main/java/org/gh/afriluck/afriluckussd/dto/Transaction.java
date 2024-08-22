@@ -31,11 +31,15 @@ public class Transaction {
     private String channel;
     @JsonProperty("discounted_amount")
     private Double discountedAmount;
+    @JsonProperty("medium")
+    private String medium;
+    @JsonProperty("use_wallet")
+    private boolean useWallet;
 
     public Transaction() {
     }
 
-    public Transaction(String msisdn, Double totalAmount, String gameId, String drawCode, Double entryAmount, Integer betTypeCode, String betType, String selectedNumbers, String channel, Double discountedAmount) {
+    public Transaction(String msisdn, Double totalAmount, String gameId, String drawCode, Double entryAmount, Integer betTypeCode, String betType, String selectedNumbers, String channel, Double discountedAmount, String medium, boolean useWallet) {
         this.msisdn = msisdn;
         this.totalAmount = totalAmount;
         this.gameId = gameId;
@@ -46,6 +50,8 @@ public class Transaction {
         this.selectedNumbers = selectedNumbers;
         this.channel = channel;
         this.discountedAmount = discountedAmount;
+        this.medium = medium;
+        this.useWallet = useWallet;
     }
 
     public String getMsisdn() {
@@ -128,6 +134,22 @@ public class Transaction {
         this.discountedAmount = discountedAmount;
     }
 
+    public void setMedium(String medium) {
+        this.medium = medium;
+    }
+
+    public String getMedium() {
+        return medium;
+    }
+
+    public void setUseWallet(boolean useWallet) {
+        this.useWallet = useWallet;
+    }
+
+    public boolean isUseWallet() {
+        return useWallet;
+    }
+
     @Override
     public String toString() {
         return "Transaction{" +
@@ -141,6 +163,8 @@ public class Transaction {
                 ", selectedNumbers='" + selectedNumbers + '\'' +
                 ", channel='" + channel + '\'' +
                 ", discountedAmount='" + discountedAmount + '\'' +
+                ", medium='" + medium + '\'' +
+                ", useWallet='" + useWallet + '\'' +
                 '}';
     }
 }

@@ -15,7 +15,7 @@ public class Session {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
     private String sequenceID;
-    private String data;
+    public String data;
 
     private Integer position;
 

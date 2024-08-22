@@ -21,7 +21,7 @@ public class TransactionMapper {
         this.gameRepository = gameRepository;
     }
 
-    public Transaction mapTransactionFromSession(Session session, Game game) {
+    public Transaction mapTransactionFromSession(Session session, Game game, boolean wallet) {
         Transaction t = new Transaction();
         t.setGameId(session.getGameId());
         String result = session.getGameType() == 1 ? "mega" : (session.getGameType() == 2 ? "direct" : "perm");
@@ -35,6 +35,9 @@ public class TransactionMapper {
         t.setBetTypeCode(betTypeCode);
         t.setDrawCode(session.getGameTypeId());
         t.setDiscountedAmount(session.getDiscountedAmount());
+        t.setMedium("ussd");
+        t.setChannel(session.getNetwork());
+        t.setUseWallet(wallet);
         return t;
     }
 
@@ -56,7 +59,7 @@ public class TransactionMapper {
         return t;
     }
 
-    public Transaction mapTransactionFromSessionBanker(Session session) {
+    public Transaction mapTransactionFromSessionBanker(Session session, boolean wallet) {
         Transaction t = new Transaction();
         t.setGameId(session.getGameId());
         t.setBetType(AppConstants.BANKER);
@@ -68,6 +71,9 @@ public class TransactionMapper {
         t.setBetTypeCode(2);
         t.setDrawCode(session.getGameTypeId());
         t.setDiscountedAmount(session.getDiscountedAmount());
+        t.setMedium("ussd");
+        t.setChannel(session.getNetwork());
+        t.setUseWallet(wallet);
         return t;
     }
 
