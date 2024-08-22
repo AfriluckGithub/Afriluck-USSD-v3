@@ -523,7 +523,7 @@ public class UssdController {
                 } else if (choice.equals("2") && savedSession.getPosition() == 7) {
                     // System.out.println("NETWORK ===> " + savedSession.getNetwork());
                     gameDraw = new Game();
-                    message = AppConstants.PAYMENT_INIT_MESSAGE;
+                    message = AppConstants.PAYMENT_INIT_MESSAGE_WALLET;
                     Runnable paymentTask = () -> {
                         Transaction t = mapper.mapTransactionFromSession(s, gameDraw, true);
                         System.out.println(t.toString());
@@ -748,7 +748,7 @@ public class UssdController {
                     continueFlag = 1;
                 } else if (savedSession.getData().equals("2")) {
                     // Pay with Wallet
-                    message = AppConstants.PAYMENT_INIT_MESSAGE;
+                    message = AppConstants.PAYMENT_INIT_MESSAGE_WALLET;
                     Runnable paymentTask = () -> {
                         Transaction t = mapper.mapTransactionFromSession(s, gameDraw, true);
                         System.out.println(t.toString());
@@ -1010,7 +1010,7 @@ public class UssdController {
                     // Payment from Wallet
                     savedSession.setCurrentGame("direct");
                     updateSession(s, true);
-                    message = AppConstants.PAYMENT_INIT_MESSAGE;
+                    message = AppConstants.PAYMENT_INIT_MESSAGE_WALLET;
                     Runnable paymentTask = () -> {
                         Transaction t = mapper.mapTransactionFromSession(savedSession, gameDraw, true);
                         System.out.println(t.toString());
