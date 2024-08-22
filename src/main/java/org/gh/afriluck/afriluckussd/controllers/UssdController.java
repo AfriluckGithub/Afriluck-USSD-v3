@@ -162,7 +162,7 @@ public class UssdController {
                             .replace("[", "");
                     break;
                 case "3":
-                    continueFlag = 1;
+                    continueFlag = 0;
                     message = "1) Deposit\n 2) Balance Enquiry\n";
                     break;
                 default:
