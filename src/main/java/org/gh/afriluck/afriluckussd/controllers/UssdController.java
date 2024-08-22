@@ -255,7 +255,7 @@ public class UssdController {
                                 Lucky 70 M %s
                                 Your No: %s
                                 \s
-                                1) to pay %s GHS on momo.
+                                1) to pay %s GHS.
                                 \s
                                 2) to apply coupon code.
                                 \s
@@ -513,7 +513,7 @@ public class UssdController {
                             Lucky 70 M Mega Jackpot
                             Your numbers: %s
                             \s
-                            1) to pay %s GHS on momo.
+                            1) to pay %s GHS.
                             \s
                             2) to apply coupon code.
                             \s
@@ -765,7 +765,7 @@ public class UssdController {
                                 Lucky 70 M %s
                                 Your No: %s
                                 \s
-                                1) to pay %s GHS on momo.
+                                1) to pay %s GHS.
                                 \s
                                 2) to apply coupon code.
                                 \s
@@ -1074,7 +1074,7 @@ public class UssdController {
                                 Lucky 70 M %s
                                 Your No: %s
                                 \s
-                                1) to pay %s GHS on momo.
+                                1) to pay %s GHS.
                                 \s
                                 2) to apply coupon code.
                                 \s
