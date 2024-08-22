@@ -179,7 +179,6 @@ public class UssdController {
                 try {
                     CustomerBalanceDto balance = getCustomerBalance(savedSession.msisdn);
                     message = String.format("Your current balance is %s GHS", balance.balance);
-                    continueFlag=1;
                 } catch (Exception e) {
                     String response = e.getMessage();
                     continueFlag=1;
@@ -200,6 +199,7 @@ public class UssdController {
         } else if (savedSession.getGameType() == FIFTH && savedSession.getPosition() == FOURTH) {
             CustomerDepositResponseDto depositResponse = customerDeposit(savedSession.getMsisdn(), savedSession.getData(), savedSession.getNetwork());
             message = depositResponse.success;
+            continueFlag = 1;
         }
         return menuResponse(savedSession, continueFlag, message);
     }
