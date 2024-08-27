@@ -143,7 +143,7 @@ public class ValidationUtils {
 
 
     public static boolean isEveningGameTime() {
-        int startHour = 11;
+        int startHour = 10;
         int startMinute = 0;
         int endHour = 19;
         int endMinute = 3;

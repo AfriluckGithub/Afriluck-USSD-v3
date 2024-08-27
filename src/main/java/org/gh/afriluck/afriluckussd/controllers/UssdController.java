@@ -99,20 +99,40 @@ public class UssdController {
             message = menuResponse(session, 1, AppConstants.GAME_CLOSED_MESSAGE);
         } else {
             if (savedSession != null) {
-                message = switch (savedSession.getGameType()) {
-                    case 1 -> megaGameOptions(savedSession.getGameType(), savedSession.getPosition(), savedSession);
-                    case 2 -> directGameOptions(savedSession.getGameType(), savedSession.getPosition(), savedSession);
-                    case 3 -> permGameOptions(savedSession.getGameType(), savedSession.getPosition(), savedSession);
-                    case 4 -> banker(savedSession, "Banker");
-                    case 5 -> account(savedSession);
-                    case 6 -> tnCsMessage(savedSession);
-                    case 99 -> contactUsMessage(savedSession);
-                    case 0 -> menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE);
-                    default -> silentDelete(savedSession);
-                };
+                if (ValidationUtils.isEveningGameTime()) {
+                    message = switch (savedSession.getGameType()) {
+                        case 1 -> megaGameOptions(savedSession.getGameType(), savedSession.getPosition(), savedSession);
+                        case 2 ->
+                                directGameOptions(savedSession.getGameType(), savedSession.getPosition(), savedSession);
+                        case 3 -> permGameOptions(savedSession.getGameType(), savedSession.getPosition(), savedSession);
+                        case 4 -> banker(savedSession, "Banker");
+                        case 5 -> account(savedSession);
+                        case 6 -> tnCsMessage(savedSession);
+                        case 99 -> contactUsMessage(savedSession);
+                        case 0 -> menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE);
+                        default -> silentDelete(savedSession);
+                    };
+                } else {
+                    message = switch (savedSession.getGameType()) {
+                        // case 1 -> megaGameOptions(savedSession.getGameType(), savedSession.getPosition(), savedSession);
+                        case 2 ->
+                                directGameOptions(savedSession.getGameType(), savedSession.getPosition(), savedSession);
+                        case 3 -> permGameOptions(savedSession.getGameType(), savedSession.getPosition(), savedSession);
+                        case 4 -> banker(savedSession, "Banker");
+                        case 5 -> account(savedSession);
+                        case 6 -> tnCsMessage(savedSession);
+                        case 99 -> contactUsMessage(savedSession);
+                        case 0 -> menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE);
+                        default -> silentDelete(savedSession);
+                    };
+                }
             } else {
                 System.out.println("--- Initial Menu ---");
-                message = menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE);
+                if (ValidationUtils.isEveningGameTime()) {
+                    message = menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE);
+                }else {
+                    message = menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE_MORNING);
+                }
                 System.out.printf("Session => %s", session.getMessage());
             }
         }
