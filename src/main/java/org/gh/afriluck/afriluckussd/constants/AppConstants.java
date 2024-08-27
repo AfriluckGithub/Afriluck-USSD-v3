@@ -53,12 +53,30 @@ public class AppConstants {
             "Direct-4(4 # to win)",
             "Direct-5(5 # to win)",
             "Direct-6(6 # to win)");
+
+    public static List<String> DIRECT_GAMES_MORNING = List.of(
+            "Direct-1(Match first no.)",
+            "Direct-2(2 # to win)",
+            "Direct-3(3 # to win)",
+            "Direct-4(4 # to win)"
+            //"Direct-5(5 # to win)",
+            //"Direct-6(6 # to win)"
+    );
+
     public static List<String> PERM_GAMES = List.of(
             "Perm-2(2 nos. to win)",
             "Perm-3(3 nos. to win)",
             "Perm-4(4 nos. to win)",
             "Perm-5(5 nos. to win)",
             "Perm-6(6 nos. to win)"
+    );
+
+    public static List<String> PERM_GAMES_MORNING = List.of(
+            "Perm-2(2 nos. to win)",
+            "Perm-3(3 nos. to win)",
+            "Perm-4(4 nos. to win)"
+            //"Perm-5(5 nos. to win)",
+            //"Perm-6(6 nos. to win)"
     );
     public static String PAYMENT_INIT_MESSAGE = "Payment request initiated.\nApprove to complete ticket purchase";
     public static String PAYMENT_INIT_MESSAGE_WALLET = "Payment request initiated.";
