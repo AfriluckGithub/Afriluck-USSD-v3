@@ -203,6 +203,8 @@ public class UssdController {
                     continueFlag = 0;
                     savedSession.setData("0");
                     savedSession.setMsisdn(savedSession.getMsisdn());
+                    //savedSession.setSecondStep(false);
+                    savedSession.setStart(false);
                     savedSession.setSecondStep(false);
                     sessionRepository.save(savedSession);
                     return menuResponse(savedSession, continueFlag, ValidationUtils.isEveningGameTime()? AppConstants.WELCOME_MENU_MESSAGE: AppConstants.WELCOME_MENU_MESSAGE_MORNING);
