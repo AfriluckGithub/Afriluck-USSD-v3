@@ -133,7 +133,7 @@ public class UssdController {
                     updateSession(s, false);
                 } else if ((s.isPassedWelcomeMessage()) && (s.getMenuChoice() == FIRST) && (s.isSecondStep())) {
                     String dayOfWeekInWords = getDayOfWeekInWords();
-                    message = ValidationUtils.isEveningGameTime() ?
+                    message = !ValidationUtils.isEveningGameTime() ?
                             switch (s.getGameType()) {
                                 case 1 -> megaGameOptions(s.getGameType(), s.getPosition(), s);
                                 case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
