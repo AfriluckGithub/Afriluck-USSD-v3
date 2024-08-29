@@ -119,7 +119,7 @@ public class UssdController {
                     s.setStart(false);
                     updateSession(s, false);
                     String dayOfWeekInWords = getDayOfWeekInWords();
-                    message = menuResponse(session, 0, ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords) : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords));
+                    message = menuResponse(session, 0, !ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords) : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords));
                     s.setStart(true);
                 }
                 updateSession(session, false);
@@ -156,7 +156,7 @@ public class UssdController {
                             default -> silentDelete(s);
                     };
                 } else if (s.getMenuChoice() == SECOND) {
-                    message = menuResponse(session, 0, session.getData().equals("2")? AppConstants.WELCOME_MENU_MESSAGE: AppConstants.WELCOME_MENU_MESSAGE_MORNING);
+                    message = menuResponse(session, 0, ValidationUtils.isEveningGameTime()? AppConstants.WELCOME_MENU_MESSAGE_MORNING: AppConstants.WELCOME_MENU_MESSAGE);
                     s.setMenuChoice(1);
                     s.setSecondStep(true);
                     updateSession(s, false);
@@ -170,7 +170,7 @@ public class UssdController {
             } else {
                 System.out.println("--- Initial Menu ---");
                 String dayOfWeekInWords = getDayOfWeekInWords();
-                message = menuResponse(session, 0, !ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords) : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords));
+                message = menuResponse(session, 0, ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords) : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords));
                 // For testing ...
                 //message = menuResponse(session, 0, String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords));
                 s.setStart(true);
