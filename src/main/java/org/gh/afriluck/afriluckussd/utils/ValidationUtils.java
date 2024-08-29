@@ -120,6 +120,16 @@ public class ValidationUtils {
         return repeatedNumbers;
     }
 
+
+    public static boolean containsAny(String mainString, String[] numbers) {
+        for (String number : numbers) {
+            if (mainString.contains(number)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static boolean isBetweenGameTime() {
         int startHour = 19;
         int startMinute = 3;

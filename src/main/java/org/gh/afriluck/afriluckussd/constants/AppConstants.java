@@ -2,6 +2,9 @@ package org.gh.afriluck.afriluckussd.constants;
 
 import org.gh.afriluck.afriluckussd.dto.Pair;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.format.TextStyle;
 import java.util.*;
 
 public class AppConstants {
@@ -10,8 +13,10 @@ public class AppConstants {
     public static final int SECOND = 2;
     public static final int THIRD = 3;
 
-    public static final String WELCOME_MENU_MESSAGE = "Welcome to Afriluck-NLA\n1. Mega Jackpot\n2. Direct Game\n3. Perm Game\n4. Banker\n5. Account\n6. TnCs\n99. Contact Us".trim();
-    public static final String WELCOME_MENU_MESSAGE_MORNING = "Welcome to Afriluck-NLA\n2. Direct Game\n3. Perm Game\n4. Banker\n5. Account\n6. TnCs\n99. Contact Us".trim();
+    public static final String WELCOME_MENU_MESSAGE = "Welcome to Afriluck-NLA\n1. Mega Jackpot\n2. Direct Game\n3. Perm Game\n4. Banker".trim();
+    public static final String WELCOME_MENU_MESSAGE_NEW_EVENING = "Welcome to Afriluck-NLA\n1. Anopa Bosuo (10:00 am)\n2. 6/57 Super %s (7:00 pm)\n5. Account\n6. TnCs\n99. Contact Us".trim();
+    public static final String WELCOME_MENU_MESSAGE_NEW = "Welcome to Afriluck-NLA\n1. 6/57 Super %s (7:00 pm)\n5. Account\n6. TnCs\n99. Contact Us".trim();
+    public static final String WELCOME_MENU_MESSAGE_MORNING = "Welcome to Afriluck-NLA\n2. Direct Game\n3. Perm Game\n4. Banker".trim();
     public static final String ACCOUNT_MENU_MESSAGE = "1) Last Draw Results\n2) Recent Transactions\n3) Account \n0) Back";
     public static final String BANKER_MENU_MESSAGE = "1) Banker";
     public static final String MEGA_VALIDATION_MESSAGE = "Numbers must be a total of 6 starting from 1 to 57.\n 0) Back";

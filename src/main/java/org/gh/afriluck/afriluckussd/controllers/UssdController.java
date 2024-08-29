@@ -19,16 +19,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.text.SimpleDateFormat;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.format.TextStyle;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @RestController("/")
 public class UssdController {
@@ -95,44 +93,68 @@ public class UssdController {
             updateSession(session, true);
         }
 
+        //String[] numbers = {"1", "5", "6", "99"};
+        // !ValidationUtils.containsAny(session.getData(), numbers)
+
         if (ValidationUtils.isBetweenGameTime()) {
             message = menuResponse(session, 1, AppConstants.GAME_CLOSED_MESSAGE);
         } else {
-            if (savedSession != null) {
-                if (ValidationUtils.isEveningGameTime()) {
-                    message = switch (savedSession.getGameType()) {
-                        case 1 -> megaGameOptions(savedSession.getGameType(), savedSession.getPosition(), savedSession);
-                        case 2 ->
-                                directGameOptions(savedSession.getGameType(), savedSession.getPosition(), savedSession);
-                        case 3 -> permGameOptions(savedSession.getGameType(), savedSession.getPosition(), savedSession);
-                        case 4 -> banker(savedSession, "Banker");
-                        case 5 -> account(savedSession);
-                        case 6 -> tnCsMessage(savedSession);
-                        case 99 -> contactUsMessage(savedSession);
+            Session s = sessionRepository.findBySequenceID(session.getSequenceID());
+            if (s.isStart()) {
+                if (session.getData().equals("1") && s.getPosition() == 1) {
+                    s.setMenuChoice(1);
+                } else if (session.getData().equals("2") && s.getPosition() == 1) {
+                    s.setMenuChoice(2);
+                } else if (session.getData().equals("5") && s.getPosition() == 1) {
+                    s.setMenuChoice(5);
+                } else if (session.getData().equals("6") && s.getPosition() == 1) {
+                    s.setMenuChoice(6);
+                } else if (session.getData().equals("99") && s.getPosition() == 1) {
+                    s.setMenuChoice(99);
+                }
+                updateSession(session, false);
+
+                s.setPassedWelcomeMessage(true);
+                updateSession(s, false);
+                System.out.printf("Session New => %s =>", s);
+                if ((s.isPassedWelcomeMessage()) && (s.getMenuChoice() == FIRST) && (!s.isSecondStep())) {
+                    message = menuResponse(session, 0, ValidationUtils.isEveningGameTime() ? AppConstants.WELCOME_MENU_MESSAGE : AppConstants.WELCOME_MENU_MESSAGE_MORNING);
+                    s.setSecondStep(true);
+                    updateSession(s, false);
+                } else if ((s.isPassedWelcomeMessage()) && (s.getMenuChoice() == FIRST) && (s.isSecondStep())) {
+                    message = switch (s.getGameType()) {
+                        case 1 -> megaGameOptions(s.getGameType(), s.getPosition(), s);
+                        case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
+                        case 3 -> permGameOptions(s.getGameType(), s.getPosition(), s);
+                        case 4 -> banker(s, "Banker");
+                        //case 5 -> account(s);
+                        //case 6 -> tnCsMessage(s);
+                        //case 99 -> contactUsMessage(s);
                         case 0 -> menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE);
-                        default -> silentDelete(savedSession);
+                        default -> silentDelete(s);
                     };
-                } else {
-                    message = switch (savedSession.getGameType()) {
-                        // case 1 -> megaGameOptions(savedSession.getGameType(), savedSession.getPosition(), savedSession);
-                        case 2 ->
-                                directGameOptions(savedSession.getGameType(), savedSession.getPosition(), savedSession);
-                        case 3 -> permGameOptions(savedSession.getGameType(), savedSession.getPosition(), savedSession);
-                        case 4 -> banker(savedSession, "Banker");
-                        case 5 -> account(savedSession);
-                        case 6 -> tnCsMessage(savedSession);
-                        case 99 -> contactUsMessage(savedSession);
-                        case 0 -> menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE);
-                        default -> silentDelete(savedSession);
-                    };
+                }else if (s.getMenuChoice() == SECOND) {
+                    message = menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE_MORNING);
+                    s.setMenuChoice(1);
+                    s.setSecondStep(true);
+                    updateSession(s, false);
+                } else if (s.getMenuChoice() == FIFTH) {
+                    message = account(s);
+                } else if (s.getMenuChoice() == SIX) {
+                    message = tnCsMessage(s);
+                } else if (s.getMenuChoice() == 99) {
+                    message = contactUsMessage(s);
                 }
             } else {
                 System.out.println("--- Initial Menu ---");
-                if (ValidationUtils.isEveningGameTime()) {
-                    message = menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE);
-                }else {
-                    message = menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE_MORNING);
-                }
+                LocalDate currentDate = LocalDate.now();
+                DayOfWeek dayOfWeek = currentDate.getDayOfWeek();
+                String dayOfWeekInWords = dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH);
+                message = menuResponse(session, 0, ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords) : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords));
+                // For testing ...
+                //message = menuResponse(session, 0, String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords));
+                s.setStart(true);
+                updateSession(s, false);
                 System.out.printf("Session => %s", session.getMessage());
             }
         }
@@ -146,10 +168,13 @@ public class UssdController {
     private String account(Session savedSession) {
         String message = null;
         int continueFlag = 0;
-        if (savedSession.getGameType() == FIFTH && savedSession.getPosition() == FIRST) {
+        savedSession.setGameType(5);
+        savedSession.setSecondStep(true);
+        updateSession(savedSession, false);
+        if (savedSession.isSecondStep() && savedSession.getPosition() == FIRST) {
             message = AppConstants.ACCOUNT_MENU_MESSAGE;
-            updateSession(savedSession, false);
-        } else if (savedSession.getGameType() == FIFTH && savedSession.getPosition() == SECOND) {
+            updateSession(savedSession, true);
+        } else if (savedSession.isSecondStep() && savedSession.getPosition() == THIRD) {
             String response = null;
             String json = null;
             JSONObject oj = null;
@@ -159,6 +184,7 @@ public class UssdController {
                     continueFlag = 0;
                     savedSession.setData("0");
                     savedSession.setMsisdn(savedSession.getMsisdn());
+                    savedSession.setSecondStep(false);
                     sessionRepository.save(savedSession);
                     return menuResponse(savedSession, continueFlag, AppConstants.WELCOME_MENU_MESSAGE);
                 case "1":
@@ -186,11 +212,13 @@ public class UssdController {
                     message = "1) Deposit\n 2) Balance Enquiry\n";
                     break;
                 default:
+                    message = "Invalid input\n 0) Back";
+                    continueFlag = 0;
                     deleteSession(savedSession);
                     break;
             }
             return menuResponse(savedSession, continueFlag, message);
-        } else if (savedSession.getGameType() == FIFTH && savedSession.getPosition() == THIRD) {
+        } else if (savedSession.isSecondStep() && savedSession.getPosition() == FOURTH) {
             if (savedSession.getData().equals("1")) {
                 continueFlag = 0;
                 message = "Enter amount to deposit\n";
@@ -216,7 +244,7 @@ public class UssdController {
 
                 }
             }
-        } else if (savedSession.getGameType() == FIFTH && savedSession.getPosition() == FOURTH) {
+        } else if (savedSession.isSecondStep() && savedSession.getPosition() == FIFTH) {
             CustomerDepositResponseDto depositResponse = customerDeposit(savedSession.getMsisdn(), savedSession.getData(), savedSession.getNetwork());
             message = depositResponse.success;
             continueFlag = 1;
@@ -234,13 +262,13 @@ public class UssdController {
         savedSession.setGameTypeId(gameDraw.getGameDraw());
         boolean containsLetters = s.getPosition() != 5 ? ValidationUtils.containsAnyLetters(s.getData()) : false;
         if (!containsLetters) {
-            if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == FIRST) {
+            if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == SECOND) {
                 message = """
                         %s
                         Choose one number between 1 and 57
                         """;
                 message = String.format(message, "Banker");
-            } else if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == SECOND) {
+            } else if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == THIRD) {
                 String input = ValidationUtils.removeSpecialCharacters(s.getData());
                 String[] selectedNumbers = ValidationUtils.splitNumbers(input);
                 int len = selectedNumbers.length;
@@ -257,7 +285,7 @@ public class UssdController {
                     savedSession.setSelectedNumbers(s.getData());
                     updateSession(savedSession, false);
                 }
-            } else if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == THIRD) {
+            } else if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == FOURTH) {
                 Number amount = ValidationUtils.parseNumber(s.getData());
                 boolean isDecimal = ValidationUtils.isDecimal(amount.doubleValue());
                 if (!isDecimal) {
@@ -290,9 +318,9 @@ public class UssdController {
                     message = "Invalid amount. Enter a round figure.\n 0) Back";
                     continueFlag = 0;
                 }
-            } else if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == SIX) {
-                message = "Select payment method\n1) Mobile Money\n2) Afriluck Wallet";
             } else if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == SEVEN) {
+                message = "Select payment method\n1) Mobile Money\n2) Afriluck Wallet";
+            } else if (savedSession.getGameType() == FOURTH && savedSession.getPosition() == 8) {
                 if (savedSession.getData().equals("1")) {
                     updateSession(savedSession, false);
                     continueFlag = 1;
@@ -349,13 +377,13 @@ public class UssdController {
                     savedSession.setMsisdn(s.getMsisdn());
                     sessionRepository.save(savedSession);
                     return menuResponse(savedSession, continueFlag, AppConstants.WELCOME_MENU_MESSAGE);
-                } else if (choice.equals("2") && savedSession.getPosition() == 4) {
+                } else if (choice.equals("2") && savedSession.getPosition() == 5) {
                     message = AppConstants.DISCOUNT_PROMPT_MESSAGE;
-                } else if (choice.equals("1") && savedSession.getPosition() == 4) {
+                } else if (choice.equals("1") && savedSession.getPosition() == 5) {
                     message = "Select payment method\n1) Mobile Money\n2) Afriluck Wallet";
-                } else if (savedSession.getPosition() == 5) {
+                } else if (savedSession.getPosition() == 6) {
                     // Payment with MOMO
-                    if (savedSession.getData().equals("1") && savedSession.getPosition() == 5) {
+                    if (savedSession.getData().equals("1") && savedSession.getPosition() == 6) {
                         updateSession(savedSession, false);
                         continueFlag = 1;
                         message = AppConstants.PAYMENT_INIT_MESSAGE;
@@ -378,7 +406,7 @@ public class UssdController {
                         };
                         paymentThread.start(paymentTask).join();
                         sessionThread.start(sessionTask);
-                    } else if (savedSession.getData().equals("2") && savedSession.getPosition() == 5) {
+                    } else if (savedSession.getData().equals("2") && savedSession.getPosition() == 6) {
                         updateSession(savedSession, false);
                         continueFlag = 1;
                         message = AppConstants.PAYMENT_INIT_MESSAGE_WALLET;
@@ -451,7 +479,7 @@ public class UssdController {
                 savedSession.setPosition(savedSession.getPosition() + 1);
             }
 
-            if (savedSession.getPosition() == 1) {
+            if (savedSession.getPosition() == 2) {
                 savedSession.setGameType(Integer.parseInt(session.getData()));
             }
         } catch (Exception e) {
@@ -459,6 +487,11 @@ public class UssdController {
         }
         System.out.println(savedSession);
         sessionRepository.save(savedSession);
+    }
+
+    private void saveUSSDSession(Session session) {
+        Session s = sessionRepository.findBySequenceID(session.getSequenceID());
+        sessionRepository.save(s);
     }
 
     private void deleteSession(Session session) {
@@ -477,9 +510,9 @@ public class UssdController {
         System.out.println(savedSession.toString());
         boolean containsLetters = savedSession.getPosition() != 7 ? ValidationUtils.containsAnyLetters(s.getData()) : false;
         if (!containsLetters) {
-            if (savedSession.getGameType() == FIRST && savedSession.getPosition() == FIRST) {
+            if (savedSession.getGameType() == FIRST && savedSession.getPosition() == SECOND) {
                 message = AppConstants.MEGA_OPTIONS_CHOICE_MESSAGE;
-            } else if (savedSession.getGameType() == FIRST && savedSession.getPosition() == SECOND) {
+            } else if (savedSession.getGameType() == FIRST && savedSession.getPosition() == THIRD) {
 
                 String input = ValidationUtils.removeSpecialCharacters(s.getData());
                 List<Integer> numbers = ValidationUtils.extractNumbers(input);
@@ -515,7 +548,7 @@ public class UssdController {
                     message = exceeds ? AppConstants.EXCEEDS_NUMBER_LIMIT_MESSAGE : AppConstants.MEGA_VALIDATION_MESSAGE;
                     deleteSession(savedSession);
                 }
-            } else if (savedSession.getGameType() == FIRST && savedSession.getPosition() == FOURTH) {
+            } else if (savedSession.getGameType() == FIRST && savedSession.getPosition() == FIFTH) {
                 int amount = 0;
                 amount = switch (s.getData()) {
                     case "1" -> 5;
@@ -561,11 +594,11 @@ public class UssdController {
                     savedSession.setMsisdn(s.getMsisdn());
                     sessionRepository.save(savedSession);
                     return menuResponse(savedSession, continueFlag, AppConstants.WELCOME_MENU_MESSAGE);
-                } else if (choice.equals("2") && savedSession.getPosition() == 6) {
+                } else if (choice.equals("2") && savedSession.getPosition() == 7) {
                     message = AppConstants.DISCOUNT_PROMPT_MESSAGE;
-                } else if (choice.equals("1") && savedSession.getPosition() == 6) {
-                    message = "Select payment method\n1) Mobile Money\n2) Afriluck Wallet";
                 } else if (choice.equals("1") && savedSession.getPosition() == 7) {
+                    message = "Select payment method\n1) Mobile Money\n2) Afriluck Wallet";
+                } else if (choice.equals("1") && savedSession.getPosition() == 8) {
                     gameDraw = new Game();
                     message = AppConstants.PAYMENT_INIT_MESSAGE;
                     Runnable paymentTask = () -> {
@@ -590,7 +623,7 @@ public class UssdController {
                     paymentThread.start(paymentTask).join();
                     sessionThread.start(sessionTask);
                     continueFlag = 1;
-                } else if (choice.equals("2") && savedSession.getPosition() == 7) {
+                } else if (choice.equals("2") && savedSession.getPosition() == 8) {
                     gameDraw = new Game();
                     message = AppConstants.PAYMENT_INIT_MESSAGE_WALLET;
                     Runnable paymentTask = () -> {
@@ -615,7 +648,7 @@ public class UssdController {
                     paymentThread.start(paymentTask).join();
                     sessionThread.start(sessionTask);
                     continueFlag = 1;
-                } else if (savedSession.getPosition() == 7) {
+                } else if (savedSession.getPosition() == 8) {
                     DiscountResponse response = applyCoupon(s.getAmount(), s.getData());
                     System.out.printf("Discount => ", response);
                     message = discountMessage(response);
@@ -623,9 +656,9 @@ public class UssdController {
                         savedSession.setDiscountedAmount(response.getAmount());
                         updateSession(savedSession, false);
                     }
-                } else if (savedSession.getPosition() == 8) {
-                    message = "Select payment method\n1) Mobile Money\n2) Afriluck Wallet";
                 } else if (savedSession.getPosition() == 9) {
+                    message = "Select payment method\n1) Mobile Money\n2) Afriluck Wallet";
+                } else if (savedSession.getPosition() == 10) {
                     if (savedSession.getData().equals("1")) {
                         gameDraw = new Game();
                         updateSession(savedSession, false);
@@ -719,18 +752,18 @@ public class UssdController {
         savedSession.setGameTypeId(gameDraw.getGameDraw());
         savedSession.setBetTypeCode(AppConstants.DIRECT);
         AtomicInteger index = new AtomicInteger(1);
-        List<String> directGames = ValidationUtils.isEveningGameTime()? AppConstants.DIRECT_GAMES: AppConstants.DIRECT_GAMES_MORNING;
+        List<String> directGames = ValidationUtils.isEveningGameTime() ? AppConstants.DIRECT_GAMES : AppConstants.DIRECT_GAMES_MORNING;
         updateSession(savedSession, false);
         boolean containsLetters = savedSession.getPosition() != 6 ? ValidationUtils.containsAnyLetters(s.getData()) : false;
         if (!containsLetters) {
-            if (savedSession.getGameType() == SECOND && savedSession.getPosition() == FIRST) {
+            if (savedSession.getGameType() == SECOND && savedSession.getPosition() == SECOND) {
                 StringBuilder builder = new StringBuilder();
                 directGames.stream().forEachOrdered(game -> {
                     int currentIndex = index.getAndIncrement();
                     builder.append(String.format("%s) %s\n", currentIndex, game.toString()));
                 });
                 message = builder.toString();
-            } else if (savedSession.getGameType() == SECOND && savedSession.getPosition() == SECOND) {
+            } else if (savedSession.getGameType() == SECOND && savedSession.getPosition() == THIRD) {
                 try {
                     String currentGame = directGames.get(ValidationUtils.parseNumber(s.getData()).intValue() - 1).toString();
                     int currentMax = ValidationUtils.parseNumber(s.getData()).intValue();
@@ -750,7 +783,7 @@ public class UssdController {
                     deleteSession(savedSession);
                     return menuResponse(savedSession, 0, "Invalid input \n 0) Back");
                 }
-            } else if (gameType == savedSession.getGameType() && savedSession.getPosition() == THIRD) {
+            } else if (gameType == savedSession.getGameType() && savedSession.getPosition() == FOURTH) {
                 String input = ValidationUtils.removeSpecialCharacters(s.getData());
                 String[] selectedNumbers = ValidationUtils.splitNumbers(input);
                 int len = selectedNumbers.length;
@@ -771,7 +804,7 @@ public class UssdController {
                     savedSession.setSelectedNumbers(s.getData());
                     updateSession(savedSession, false);
                 }
-            } else if (gameType == SECOND && position == FOURTH) {
+            } else if (gameType == SECOND && position == FIFTH) {
                 Number amount = ValidationUtils.parseNumber(s.getData());
                 boolean isDecimal = ValidationUtils.isDecimal(amount.doubleValue());
                 if (!isDecimal) {
@@ -801,7 +834,7 @@ public class UssdController {
                     message = "Invalid amount. Enter a round figure.\n 0) Back";
                     continueFlag = 0;
                 }
-            } else if (savedSession.getGameType() == SECOND && savedSession.getPosition() == FIFTH) {
+            } else if (savedSession.getGameType() == SECOND && savedSession.getPosition() == SIX) {
                 String choice = s.getData();
                 if (choice.equals("0")) {
                     continueFlag = 0;
@@ -810,9 +843,9 @@ public class UssdController {
                     savedSession.setMsisdn(s.getMsisdn());
                     sessionRepository.save(savedSession);
                     return menuResponse(savedSession, continueFlag, AppConstants.WELCOME_MENU_MESSAGE);
-                } else if (choice.equals("2") && savedSession.getPosition() == 5) {
+                } else if (choice.equals("2") && savedSession.getPosition() == 6) {
                     message = AppConstants.DISCOUNT_PROMPT_MESSAGE;
-                } else if (choice.equals("1") && savedSession.getPosition() == 5) {
+                } else if (choice.equals("1") && savedSession.getPosition() == 6) {
                     message = "Select payment method\n1) Mobile Money\n2) Afriluck Wallet";
                 } else {
                     savedSession.setCurrentGame("direct");
@@ -841,7 +874,7 @@ public class UssdController {
                     sessionThread.start(sessionTask);
                     continueFlag = 1;
                 }
-            } else if (savedSession.getPosition() == SIX) {
+            } else if (savedSession.getPosition() == SEVEN) {
                 if (savedSession.getData().equals("1")) {
                     // Pay with MOMO
                     message = AppConstants.PAYMENT_INIT_MESSAGE;
@@ -901,16 +934,16 @@ public class UssdController {
                         updateSession(savedSession, false);
                     }
                 }
-            } else if (savedSession.getPosition() == 7 && savedSession.getData().equals("0")) {
+            } else if (savedSession.getPosition() == 8 && savedSession.getData().equals("0")) {
                 deleteSession(savedSession);
                 continueFlag = 0;
                 savedSession.setData("0");
                 savedSession.setMsisdn(s.getMsisdn());
                 sessionRepository.save(savedSession);
                 return menuResponse(savedSession, continueFlag, AppConstants.WELCOME_MENU_MESSAGE);
-            } else if (savedSession.getPosition() == 7 && savedSession.getData().equals("1")) {
+            } else if (savedSession.getPosition() == 8 && savedSession.getData().equals("1")) {
                 message = "Select payment method\n1) Mobile Money\n2) Afriluck Wallet";
-            } else if (savedSession.getPosition() == 8) {
+            } else if (savedSession.getPosition() == 9) {
                 if (savedSession.getData().equals("1")) {
                     message = AppConstants.PAYMENT_INIT_MESSAGE;
                     Runnable paymentTask = () -> {
@@ -998,7 +1031,7 @@ public class UssdController {
         int continueFlag = 0;
         String message = null;
         int codeType = 0;
-        List<String> permGames = ValidationUtils.isEveningGameTime()? AppConstants.PERM_GAMES: AppConstants.PERM_GAMES_MORNING;
+        List<String> permGames = ValidationUtils.isEveningGameTime() ? AppConstants.PERM_GAMES : AppConstants.PERM_GAMES_MORNING;
         AtomicReference<Integer> index = new AtomicReference<>(0);
         Optional<Game> currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameDraw().endsWith("A")).findFirst();
         final Game gameDraw = currentGameDraw.get();
@@ -1009,14 +1042,14 @@ public class UssdController {
         updateSession(savedSession, false);
         boolean containsLetters = savedSession.getPosition() != 6 ? ValidationUtils.containsAnyLetters(s.getData()) : false;
         if (!containsLetters) {
-            if (savedSession.getGameType() == THIRD && savedSession.getPosition() == FIRST) {
+            if (savedSession.getGameType() == THIRD && savedSession.getPosition() == SECOND) {
                 StringBuilder builder = new StringBuilder();
                 permGames.stream().forEachOrdered(game -> {
                     int currentIndex = index.updateAndGet(v -> v + 1);
                     builder.append(String.format("%s) %s\n", currentIndex, game.toString()));
                 });
                 message = builder.toString();
-            } else if (savedSession.getGameType() == THIRD && savedSession.getPosition() == SECOND) {
+            } else if (savedSession.getGameType() == THIRD && savedSession.getPosition() == THIRD) {
                 String currentGame = null;
                 try {
                     currentGame = permGames.get(ValidationUtils.parseNumber(s.getData()).intValue() - 1).toString();
@@ -1054,7 +1087,7 @@ public class UssdController {
                     default -> "";
                 };
                 updateSession(savedSession, false);
-            } else if (savedSession.getGameType() == THIRD && savedSession.getPosition() == THIRD) {
+            } else if (savedSession.getGameType() == THIRD && savedSession.getPosition() == FOURTH) {
                 String input = ValidationUtils.removeSpecialCharacters(s.getData());
                 savedSession.setSelectedNumbers(input);
                 String[] selectedNumbers = ValidationUtils.splitNumbers(input);
@@ -1078,7 +1111,7 @@ public class UssdController {
                             """;
                     updateSession(savedSession, false);
                 }
-            } else if (savedSession.getGameType() == THIRD && savedSession.getPosition() == FOURTH) {
+            } else if (savedSession.getGameType() == THIRD && savedSession.getPosition() == FIFTH) {
                 Number amount = ValidationUtils.parseNumber(s.getData());
                 boolean isDecimal = ValidationUtils.isDecimal(amount.doubleValue());
                 if (!isDecimal) {
@@ -1109,7 +1142,7 @@ public class UssdController {
                     message = "Invalid amount. Enter a round figure.\n 0) Back";
                     continueFlag = 0;
                 }
-            } else if (gameType == THIRD && position == FIFTH) {
+            } else if (gameType == THIRD && position == SIX) {
                 String choice = s.getData();
                 if (choice.equals("0")) {
                     continueFlag = 0;
@@ -1118,9 +1151,9 @@ public class UssdController {
                     savedSession.setMsisdn(s.getMsisdn());
                     sessionRepository.save(savedSession);
                     return menuResponse(savedSession, continueFlag, AppConstants.WELCOME_MENU_MESSAGE);
-                } else if (choice.equals("2") && savedSession.getPosition() == 5) {
+                } else if (choice.equals("2") && savedSession.getPosition() == 6) {
                     message = AppConstants.DISCOUNT_PROMPT_MESSAGE;
-                } else if (choice.equals("1") && savedSession.getPosition() == 5) {
+                } else if (choice.equals("1") && savedSession.getPosition() == 6) {
                     message = "Select payment method\n1) Mobile Money\n2) Afriluck Wallet";
                 } else {
                     savedSession.setBetTypeCode(AppConstants.PERM);
@@ -1151,7 +1184,7 @@ public class UssdController {
                     paymentThread.start(paymentTask).join();
                     sessionThread.start(sessionTask);
                 }
-            } else if (savedSession.getPosition() == SIX) {
+            } else if (savedSession.getPosition() == SEVEN) {
                 if (savedSession.getData().equals("1")) {
                     // Payment from MOMO
                     savedSession.setCurrentGame("direct");
@@ -1215,16 +1248,16 @@ public class UssdController {
                         updateSession(savedSession, false);
                     }
                 }
-            } else if (savedSession.getPosition() == 7 && savedSession.getData().equals("0")) {
+            } else if (savedSession.getPosition() == 8 && savedSession.getData().equals("0")) {
                 deleteSession(savedSession);
                 continueFlag = 0;
                 savedSession.setData("0");
                 savedSession.setMsisdn(s.getMsisdn());
                 sessionRepository.save(savedSession);
                 return menuResponse(savedSession, continueFlag, AppConstants.WELCOME_MENU_MESSAGE);
-            } else if (savedSession.getPosition() == 7 && savedSession.getData().equals("1")) {
+            } else if (savedSession.getPosition() == 8 && savedSession.getData().equals("1")) {
                 message = "Select payment method\n1) Mobile Money\n2) Afriluck Wallet";
-            } else if (savedSession.getPosition() == 8) {
+            } else if (savedSession.getPosition() == 9) {
                 if (savedSession.getData().equals("1")) {
                     message = AppConstants.PAYMENT_INIT_MESSAGE;
                     Runnable paymentTask = () -> {

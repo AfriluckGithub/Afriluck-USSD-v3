@@ -44,6 +44,15 @@ public class Session {
     private String callBackMessage;
     private Boolean couponApplied;
     private Double discountedAmount;
+    @Column(name = "passed_welcome_msg")
+    private boolean passedWelcomeMessage;
+    @Column(name = "secondStep")
+    private boolean secondStep;
+    @Column(name = "start")
+    private boolean start;
+    @Column(name = "menu_choice")
+    private int menuChoice;
+
 
     private LocalDateTime updatedDate;
 
@@ -51,7 +60,7 @@ public class Session {
     }
 
 
-    public Session(Integer id, String message, String sequenceID, String network, String msisdn, String data, Integer position, Integer gameType, String selectedNumbers, Double amount, String gameTypeId, String timeStamp, String gameId, String betTypeCode, Integer gameTypeCode, String currentGame, Integer max, Integer min, String callBackMessage, Boolean couponApplied, Double discountedAmount) {
+    public Session(Integer id, String message, String sequenceID, String network, String msisdn, String data, Integer position, Integer gameType, String selectedNumbers, Double amount, String gameTypeId, String timeStamp, String gameId, String betTypeCode, Integer gameTypeCode, String currentGame, Integer max, Integer min, String callBackMessage, Boolean couponApplied, Double discountedAmount, Boolean passedWelcomeMessage, Boolean start, Boolean secondStep, Integer menuChoice) {
         this.id = id;
         this.sequenceID = sequenceID;
         this.network = network;
@@ -73,6 +82,10 @@ public class Session {
         this.callBackMessage = callBackMessage;
         this.couponApplied = couponApplied;
         this.discountedAmount = discountedAmount;
+        this.passedWelcomeMessage = passedWelcomeMessage;
+        this.start = start;
+        this.secondStep = secondStep;
+        this.menuChoice = menuChoice;
     }
 
     @PrePersist
@@ -86,6 +99,14 @@ public class Session {
     @PreUpdate
     protected void onUpdate() {
         updatedDate = LocalDateTime.now();
+    }
+
+    public void setMenuChoice(int menuChoice) {
+        this.menuChoice = menuChoice;
+    }
+
+    public int getMenuChoice() {
+        return menuChoice;
     }
 
     public String getMessage() {
@@ -264,6 +285,30 @@ public class Session {
         this.discountedAmount = discountedAmount;
     }
 
+    public void setPassedWelcomeMessage(boolean passedWelcomeMessage) {
+        this.passedWelcomeMessage = passedWelcomeMessage;
+    }
+
+    public boolean isPassedWelcomeMessage() {
+        return passedWelcomeMessage;
+    }
+
+    public void setStart(boolean start) {
+        this.start = start;
+    }
+
+    public boolean isStart() {
+        return start;
+    }
+
+    public void setSecondStep(boolean secondStep) {
+        this.secondStep = secondStep;
+    }
+
+    public boolean isSecondStep() {
+        return secondStep;
+    }
+
     @Override
     public String toString() {
         return "Session{" +
@@ -280,6 +325,10 @@ public class Session {
                 ", couponApplied='" + couponApplied + '\'' +
                 ", discountedAmount='" + discountedAmount + '\'' +
                 ", timeStamp='" + timeStamp + '\'' +
+                ", passedWelcomeMessage'"+ passedWelcomeMessage+'\''+
+                ", start'"+ start+'\''+
+                ", secondStep'"+ secondStep+'\''+
+                ", menuChoice'"+ menuChoice+'\''+
                 '}';
     }
 }
