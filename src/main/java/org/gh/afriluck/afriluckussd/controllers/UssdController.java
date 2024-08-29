@@ -27,6 +27,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
 
 @RestController("/")
 public class UssdController {
@@ -169,7 +170,7 @@ public class UssdController {
             } else {
                 System.out.println("--- Initial Menu ---");
                 String dayOfWeekInWords = getDayOfWeekInWords();
-                message = menuResponse(session, 0, ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords) : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords));
+                message = menuResponse(session, 0, !ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords) : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords));
                 // For testing ...
                 //message = menuResponse(session, 0, String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords));
                 s.setStart(true);
