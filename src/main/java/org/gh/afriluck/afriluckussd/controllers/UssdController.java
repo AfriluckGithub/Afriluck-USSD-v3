@@ -205,7 +205,7 @@ public class UssdController {
                     savedSession.setMsisdn(savedSession.getMsisdn());
                     savedSession.setSecondStep(false);
                     sessionRepository.save(savedSession);
-                    return menuResponse(savedSession, continueFlag, AppConstants.WELCOME_MENU_MESSAGE);
+                    return menuResponse(savedSession, continueFlag, ValidationUtils.isEveningGameTime()? AppConstants.WELCOME_MENU_MESSAGE: AppConstants.WELCOME_MENU_MESSAGE_MORNING);
                 case "1":
                     continueFlag = 1;
                     response = getDrawResults(savedSession);
