@@ -133,26 +133,27 @@ public class UssdController {
                     s.setSecondStep(true);
                     updateSession(s, false);
                 } else if ((s.isPassedWelcomeMessage()) && (s.getMenuChoice() == FIRST) && (s.isSecondStep())) {
-                    message = ValidationUtils.isEveningGameTime() ? switch (s.getGameType()) {
-                        case 1 -> megaGameOptions(s.getGameType(), s.getPosition(), s);
-                        case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
-                        case 3 -> permGameOptions(s.getGameType(), s.getPosition(), s);
-                        case 4 -> banker(s, "Banker");
-                        //case 5 -> account(s);
-                        //case 6 -> tnCsMessage(s);
-                        //case 99 -> contactUsMessage(s);
-                        case 0 -> menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE);
+                    message = ValidationUtils.isEveningGameTime() ?
+                            switch (s.getGameType()) {
+                                case 1 -> megaGameOptions(s.getGameType(), s.getPosition(), s);
+                                case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
+                                case 3 -> permGameOptions(s.getGameType(), s.getPosition(), s);
+                                case 4 -> banker(s, "Banker");
+                                //case 5 -> account(s);
+                                //case 6 -> tnCsMessage(s);
+                                //case 99 -> contactUsMessage(s);
+                                case 0 -> menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE);
                         default -> silentDelete(s);
                     } : switch (s.getGameType()) {
                         //case 1 -> megaGameOptions(s.getGameType(), s.getPosition(), s);
-                        case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
-                        case 3 -> permGameOptions(s.getGameType(), s.getPosition(), s);
-                        case 4 -> banker(s, "Banker");
-                        //case 5 -> account(s);
-                        //case 6 -> tnCsMessage(s);
-                        //case 99 -> contactUsMessage(s);
-                        case 0 -> menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE);
-                        default -> silentDelete(s);
+                            case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
+                            case 3 -> permGameOptions(s.getGameType(), s.getPosition(), s);
+                            case 4 -> banker(s, "Banker");
+                            //case 5 -> account(s);
+                            //case 6 -> tnCsMessage(s);
+                            //case 99 -> contactUsMessage(s);
+                            case 0 -> menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE);
+                            default -> silentDelete(s);
                     };
                 } else if (s.getMenuChoice() == SECOND) {
                     message = menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE_MORNING);
