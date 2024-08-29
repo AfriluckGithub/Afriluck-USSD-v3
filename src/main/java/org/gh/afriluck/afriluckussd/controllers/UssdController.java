@@ -156,7 +156,7 @@ public class UssdController {
                             default -> silentDelete(s);
                     };
                 } else if (s.getMenuChoice() == SECOND) {
-                    message = menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE_MORNING);
+                    message = menuResponse(session, 0, session.getData().equals("2")? AppConstants.WELCOME_MENU_MESSAGE: AppConstants.WELCOME_MENU_MESSAGE_MORNING);
                     s.setMenuChoice(1);
                     s.setSecondStep(true);
                     updateSession(s, false);
