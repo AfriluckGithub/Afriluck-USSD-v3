@@ -111,6 +111,17 @@ public class UssdController {
                     s.setMenuChoice(6);
                 } else if (session.getData().equals("99") && s.getPosition() == 1) {
                     s.setMenuChoice(99);
+                } else if (session.getData().equals("0") && s.getPosition() == 2) {
+                    s.setMenuChoice(0);
+                    s.setPosition(0);
+                    s.setSecondStep(false);
+                    s.setStart(false);
+                    updateSession(s, false);
+                    LocalDate currentDate = LocalDate.now();
+                    DayOfWeek dayOfWeek = currentDate.getDayOfWeek();
+                    String dayOfWeekInWords = dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH);
+                    message = menuResponse(session, 0, ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords) : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords));
+                    s.setStart(true);
                 }
                 updateSession(session, false);
 
@@ -122,7 +133,7 @@ public class UssdController {
                     s.setSecondStep(true);
                     updateSession(s, false);
                 } else if ((s.isPassedWelcomeMessage()) && (s.getMenuChoice() == FIRST) && (s.isSecondStep())) {
-                    message = switch (s.getGameType()) {
+                    message = ValidationUtils.isEveningGameTime() ? switch (s.getGameType()) {
                         case 1 -> megaGameOptions(s.getGameType(), s.getPosition(), s);
                         case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
                         case 3 -> permGameOptions(s.getGameType(), s.getPosition(), s);
@@ -132,8 +143,18 @@ public class UssdController {
                         //case 99 -> contactUsMessage(s);
                         case 0 -> menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE);
                         default -> silentDelete(s);
+                    } : switch (s.getGameType()) {
+                        //case 1 -> megaGameOptions(s.getGameType(), s.getPosition(), s);
+                        case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
+                        case 3 -> permGameOptions(s.getGameType(), s.getPosition(), s);
+                        case 4 -> banker(s, "Banker");
+                        //case 5 -> account(s);
+                        //case 6 -> tnCsMessage(s);
+                        //case 99 -> contactUsMessage(s);
+                        case 0 -> menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE);
+                        default -> silentDelete(s);
                     };
-                }else if (s.getMenuChoice() == SECOND) {
+                } else if (s.getMenuChoice() == SECOND) {
                     message = menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE_MORNING);
                     s.setMenuChoice(1);
                     s.setSecondStep(true);
