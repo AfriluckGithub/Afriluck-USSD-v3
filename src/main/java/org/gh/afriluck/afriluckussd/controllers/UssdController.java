@@ -94,96 +94,83 @@ public class UssdController {
             updateSession(session, true);
         }
 
-        //String[] numbers = {"1", "5", "6", "99"};
-        // !ValidationUtils.containsAny(session.getData(), numbers)
-
         if (ValidationUtils.isBetweenGameTime()) {
             message = menuResponse(session, 1, AppConstants.GAME_CLOSED_MESSAGE);
         } else {
             Session s = sessionRepository.findBySequenceID(session.getSequenceID());
-            if (s.isStart()) {
-                if (session.getData().equals("1") && s.getPosition() == 1) {
-                    s.setMenuChoice(1);
-                } else if (session.getData().equals("2") && s.getPosition() == 1) {
-                    s.setMenuChoice(2);
-                } else if (session.getData().equals("5") && s.getPosition() == 1) {
-                    s.setMenuChoice(5);
-                } else if (session.getData().equals("6") && s.getPosition() == 1) {
-                    s.setMenuChoice(6);
-                } else if (session.getData().equals("99") && s.getPosition() == 1) {
-                    s.setMenuChoice(99);
-                } else if (session.getData().equals("0") && s.getPosition() == 2) {
-                    s.setMenuChoice(0);
-                    s.setPosition(0);
-                    s.setSecondStep(false);
-                    s.setStart(false);
-                    updateSession(s, false);
-                    String dayOfWeekInWords = getDayOfWeekInWords();
-                    message = menuResponse(session, 0, !ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords) : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords));
-                    s.setStart(true);
-                }
-                updateSession(session, false);
-
-                s.setPassedWelcomeMessage(true);
-                updateSession(s, false);
-                System.out.printf("Session New => %s =>", s);
-                if (s.isPassedWelcomeMessage() && s.getMenuChoice() == FIRST && !s.isSecondStep()) {
-                    message = menuResponse(session, 0, ValidationUtils.isEveningGameTime() ? AppConstants.WELCOME_MENU_MESSAGE : AppConstants.WELCOME_MENU_MESSAGE_MORNING);
-                    s.setSecondStep(true);
-                    updateSession(s, false);
-                } else if (s.isPassedWelcomeMessage() && s.getMenuChoice() == FIRST && s.isSecondStep()) {
-                    String dayOfWeekInWords = getDayOfWeekInWords();
-                    message = s.getMenuChoice() == 2 ?
-                            switch (s.getGameType()) {
-                                case 1 -> megaGameOptions(s.getGameType(), s.getPosition(), s);
-                                case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
-                                case 3 -> permGameOptions(s.getGameType(), s.getPosition(), s);
-                                case 4 -> banker(s, "Banker");
-                                //case 5 -> account(s);
-                                //case 6 -> tnCsMessage(s);
-                                //case 99 -> contactUsMessage(s);
-                                case 0 -> menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE);
-                                default -> silentDelete(s);
-                            } : switch (s.getGameType()) {
-                        //case 1 -> megaGameOptions(s.getGameType(), s.getPosition(), s);
-                        case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
-                        case 3 -> permGameOptions(s.getGameType(), s.getPosition(), s);
-                        case 4 -> banker(s, "Banker");
-                        //case 5 -> account(s);
-                        //case 6 -> tnCsMessage(s);
-                        //case 99 -> contactUsMessage(s);
-                        case 0 ->
-                                menuResponse(session, 0, String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords));
-                        default -> silentDelete(s);
-                    };
-                } else if (s.getMenuChoice() == SECOND) {
-                    if (ValidationUtils.isEveningGameTime()) {
-                        message = menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE);
-                    } else {
-                        message = menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE_MORNING);
-                    }
-                    s.setMenuChoice(1);
-                    s.setSecondStep(true);
-                    updateSession(s, false);
-                } else if (s.getMenuChoice() == FIFTH) {
-                    message = account(s);
-                } else if (s.getMenuChoice() == SIX) {
-                    message = tnCsMessage(s);
-                } else if (s.getMenuChoice() == 99) {
-                    message = contactUsMessage(s);
-                }
-            } else {
-                System.out.println("--- Initial Menu ---");
+            if (s.getNextStep() == ZERO) {
+                s.setNextStep(FIRST);
                 String dayOfWeekInWords = getDayOfWeekInWords();
-                message = menuResponse(session, 0, !ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords) : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords));
-                // For testing ...
-                //message = menuResponse(session, 0, String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords));
-                s.setStart(true);
                 updateSession(s, false);
-                System.out.printf("Session => %s", session.getMessage());
+                message = menuResponse(session, 0, ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords) : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords));
+            } else if (s.getNextStep() == FIRST) {
+                try {
+                    if (s.getNextStep() == FIRST && s.isSecondStep() == false) {
+                        s.setGameType(Integer.valueOf(s.getData()));
+                        updateSession(s, false);
+                    }
+                    message = switch (s.getGameType()) {
+                        case 1 -> anopaGameOptions(s);
+                        case 2 -> eveningGameOptions(s);
+                        case 5 -> account(s);
+                        case 6 -> tnCsMessage(s);
+                        case 99 -> contactUsMessage(s);
+                        case null -> "Invalid value entered\n 0. Back";
+                        default -> throw new IllegalStateException("Unexpected value: " + s.getData());
+                    };
+                } catch (Exception e) {
+                    message = menuResponse(session, 1, "Invalid value entered");
+                    e.printStackTrace();
+                }
+            } else if (s.getNextStep() == SECOND) {
+                String dayOfWeekInWords = getDayOfWeekInWords();
+                if (s.getPosition() == SECOND) {
+                    s.setGameType(Integer.valueOf(s.getData()));
+                    updateSession(s, false);
+                }
+                message = !s.isMorning() ? switch (s.getGameType()) {
+                    case 1 -> megaGameOptions(s.getGameType(), s.getPosition(), s);
+                    case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
+                    case 3 -> permGameOptions(s.getGameType(), s.getPosition(), s);
+                    case 4 -> banker(s, "Banker");
+                    //case 5 -> account(s);
+                    //case 6 -> tnCsMessage(s);
+                    //case 99 -> contactUsMessage(s);
+                    case null -> "Invalid value entered\n 0. Back";
+                    case 0 ->
+                            menuResponse(session, 0, s.isMorning() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords) : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords));
+                    default -> silentDelete(s);
+                } : switch (s.getGameType()) {
+                    case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
+                    case 3 -> permGameOptions(s.getGameType(), s.getPosition(), s);
+                    case 4 -> banker(s, "Banker");
+                    //case 5 -> account(s);
+                    //case 6 -> tnCsMessage(s);
+                    //case 99 -> contactUsMessage(s);
+                    case null -> "Invalid value entered\n 0. Back";
+                    case 0 ->
+                            menuResponse(session, 0, s.isMorning() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords) : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords));
+                    default -> silentDelete(s);
+                }
+                ;
             }
         }
         return message;
+    }
+
+
+    private String anopaGameOptions(Session session) {
+        session.setNextStep(SECOND);
+        session.setMorning(true);
+        updateSession(session, false);
+        return menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE_MORNING);
+    }
+
+    private String eveningGameOptions(Session session) {
+        session.setNextStep(SECOND);
+        session.setMorning(false);
+        updateSession(session, false);
+        return menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE);
     }
 
     /**
@@ -779,7 +766,7 @@ public class UssdController {
         savedSession.setGameTypeId(gameDraw.getGameDraw());
         savedSession.setBetTypeCode(AppConstants.DIRECT);
         AtomicInteger index = new AtomicInteger(1);
-        List<String> directGames = ValidationUtils.isEveningGameTime() ? AppConstants.DIRECT_GAMES : AppConstants.DIRECT_GAMES_MORNING;
+        List<String> directGames = savedSession.isMorning() ? AppConstants.DIRECT_GAMES_MORNING : AppConstants.DIRECT_GAMES;
         updateSession(savedSession, false);
         boolean containsLetters = savedSession.getPosition() != 7 ? ValidationUtils.containsAnyLetters(s.getData()) : false;
         if (!containsLetters) {
@@ -869,7 +856,7 @@ public class UssdController {
                     savedSession.setData("0");
                     savedSession.setMsisdn(s.getMsisdn());
                     sessionRepository.save(savedSession);
-                    return menuResponse(savedSession, continueFlag, ValidationUtils.isEveningGameTime() ? AppConstants.WELCOME_MENU_MESSAGE : AppConstants.WELCOME_MENU_MESSAGE_MORNING);
+                    return menuResponse(savedSession, continueFlag, savedSession.isMorning() ? AppConstants.WELCOME_MENU_MESSAGE_MORNING : AppConstants.WELCOME_MENU_MESSAGE);
                 } else if (choice.equals("2") && savedSession.getPosition() == 6) {
                     message = AppConstants.DISCOUNT_PROMPT_MESSAGE;
                 } else if (choice.equals("1") && savedSession.getPosition() == 6) {
@@ -967,7 +954,7 @@ public class UssdController {
                 savedSession.setData("0");
                 savedSession.setMsisdn(s.getMsisdn());
                 sessionRepository.save(savedSession);
-                return menuResponse(savedSession, continueFlag, ValidationUtils.isEveningGameTime() ? AppConstants.WELCOME_MENU_MESSAGE : AppConstants.WELCOME_MENU_MESSAGE_MORNING);
+                return menuResponse(savedSession, continueFlag, savedSession.isMorning() ? AppConstants.WELCOME_MENU_MESSAGE_MORNING : AppConstants.WELCOME_MENU_MESSAGE);
             } else if (savedSession.getPosition() == 8 && savedSession.getData().equals("1")) {
                 message = "Select payment method\n1) Mobile Money\n2) Afriluck Wallet";
             } else if (savedSession.getPosition() == 9) {
@@ -1058,7 +1045,7 @@ public class UssdController {
         int continueFlag = 0;
         String message = null;
         int codeType = 0;
-        List<String> permGames = ValidationUtils.isEveningGameTime() ? AppConstants.PERM_GAMES : AppConstants.PERM_GAMES_MORNING;
+        List<String> permGames = s.isMorning() ? AppConstants.PERM_GAMES_MORNING : AppConstants.PERM_GAMES;
         AtomicReference<Integer> index = new AtomicReference<>(0);
         Optional<Game> currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameDraw().endsWith("A")).findFirst();
         final Game gameDraw = currentGameDraw.get();
@@ -1177,7 +1164,7 @@ public class UssdController {
                     savedSession.setData("0");
                     savedSession.setMsisdn(s.getMsisdn());
                     sessionRepository.save(savedSession);
-                    return menuResponse(savedSession, continueFlag, ValidationUtils.isEveningGameTime() ? AppConstants.WELCOME_MENU_MESSAGE : AppConstants.WELCOME_MENU_MESSAGE_MORNING);
+                    return menuResponse(savedSession, continueFlag, savedSession.isMorning() ? AppConstants.WELCOME_MENU_MESSAGE_MORNING : AppConstants.WELCOME_MENU_MESSAGE);
                 } else if (choice.equals("2") && savedSession.getPosition() == 6) {
                     message = AppConstants.DISCOUNT_PROMPT_MESSAGE;
                 } else if (choice.equals("1") && savedSession.getPosition() == 6) {
@@ -1281,7 +1268,7 @@ public class UssdController {
                 savedSession.setData("0");
                 savedSession.setMsisdn(s.getMsisdn());
                 sessionRepository.save(savedSession);
-                return menuResponse(savedSession, continueFlag, ValidationUtils.isEveningGameTime() ? AppConstants.WELCOME_MENU_MESSAGE : AppConstants.WELCOME_MENU_MESSAGE_MORNING);
+                return menuResponse(savedSession, continueFlag, savedSession.isMorning() ? AppConstants.WELCOME_MENU_MESSAGE_MORNING : AppConstants.WELCOME_MENU_MESSAGE);
             } else if (savedSession.getPosition() == 8 && savedSession.getData().equals("1")) {
                 message = "Select payment method\n1) Mobile Money\n2) Afriluck Wallet";
             } else if (savedSession.getPosition() == 9) {

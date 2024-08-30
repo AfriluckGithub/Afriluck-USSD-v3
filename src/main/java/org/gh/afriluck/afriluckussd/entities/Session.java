@@ -52,6 +52,10 @@ public class Session {
     private boolean start;
     @Column(name = "menu_choice")
     private int menuChoice;
+    @Column(name = "next_step")
+    private Integer nextStep=0;
+    @Column(name = "is_morning")
+    private boolean isMorning;
 
 
     private LocalDateTime updatedDate;
@@ -60,7 +64,7 @@ public class Session {
     }
 
 
-    public Session(Integer id, String message, String sequenceID, String network, String msisdn, String data, Integer position, Integer gameType, String selectedNumbers, Double amount, String gameTypeId, String timeStamp, String gameId, String betTypeCode, Integer gameTypeCode, String currentGame, Integer max, Integer min, String callBackMessage, Boolean couponApplied, Double discountedAmount, Boolean passedWelcomeMessage, Boolean start, Boolean secondStep, Integer menuChoice) {
+    public Session(Integer id, String message, String sequenceID, String network, String msisdn, String data, Integer position, Integer gameType, String selectedNumbers, Double amount, String gameTypeId, String timeStamp, String gameId, String betTypeCode, Integer gameTypeCode, String currentGame, Integer max, Integer min, String callBackMessage, Boolean couponApplied, Double discountedAmount, Boolean passedWelcomeMessage, Boolean start, Boolean secondStep, Integer menuChoice, Integer nextStep, boolean isMorning) {
         this.id = id;
         this.sequenceID = sequenceID;
         this.network = network;
@@ -86,6 +90,8 @@ public class Session {
         this.start = start;
         this.secondStep = secondStep;
         this.menuChoice = menuChoice;
+        this.nextStep = nextStep;
+        this.isMorning = isMorning;
     }
 
     @PrePersist
@@ -297,16 +303,28 @@ public class Session {
         this.start = start;
     }
 
-    public boolean isStart() {
-        return start;
+    public void setNextStep(Integer nextStep) {
+        this.nextStep = nextStep;
+    }
+
+    public Integer getNextStep() {
+        return nextStep;
+    }
+
+    public boolean isSecondStep() {
+        return secondStep;
     }
 
     public void setSecondStep(boolean secondStep) {
         this.secondStep = secondStep;
     }
 
-    public boolean isSecondStep() {
-        return secondStep;
+    public boolean isMorning() {
+        return isMorning;
+    }
+
+    public void setMorning(boolean morning) {
+        isMorning = morning;
     }
 
     @Override
@@ -329,6 +347,8 @@ public class Session {
                 ", start'"+ start+'\''+
                 ", secondStep'"+ secondStep+'\''+
                 ", menuChoice'"+ menuChoice+'\''+
+                ", nextStep'"+ nextStep+'\''+
+                ", isMorning'"+ isMorning+'\''+
                 '}';
     }
 }
