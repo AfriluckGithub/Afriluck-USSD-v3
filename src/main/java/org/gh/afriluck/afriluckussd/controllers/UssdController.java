@@ -99,6 +99,11 @@ public class UssdController {
             message = menuResponse(session, 1, AppConstants.GAME_CLOSED_MESSAGE);
         } else {
             Session s = sessionRepository.findBySequenceID(session.getSequenceID());
+            if (s.isReset()) {
+                s.setNextStep(SECOND);
+                s.setPosition(SECOND);
+                s.setGameType(s.getGameType());
+            }
             if (s.getNextStep() == ZERO) {
                 s.setNextStep(FIRST);
                 String dayOfWeekInWords = getDayOfWeekInWords();
@@ -125,7 +130,7 @@ public class UssdController {
                 }
             } else if (s.getNextStep() == SECOND) {
                 String dayOfWeekInWords = getDayOfWeekInWords();
-                if (s.getPosition() == SECOND) {
+                if (s.getPosition() == SECOND && !s.isReset()) {
                     s.setGameType(Integer.valueOf(s.getData()));
                     updateSession(s, false);
                 }
@@ -195,13 +200,13 @@ public class UssdController {
                 case "0":
                     deleteSession(savedSession);
                     continueFlag = 0;
-                    savedSession.setData("0");
-                    savedSession.setMsisdn(savedSession.getMsisdn());
-                    //savedSession.setSecondStep(false);
-                    savedSession.setStart(false);
-                    savedSession.setSecondStep(false);
-                    sessionRepository.save(savedSession);
-                    return menuResponse(savedSession, continueFlag, ValidationUtils.isEveningGameTime() ? AppConstants.WELCOME_MENU_MESSAGE : AppConstants.WELCOME_MENU_MESSAGE_MORNING);
+//                    savedSession.setData("0");
+//                    savedSession.setMsisdn(savedSession.getMsisdn());
+//                    //savedSession.setSecondStep(false);
+//                    savedSession.setStart(false);
+//                    savedSession.setSecondStep(false);
+//                    sessionRepository.save(savedSession);
+                    return menuResponse(savedSession, continueFlag, ValidationUtils.isEveningGameTime() ? AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING : AppConstants.WELCOME_MENU_MESSAGE_NEW);
                 case "1":
                     continueFlag = 1;
                     response = getDrawResults(savedSession);
@@ -386,12 +391,8 @@ public class UssdController {
             } else {
                 String choice = s.getData();
                 if (choice.equals("0")) {
-                    continueFlag = 0;
                     deleteSession(savedSession);
-                    savedSession.setData("0");
-                    savedSession.setMsisdn(s.getMsisdn());
-                    sessionRepository.save(savedSession);
-                    return menuResponse(savedSession, continueFlag, ValidationUtils.isEveningGameTime() ? AppConstants.WELCOME_MENU_MESSAGE : AppConstants.WELCOME_MENU_MESSAGE_MORNING);
+                    return menuResponse(savedSession, 1, "Ticket cancelled by user\n 0. Back");
                 } else if (choice.equals("2") && savedSession.getPosition() == 5) {
                     message = AppConstants.DISCOUNT_PROMPT_MESSAGE;
                 } else if (choice.equals("1") && savedSession.getPosition() == 5) {
@@ -494,14 +495,18 @@ public class UssdController {
                 savedSession.setPosition(savedSession.getPosition() + 1);
             }
 
-            if (savedSession.getPosition() == 2) {
+            if (savedSession.getPosition() == 2 && !savedSession.isReset()) {
                 savedSession.setGameType(Integer.parseInt(session.getData()));
             }
         } catch (Exception e) {
             System.out.println(e);
         }
-        System.out.println(savedSession);
+        // System.out.println(savedSession);
         sessionRepository.save(savedSession);
+    }
+
+    private void increasePosition(Session savedSession) {
+        savedSession.setPosition(savedSession.getPosition() + 1);
     }
 
     private void saveUSSDSession(Session session) {
@@ -603,12 +608,8 @@ public class UssdController {
                 String choice = s.getData();
 
                 if (choice.equals("0")) {
-                    continueFlag = 0;
                     deleteSession(savedSession);
-                    savedSession.setData("0");
-                    savedSession.setMsisdn(s.getMsisdn());
-                    sessionRepository.save(savedSession);
-                    return menuResponse(savedSession, continueFlag, ValidationUtils.isEveningGameTime() ? AppConstants.WELCOME_MENU_MESSAGE : AppConstants.WELCOME_MENU_MESSAGE_MORNING);
+                    return menuResponse(savedSession, 1, "Ticket cancelled by user\n 0. Back");
                 } else if (choice.equals("2") && savedSession.getPosition() == 7) {
                     message = AppConstants.DISCOUNT_PROMPT_MESSAGE;
                 } else if (choice.equals("1") && savedSession.getPosition() == 7) {
@@ -761,9 +762,11 @@ public class UssdController {
         String message = null;
         int continueFlag = 0;
         Session savedSession = sessionRepository.findBySequenceID(s.getSequenceID());
+        System.err.printf("\nDIRECT SESSION => %s\n", savedSession);
+        System.err.printf("\nSESSION SESSION => %s\n", savedSession);
         List<Game> currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameDraw().endsWith("A")).sorted(Comparator.comparing(Game::getGameName)).toList();
         Game gameDraw = savedSession.isMorning()? currentGameDraw.get(0): currentGameDraw.get(1);
-        System.out.printf("Game Name ----> %s", gameDraw.getGameName());
+        //System.out.printf("Game Name ----> %s", gameDraw.getGameName());
         savedSession.setGameId(gameDraw.getGameId());
         savedSession.setGameTypeId(gameDraw.getGameDraw());
         savedSession.setBetTypeCode(AppConstants.DIRECT);
@@ -853,12 +856,8 @@ public class UssdController {
             } else if (savedSession.getGameType() == SECOND && savedSession.getPosition() == SIX) {
                 String choice = s.getData();
                 if (choice.equals("0")) {
-                    continueFlag = 0;
                     deleteSession(savedSession);
-                    savedSession.setData("0");
-                    savedSession.setMsisdn(s.getMsisdn());
-                    sessionRepository.save(savedSession);
-                    return menuResponse(savedSession, continueFlag, savedSession.isMorning() ? AppConstants.WELCOME_MENU_MESSAGE_MORNING : AppConstants.WELCOME_MENU_MESSAGE);
+                    return menuResponse(savedSession, 1, "Ticket cancelled by user\n 0. Back");
                 } else if (choice.equals("2") && savedSession.getPosition() == 6) {
                     message = AppConstants.DISCOUNT_PROMPT_MESSAGE;
                 } else if (choice.equals("1") && savedSession.getPosition() == 6) {
@@ -952,11 +951,7 @@ public class UssdController {
                 }
             } else if (savedSession.getPosition() == 8 && savedSession.getData().equals("0")) {
                 deleteSession(savedSession);
-                continueFlag = 0;
-                savedSession.setData("0");
-                savedSession.setMsisdn(s.getMsisdn());
-                sessionRepository.save(savedSession);
-                return menuResponse(savedSession, continueFlag, savedSession.isMorning() ? AppConstants.WELCOME_MENU_MESSAGE_MORNING : AppConstants.WELCOME_MENU_MESSAGE);
+                return menuResponse(savedSession, 1, "Ticket cancelled by user\n 0. Back");
             } else if (savedSession.getPosition() == 8 && savedSession.getData().equals("1")) {
                 message = "Select payment method\n1) Mobile Money\n2) Afriluck Wallet";
             } else if (savedSession.getPosition() == 9) {
@@ -1161,12 +1156,8 @@ public class UssdController {
             } else if (gameType == THIRD && position == SIX) {
                 String choice = s.getData();
                 if (choice.equals("0")) {
-                    continueFlag = 0;
                     deleteSession(savedSession);
-                    savedSession.setData("0");
-                    savedSession.setMsisdn(s.getMsisdn());
-                    sessionRepository.save(savedSession);
-                    return menuResponse(savedSession, continueFlag, savedSession.isMorning() ? AppConstants.WELCOME_MENU_MESSAGE_MORNING : AppConstants.WELCOME_MENU_MESSAGE);
+                    return menuResponse(savedSession, 1, "Ticket cancelled by user\n 0. Back");
                 } else if (choice.equals("2") && savedSession.getPosition() == 6) {
                     message = AppConstants.DISCOUNT_PROMPT_MESSAGE;
                 } else if (choice.equals("1") && savedSession.getPosition() == 6) {
@@ -1266,11 +1257,7 @@ public class UssdController {
                 }
             } else if (savedSession.getPosition() == 8 && savedSession.getData().equals("0")) {
                 deleteSession(savedSession);
-                continueFlag = 0;
-                savedSession.setData("0");
-                savedSession.setMsisdn(s.getMsisdn());
-                sessionRepository.save(savedSession);
-                return menuResponse(savedSession, continueFlag, savedSession.isMorning() ? AppConstants.WELCOME_MENU_MESSAGE_MORNING : AppConstants.WELCOME_MENU_MESSAGE);
+                return menuResponse(savedSession, 1, "Ticket cancelled by user\n 0. Back");
             } else if (savedSession.getPosition() == 8 && savedSession.getData().equals("1")) {
                 message = "Select payment method\n1) Mobile Money\n2) Afriluck Wallet";
             } else if (savedSession.getPosition() == 9) {

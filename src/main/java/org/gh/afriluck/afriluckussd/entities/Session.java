@@ -56,6 +56,8 @@ public class Session {
     private Integer nextStep=0;
     @Column(name = "is_morning")
     private boolean isMorning;
+    @Column(name = "reset")
+    private boolean reset;
 
 
     private LocalDateTime updatedDate;
@@ -64,7 +66,7 @@ public class Session {
     }
 
 
-    public Session(Integer id, String message, String sequenceID, String network, String msisdn, String data, Integer position, Integer gameType, String selectedNumbers, Double amount, String gameTypeId, String timeStamp, String gameId, String betTypeCode, Integer gameTypeCode, String currentGame, Integer max, Integer min, String callBackMessage, Boolean couponApplied, Double discountedAmount, Boolean passedWelcomeMessage, Boolean start, Boolean secondStep, Integer menuChoice, Integer nextStep, boolean isMorning) {
+    public Session(Integer id, String message, String sequenceID, String network, String msisdn, String data, Integer position, Integer gameType, String selectedNumbers, Double amount, String gameTypeId, String timeStamp, String gameId, String betTypeCode, Integer gameTypeCode, String currentGame, Integer max, Integer min, String callBackMessage, Boolean couponApplied, Double discountedAmount, Boolean passedWelcomeMessage, Boolean start, Boolean secondStep, Integer menuChoice, Integer nextStep, boolean isMorning, Boolean reset) {
         this.id = id;
         this.sequenceID = sequenceID;
         this.network = network;
@@ -92,6 +94,7 @@ public class Session {
         this.menuChoice = menuChoice;
         this.nextStep = nextStep;
         this.isMorning = isMorning;
+        this.reset = reset;
     }
 
     @PrePersist
@@ -327,6 +330,14 @@ public class Session {
         isMorning = morning;
     }
 
+    public boolean isReset() {
+        return reset;
+    }
+
+    public void setReset(boolean reset) {
+        this.reset = reset;
+    }
+
     @Override
     public String toString() {
         return "Session{" +
@@ -349,6 +360,7 @@ public class Session {
                 ", menuChoice'"+ menuChoice+'\''+
                 ", nextStep'"+ nextStep+'\''+
                 ", isMorning'"+ isMorning+'\''+
+                ", reset'"+ reset+'\''+
                 '}';
     }
 }
