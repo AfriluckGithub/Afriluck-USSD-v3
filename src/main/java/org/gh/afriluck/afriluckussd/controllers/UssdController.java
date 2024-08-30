@@ -391,8 +391,7 @@ public class UssdController {
             } else {
                 String choice = s.getData();
                 if (choice.equals("0")) {
-                    deleteSession(savedSession);
-                    return menuResponse(savedSession, 1, "Ticket cancelled by user");
+                    return ticketCancelledMessage(savedSession);
                 } else if (choice.equals("2") && savedSession.getPosition() == 5) {
                     message = AppConstants.DISCOUNT_PROMPT_MESSAGE;
                 } else if (choice.equals("1") && savedSession.getPosition() == 5) {
@@ -608,8 +607,7 @@ public class UssdController {
                 String choice = s.getData();
 
                 if (choice.equals("0")) {
-                    deleteSession(savedSession);
-                    return menuResponse(savedSession, 1, "Ticket cancelled by user");
+                    return ticketCancelledMessage(savedSession);
                 } else if (choice.equals("2") && savedSession.getPosition() == 7) {
                     message = AppConstants.DISCOUNT_PROMPT_MESSAGE;
                 } else if (choice.equals("1") && savedSession.getPosition() == 7) {
@@ -856,8 +854,7 @@ public class UssdController {
             } else if (savedSession.getGameType() == SECOND && savedSession.getPosition() == SIX) {
                 String choice = s.getData();
                 if (choice.equals("0")) {
-                    deleteSession(savedSession);
-                    return menuResponse(savedSession, 1, "Ticket cancelled by user");
+                    return ticketCancelledMessage(savedSession);
                 } else if (choice.equals("2") && savedSession.getPosition() == 6) {
                     message = AppConstants.DISCOUNT_PROMPT_MESSAGE;
                 } else if (choice.equals("1") && savedSession.getPosition() == 6) {
@@ -950,8 +947,7 @@ public class UssdController {
                     }
                 }
             } else if (savedSession.getPosition() == 8 && savedSession.getData().equals("0")) {
-                deleteSession(savedSession);
-                return menuResponse(savedSession, 1, "Ticket cancelled by user");
+                return ticketCancelledMessage(savedSession);
             } else if (savedSession.getPosition() == 8 && savedSession.getData().equals("1")) {
                 message = "Select payment method\n1) Mobile Money\n2) Afriluck Wallet";
             } else if (savedSession.getPosition() == 9) {
@@ -1156,8 +1152,7 @@ public class UssdController {
             } else if (gameType == THIRD && position == SIX) {
                 String choice = s.getData();
                 if (choice.equals("0")) {
-                    deleteSession(savedSession);
-                    return menuResponse(savedSession, 1, "Ticket cancelled by user");
+                    return ticketCancelledMessage(savedSession);
                 } else if (choice.equals("2") && savedSession.getPosition() == 6) {
                     message = AppConstants.DISCOUNT_PROMPT_MESSAGE;
                 } else if (choice.equals("1") && savedSession.getPosition() == 6) {
@@ -1256,8 +1251,7 @@ public class UssdController {
                     }
                 }
             } else if (savedSession.getPosition() == 8 && savedSession.getData().equals("0")) {
-                deleteSession(savedSession);
-                return menuResponse(savedSession, 1, "Ticket cancelled by user");
+                return ticketCancelledMessage(savedSession);
             } else if (savedSession.getPosition() == 8 && savedSession.getData().equals("1")) {
                 message = "Select payment method\n1) Mobile Money\n2) Afriluck Wallet";
             } else if (savedSession.getPosition() == 9) {
@@ -1452,6 +1446,11 @@ public class UssdController {
     public String silentDelete(Session savedSession) {
         deleteSession(savedSession);
         return menuResponse(savedSession, 0, "Enter a valid menu option\n 0) Back");
+    }
+
+    public String ticketCancelledMessage(Session savedSession) {
+        deleteSession(savedSession);
+        return menuResponse(savedSession, 0, "Ticket cancelled by user\n 0) Back");
     }
 
     @Async
