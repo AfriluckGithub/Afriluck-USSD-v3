@@ -166,8 +166,8 @@ public class ValidationUtils {
     public static boolean isCurrentGameTime() {
         int startHour = 20;
         int startMinute = 15;
-        int endHour = 0;
-        int endMinute = 0;
+        int endHour = 24;
+        int endMinute = 59;
         int currentTime = LocalTime.now().getHour() * 60 + LocalTime.now().getMinute();
         int startTime = startHour * 60 + startMinute;
         int endTime = endHour * 60 + endMinute;
