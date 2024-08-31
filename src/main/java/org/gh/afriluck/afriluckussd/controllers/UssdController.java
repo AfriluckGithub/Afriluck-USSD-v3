@@ -1482,7 +1482,7 @@ public class UssdController {
     }
 
     public String getDayOfWeekInWords() {
-        LocalDate currentDate = ValidationUtils.isCurrentGameTime()? LocalDate.now().minusDays(1): LocalDate.now();
+        LocalDate currentDate = ValidationUtils.isCurrentGameTime()? LocalDate.now().plusDays(1): LocalDate.now();
         DayOfWeek dayOfWeek = currentDate.getDayOfWeek();
         return dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH);
     }
