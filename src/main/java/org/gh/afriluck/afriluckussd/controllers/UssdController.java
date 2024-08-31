@@ -301,7 +301,7 @@ public class UssdController {
                     message = """
                             Type amount to Start (1 - 20):
                             """;
-                    savedSession.setCurrentGame("banker");
+                    savedSession.setCurrentGame(gameDraw.getGameName());
                     savedSession.setSelectedNumbers(s.getData());
                     updateSession(savedSession, false);
                 }
@@ -579,10 +579,14 @@ public class UssdController {
                     deleteSession(savedSession);
                     message = "Amount should be between 1GHS and 20GHS \n 0 Back";
                 } else {
+                    int finalAmount = amount;
+                    CompletableFuture<Game> matchAsync = CompletableFuture.supplyAsync(()
+                            -> games.stream().filter(game -> game.getAmount() == Double.parseDouble(String.valueOf(finalAmount))).findFirst().get());
+                    gameDraw = matchAsync.get();
                     String ticketInfo = """
                             Tck info:
                             --
-                            Lucky 70 M Mega Jackpot
+                            %s
                             Your numbers: %s
                             \s
                             1) to pay %s GHS.
@@ -591,11 +595,7 @@ public class UssdController {
                             \s
                             0) to cancel.
                             \s""";
-                    message = String.format(ticketInfo, s.getSelectedNumbers(), amount);
-                    int finalAmount = amount;
-                    CompletableFuture<Game> matchAsync = CompletableFuture.supplyAsync(()
-                            -> games.stream().filter(game -> game.getAmount() == Double.parseDouble(String.valueOf(finalAmount))).findFirst().get());
-                    gameDraw = matchAsync.get();
+                    message = String.format(ticketInfo, gameDraw.getGameName(), s.getSelectedNumbers(), amount);
                     savedSession.setGameTypeId(gameDraw.getGameDraw());
                     savedSession.setAmount(Double.parseDouble(gameDraw.getAmount().toString()));
                     savedSession.setGameId(gameDraw.getGameId());
@@ -832,7 +832,7 @@ public class UssdController {
                         String ticketInfo = """
                                 Tck info:
                                 --
-                                Lucky 70 M %s
+                                %s
                                 Your No: %s
                                 \s
                                 1) to pay %s GHS.
@@ -843,7 +843,7 @@ public class UssdController {
                                 \s""";
                         s.setAmount(Double.parseDouble(s.getData()));
                         //s.setCurrentGame(directGameName);
-                        message = String.format(ticketInfo, s.getCurrentGame(), s.getSelectedNumbers(), s.getAmount());
+                        message = String.format(ticketInfo, gameDraw.getGameName(), s.getSelectedNumbers(), s.getAmount());
                         updateSession(s, false);
                     }
                 } else {
@@ -1131,7 +1131,7 @@ public class UssdController {
                         String ticketInfo = """
                                 Tck info:
                                 --
-                                Lucky 70 M %s
+                                %s
                                 Your No: %s
                                 \s
                                 1) to pay %s GHS.
@@ -1140,7 +1140,7 @@ public class UssdController {
                                 \s
                                 0) to cancel.
                                 \s""";
-                        message = String.format(ticketInfo, s.getCurrentGame(), s.getSelectedNumbers(), total);
+                        message = String.format(ticketInfo, gameDraw.getGameName(), s.getSelectedNumbers(), total);
                         savedSession.setAmount(Double.valueOf(total));
                         updateSession(s, false);
                     }
