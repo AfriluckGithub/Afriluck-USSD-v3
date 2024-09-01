@@ -108,7 +108,7 @@ public class UssdController {
                 s.setNextStep(FIRST);
                 String dayOfWeekInWords = getDayOfWeekInWords();
                 updateSession(s, false);
-                message = menuResponse(session, 0, ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords) : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords));
+                message = menuResponse(session, 0, ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday")? 6: 7) : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday")? 6: 7));
             } else if (s.getNextStep() == FIRST) {
                 try {
                     if (s.getNextStep() == FIRST && s.isSecondStep() == false) {
@@ -144,7 +144,8 @@ public class UssdController {
                     //case 99 -> contactUsMessage(s);
                     case null -> "Invalid value entered\n 0. Back";
                     case 0 ->
-                            menuResponse(session, 0, s.isMorning() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords) : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords));
+                            menuResponse(session, 0, s.isMorning() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday")? 6: 7)
+                                    : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday")? 6: 7));
                     default -> silentDelete(s);
                 } : switch (s.getGameType()) {
                     case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
@@ -155,7 +156,8 @@ public class UssdController {
                     //case 99 -> contactUsMessage(s);
                     case null -> "Invalid value entered\n 0. Back";
                     case 0 ->
-                            menuResponse(session, 0, s.isMorning() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords) : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords));
+                            menuResponse(session, 0, s.isMorning() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday")? 6: 7)
+                                    : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday")? 6: 7));
                     default -> silentDelete(s);
                 }
                 ;
@@ -206,7 +208,7 @@ public class UssdController {
 //                    savedSession.setStart(false);
 //                    savedSession.setSecondStep(false);
 //                    sessionRepository.save(savedSession);
-                    return menuResponse(savedSession, continueFlag, ValidationUtils.isEveningGameTime() ? AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING : AppConstants.WELCOME_MENU_MESSAGE_NEW);
+                    return menuResponse(savedSession, continueFlag, ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, getDayOfWeekInWords(), getDayOfWeekInWords().equals("Sunday")? 6: 7) : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, getDayOfWeekInWords(), getDayOfWeekInWords().equals("Sunday")? 6: 7));
                 case "1":
                     continueFlag = 1;
                     response = getDrawResults(savedSession);
