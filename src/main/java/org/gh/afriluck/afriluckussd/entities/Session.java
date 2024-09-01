@@ -58,6 +58,8 @@ public class Session {
     private boolean isMorning;
     @Column(name = "reset")
     private boolean reset;
+    @Column(name = "back_pressed")
+    private boolean isBackPressed;
 
 
     private LocalDateTime updatedDate;
@@ -66,7 +68,7 @@ public class Session {
     }
 
 
-    public Session(Integer id, String message, String sequenceID, String network, String msisdn, String data, Integer position, Integer gameType, String selectedNumbers, Double amount, String gameTypeId, String timeStamp, String gameId, String betTypeCode, Integer gameTypeCode, String currentGame, Integer max, Integer min, String callBackMessage, Boolean couponApplied, Double discountedAmount, Boolean passedWelcomeMessage, Boolean start, Boolean secondStep, Integer menuChoice, Integer nextStep, boolean isMorning, Boolean reset) {
+    public Session(Integer id, String message, String sequenceID, String network, String msisdn, String data, Integer position, Integer gameType, String selectedNumbers, Double amount, String gameTypeId, String timeStamp, String gameId, String betTypeCode, Integer gameTypeCode, String currentGame, Integer max, Integer min, String callBackMessage, Boolean couponApplied, Double discountedAmount, Boolean passedWelcomeMessage, Boolean start, Boolean secondStep, Integer menuChoice, Integer nextStep, Boolean isMorning, Boolean reset, Boolean isBackPressed) {
         this.id = id;
         this.sequenceID = sequenceID;
         this.network = network;
@@ -95,6 +97,7 @@ public class Session {
         this.nextStep = nextStep;
         this.isMorning = isMorning;
         this.reset = reset;
+        this.isBackPressed = isBackPressed;
     }
 
     @PrePersist
@@ -338,6 +341,14 @@ public class Session {
         this.reset = reset;
     }
 
+    public void setBackPressed(boolean backPressed) {
+        isBackPressed = backPressed;
+    }
+
+    public boolean isBackPressed() {
+        return isBackPressed;
+    }
+
     @Override
     public String toString() {
         return "Session{" +
@@ -361,6 +372,7 @@ public class Session {
                 ", nextStep'"+ nextStep+'\''+
                 ", isMorning'"+ isMorning+'\''+
                 ", reset'"+ reset+'\''+
+                ", isBackPressed'"+ isBackPressed+'\''+
                 '}';
     }
 }

@@ -108,13 +108,14 @@ public class UssdController {
                 s.setNextStep(FIRST);
                 String dayOfWeekInWords = getDayOfWeekInWords();
                 updateSession(s, false);
-                message = menuResponse(session, 0, ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday")? 6: 7) : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday")? 6: 7));
+                message = menuResponse(session, 0, ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 6 : 7) : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 6 : 7));
             } else if (s.getNextStep() == FIRST) {
                 try {
                     if (s.getNextStep() == FIRST && s.isSecondStep() == false) {
                         s.setGameType(Integer.valueOf(s.getData()));
                         updateSession(s, false);
                     }
+
                     message = switch (s.getGameType()) {
                         case 1 -> anopaGameOptions(s);
                         case 2 -> eveningGameOptions(s);
@@ -134,30 +135,28 @@ public class UssdController {
                     s.setGameType(Integer.valueOf(s.getData()));
                     updateSession(s, false);
                 }
+
+                if (s.isBackPressed()) {
+                    s.setGameType(Integer.parseInt(s.getData()));
+                    s.setBackPressed(false);
+                    s.setPosition(SECOND);
+                    updateSession(s, false);
+                }
+
                 message = !s.isMorning() ? switch (s.getGameType()) {
                     case 1 -> megaGameOptions(s.getGameType(), s.getPosition(), s);
                     case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
                     case 3 -> permGameOptions(s.getGameType(), s.getPosition(), s);
                     case 4 -> banker(s, "Banker");
-                    //case 5 -> account(s);
-                    //case 6 -> tnCsMessage(s);
-                    //case 99 -> contactUsMessage(s);
                     case null -> "Invalid value entered\n 0. Back";
-                    case 0 ->
-                            menuResponse(session, 0, s.isMorning() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday")? 6: 7)
-                                    : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday")? 6: 7));
+                    case 0 -> backOption(session, s);
                     default -> silentDelete(s);
                 } : switch (s.getGameType()) {
                     case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
                     case 3 -> permGameOptions(s.getGameType(), s.getPosition(), s);
                     case 4 -> banker(s, "Banker");
-                    //case 5 -> account(s);
-                    //case 6 -> tnCsMessage(s);
-                    //case 99 -> contactUsMessage(s);
                     case null -> "Invalid value entered\n 0. Back";
-                    case 0 ->
-                            menuResponse(session, 0, s.isMorning() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday")? 6: 7)
-                                    : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday")? 6: 7));
+                    case 0 -> backOption(session, s);
                     default -> silentDelete(s);
                 }
                 ;
@@ -166,6 +165,19 @@ public class UssdController {
         return message;
     }
 
+    private String backOption(Session session, Session savedSession) {
+        String dayOfWeekInWords = getDayOfWeekInWords();
+        //deleteSession(savedSession);
+        savedSession.setNextStep(FIRST);
+        savedSession.setPosition(FIRST);
+        savedSession.setSequenceId(session.getSequenceID());
+        savedSession.setMsisdn(session.getMsisdn());
+        savedSession.setReset(false);
+        savedSession.setBackPressed(true);
+        updateSession(savedSession, false);
+        return menuResponse(session, 0, savedSession.isMorning() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 6 : 7)
+                : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 6 : 7));
+    }
 
     private String anopaGameOptions(Session session) {
         session.setNextStep(SECOND);
@@ -208,7 +220,7 @@ public class UssdController {
 //                    savedSession.setStart(false);
 //                    savedSession.setSecondStep(false);
 //                    sessionRepository.save(savedSession);
-                    return menuResponse(savedSession, continueFlag, ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, getDayOfWeekInWords(), getDayOfWeekInWords().equals("Sunday")? 6: 7) : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, getDayOfWeekInWords(), getDayOfWeekInWords().equals("Sunday")? 6: 7));
+                    return menuResponse(savedSession, continueFlag, ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, getDayOfWeekInWords(), getDayOfWeekInWords().equals("Sunday") ? 6 : 7) : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, getDayOfWeekInWords(), getDayOfWeekInWords().equals("Sunday") ? 6 : 7));
                 case "1":
                     continueFlag = 1;
                     response = getDrawResults(savedSession);
@@ -278,8 +290,9 @@ public class UssdController {
         String message = null;
         int continueFlag = 0;
         Session savedSession = sessionRepository.findBySequenceID(s.getSequenceID());
-        List<Game> currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameDraw().endsWith("A")).sorted(Comparator.comparing(Game::getGameName)).toList();;
-        final Game gameDraw = s.isMorning()? currentGameDraw.get(0): currentGameDraw.get(1);
+        List<Game> currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameDraw().endsWith("A")).sorted(Comparator.comparing(Game::getGameName)).toList();
+        ;
+        final Game gameDraw = s.isMorning() ? currentGameDraw.get(0) : currentGameDraw.get(1);
         savedSession.setGameId(gameDraw.getGameId());
         savedSession.setGameTypeId(gameDraw.getGameDraw());
         boolean containsLetters = s.getPosition() != 6 ? ValidationUtils.containsAnyLetters(s.getData()) : false;
@@ -502,7 +515,7 @@ public class UssdController {
         } catch (Exception e) {
             System.out.println(e);
         }
-        // System.out.println(savedSession);
+        System.out.println(savedSession);
         sessionRepository.save(savedSession);
     }
 
@@ -765,7 +778,7 @@ public class UssdController {
         System.err.printf("\nDIRECT SESSION => %s\n", savedSession);
         System.err.printf("\nSESSION SESSION => %s\n", savedSession);
         List<Game> currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameDraw().endsWith("A")).sorted(Comparator.comparing(Game::getGameName)).toList();
-        Game gameDraw = savedSession.isMorning()? currentGameDraw.get(0): currentGameDraw.get(1);
+        Game gameDraw = savedSession.isMorning() ? currentGameDraw.get(0) : currentGameDraw.get(1);
         //System.out.printf("Game Name ----> %s", gameDraw.getGameName());
         savedSession.setGameId(gameDraw.getGameId());
         savedSession.setGameTypeId(gameDraw.getGameDraw());
@@ -1042,8 +1055,9 @@ public class UssdController {
         int codeType = 0;
         List<String> permGames = s.isMorning() ? AppConstants.PERM_GAMES_MORNING : AppConstants.PERM_GAMES;
         AtomicReference<Integer> index = new AtomicReference<>(0);
-        List<Game> currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameDraw().endsWith("A")).sorted(Comparator.comparing(Game::getGameName)).toList();;
-        final Game gameDraw = s.isMorning()? currentGameDraw.get(0): currentGameDraw.get(1);
+        List<Game> currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameDraw().endsWith("A")).sorted(Comparator.comparing(Game::getGameName)).toList();
+        ;
+        final Game gameDraw = s.isMorning() ? currentGameDraw.get(0) : currentGameDraw.get(1);
         Session savedSession = sessionRepository.findBySequenceID(s.getSequenceID());
         savedSession.setGameId(gameDraw.getGameId());
         savedSession.setGameTypeId(gameDraw.getGameDraw());
@@ -1484,7 +1498,7 @@ public class UssdController {
     }
 
     public String getDayOfWeekInWords() {
-        LocalDate currentDate = ValidationUtils.isCurrentGameTime()? LocalDate.now().plusDays(1): LocalDate.now();
+        LocalDate currentDate = ValidationUtils.isCurrentGameTime() ? LocalDate.now().plusDays(1) : LocalDate.now();
         DayOfWeek dayOfWeek = currentDate.getDayOfWeek();
         return dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH);
     }
