@@ -694,7 +694,7 @@ public class UssdController {
                         continueFlag = 1;
                         message = AppConstants.PAYMENT_INIT_MESSAGE;
                         Runnable paymentTask = () -> {
-                            Transaction t = mapper.mapTransactionFromSession(s, gameDraw, true);
+                            Transaction t = mapper.mapTransactionFromSession(s, gameDraw, false);
                             System.out.println(t.toString());
                             ResponseEntity<String> response = handler.client()
                                     .post()
