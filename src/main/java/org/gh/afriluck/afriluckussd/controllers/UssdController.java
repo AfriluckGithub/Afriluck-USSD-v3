@@ -214,12 +214,6 @@ public class UssdController {
                 case "0":
                     deleteSession(savedSession);
                     continueFlag = 0;
-//                    savedSession.setData("0");
-//                    savedSession.setMsisdn(savedSession.getMsisdn());
-//                    //savedSession.setSecondStep(false);
-//                    savedSession.setStart(false);
-//                    savedSession.setSecondStep(false);
-//                    sessionRepository.save(savedSession);
                     return menuResponse(savedSession, continueFlag, ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, getDayOfWeekInWords(), getDayOfWeekInWords().equals("Sunday") ? 6 : 7) : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, getDayOfWeekInWords(), getDayOfWeekInWords().equals("Sunday") ? 6 : 7));
                 case "1":
                     continueFlag = 1;
@@ -291,7 +285,6 @@ public class UssdController {
         int continueFlag = 0;
         Session savedSession = sessionRepository.findBySequenceID(s.getSequenceID());
         List<Game> currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameDraw().endsWith("A")).sorted(Comparator.comparing(Game::getGameName)).toList();
-        ;
         final Game gameDraw = s.isMorning() ? currentGameDraw.get(0) : currentGameDraw.get(1);
         savedSession.setGameId(gameDraw.getGameId());
         savedSession.setGameTypeId(gameDraw.getGameDraw());
