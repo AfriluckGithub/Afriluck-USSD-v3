@@ -114,7 +114,16 @@ public class UssdController {
                         updateSession(s, false);
                     }
 
-                    message = switch (s.getGameType()) {
+
+                    message = ValidationUtils.isEveningGameTime() ? switch (s.getGameType()) {
+                        case 1 -> eveningGameOptions(s);
+                        //case 2 -> eveningGameOptions(s);
+                        case 5 -> account(s);
+                        case 6 -> tnCsMessage(s);
+                        case 99 -> contactUsMessage(s);
+                        case null -> "Invalid value entered\n 0. Back";
+                        default -> throw new IllegalStateException("Unexpected value: " + s.getData());
+                    } : switch (s.getGameType()) {
                         case 1 -> anopaGameOptions(s);
                         case 2 -> eveningGameOptions(s);
                         case 5 -> account(s);
