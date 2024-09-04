@@ -27,8 +27,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @RestController("/")
 public class UssdController {
@@ -284,7 +282,8 @@ public class UssdController {
         String message = null;
         int continueFlag = 0;
         Session savedSession = sessionRepository.findBySequenceID(s.getSequenceID());
-        List<Game> currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameDraw().endsWith("A")).sorted(Comparator.comparing(Game::getGameName)).toList();
+        //List<Game> currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameDraw().endsWith("A")).sorted(Comparator.comparing(Game::getGameName)).toList();
+        List<Game> currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameTypeId() == 15).sorted(Comparator.comparing(Game::getGameName)).toList();
         final Game gameDraw = s.isMorning() ? currentGameDraw.get(0) : currentGameDraw.get(1);
         savedSession.setGameId(gameDraw.getGameId());
         savedSession.setGameTypeId(gameDraw.getGameDraw());
@@ -554,8 +553,8 @@ public class UssdController {
                 if (len == AppConstants.MAX_MEGA && !exceeds && !containsZero) {
                     StringBuilder messageBuilder = new StringBuilder(AppConstants.AMOUNT_TO_STAKE_MESSAGE);
 
-                    games = gameRepository.findAll().stream().distinct().filter(game -> !game.getGameDraw().endsWith("A"))
-                            .sorted(Comparator.comparing(Game::getGameDraw)).toList();
+                    games = gameRepository.findAll().stream().distinct().filter(game -> game.getGameTypeId() == 1)
+                            .sorted(Comparator.comparing(Game::getAmount)).toList();
 
                     games.stream().forEachOrdered(game -> {
                         int currentIndex = index.getAndIncrement();
@@ -770,7 +769,7 @@ public class UssdController {
         Session savedSession = sessionRepository.findBySequenceID(s.getSequenceID());
         System.err.printf("\nDIRECT SESSION => %s\n", savedSession);
         System.err.printf("\nSESSION SESSION => %s\n", savedSession);
-        List<Game> currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameDraw().endsWith("A")).sorted(Comparator.comparing(Game::getGameName)).toList();
+        List<Game> currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameTypeId() == 15).sorted(Comparator.comparing(Game::getGameName)).toList();
         Game gameDraw = savedSession.isMorning() ? currentGameDraw.get(0) : currentGameDraw.get(1);
         //System.out.printf("Game Name ----> %s", gameDraw.getGameName());
         savedSession.setGameId(gameDraw.getGameId());
@@ -1048,7 +1047,7 @@ public class UssdController {
         int codeType = 0;
         List<String> permGames = s.isMorning() ? AppConstants.PERM_GAMES_MORNING : AppConstants.PERM_GAMES;
         AtomicReference<Integer> index = new AtomicReference<>(0);
-        List<Game> currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameDraw().endsWith("A")).sorted(Comparator.comparing(Game::getGameName)).toList();
+        List<Game> currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameTypeId() == 15).sorted(Comparator.comparing(Game::getGameName)).toList();
         ;
         final Game gameDraw = s.isMorning() ? currentGameDraw.get(0) : currentGameDraw.get(1);
         Session savedSession = sessionRepository.findBySequenceID(s.getSequenceID());
