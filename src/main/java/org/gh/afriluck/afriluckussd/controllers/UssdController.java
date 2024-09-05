@@ -106,7 +106,7 @@ public class UssdController {
                 s.setNextStep(FIRST);
                 String dayOfWeekInWords = getDayOfWeekInWords();
                 updateSession(s, false);
-                message = menuResponse(session, 0, ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 6 : 7) : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 6 : 7));
+                message = menuResponse(session, 0, ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 6 : 7) : String.format(dayOfWeekInWords.equals("Sunday")? AppConstants.WELCOME_MENU_MESSAGE_NEW: AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 6 : 7));
             } else if (s.getNextStep() == FIRST) {
                 try {
                     if (s.getNextStep() == FIRST && s.isSecondStep() == false) {
@@ -114,10 +114,8 @@ public class UssdController {
                         updateSession(s, false);
                     }
 
-
                     message = ValidationUtils.isEveningGameTime() ? switch (s.getGameType()) {
                         case 1 -> eveningGameOptions(s);
-                        //case 2 -> eveningGameOptions(s);
                         case 5 -> account(s);
                         case 6 -> tnCsMessage(s);
                         case 99 -> contactUsMessage(s);
@@ -290,9 +288,14 @@ public class UssdController {
     private String banker(Session s, String title) throws InterruptedException {
         String message = null;
         int continueFlag = 0;
+        List<Game> currentGameDraw = null;
         Session savedSession = sessionRepository.findBySequenceID(s.getSequenceID());
         //List<Game> currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameDraw().endsWith("A")).sorted(Comparator.comparing(Game::getGameName)).toList();
-        List<Game> currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameTypeId() == 15).sorted(Comparator.comparing(Game::getGameName)).toList();
+        try {
+            currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameTypeId() == 15).sorted(Comparator.comparing(Game::getGameName)).toList();
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
         final Game gameDraw = s.isMorning() ? currentGameDraw.get(0) : currentGameDraw.get(1);
         savedSession.setGameId(gameDraw.getGameId());
         savedSession.setGameTypeId(gameDraw.getGameDraw());
@@ -336,7 +339,7 @@ public class UssdController {
                         String ticketInfo = """
                                 Tck info:
                                 --
-                                Lucky 70 M %s
+                                %s
                                 Your No: %s
                                 \s
                                 1) to pay %s GHS.
