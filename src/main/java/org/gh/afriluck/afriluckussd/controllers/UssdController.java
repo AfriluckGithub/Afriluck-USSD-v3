@@ -108,13 +108,19 @@ public class UssdController {
                 updateSession(s, false);
                 message = menuResponse(session, 0, ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 6 : 7) : String.format(dayOfWeekInWords.equals("Sunday")? AppConstants.WELCOME_MENU_MESSAGE_NEW: AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 6 : 7));
             } else if (s.getNextStep() == FIRST) {
+                boolean isEvening = ValidationUtils.isEveningGameTime();
                 try {
                     if (s.getNextStep() == FIRST && s.isSecondStep() == false) {
-                        s.setGameType(Integer.valueOf(s.getData()));
+                        if(!getDayOfWeekInWords().equals("Sunday")) {
+                            s.setGameType(1);
+                            isEvening = true;
+                        }else {
+                            s.setGameType(Integer.valueOf(s.getData()));
+                        }
                         updateSession(s, false);
                     }
 
-                    message = ValidationUtils.isEveningGameTime() ? switch (s.getGameType()) {
+                    message = isEvening? switch (s.getGameType()) {
                         case 1 -> eveningGameOptions(s);
                         case 5 -> account(s);
                         case 6 -> tnCsMessage(s);
@@ -148,7 +154,7 @@ public class UssdController {
                     updateSession(s, false);
                 }
 
-                message = !s.isMorning() ? switch (s.getGameType()) {
+                message = !s.isMorning()? switch (s.getGameType()) {
                     case 1 -> megaGameOptions(s.getGameType(), s.getPosition(), s);
                     case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
                     case 3 -> permGameOptions(s.getGameType(), s.getPosition(), s);
