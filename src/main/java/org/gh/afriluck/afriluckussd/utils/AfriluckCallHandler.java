@@ -16,7 +16,7 @@ public class AfriluckCallHandler {
         return RestClient.builder()
                 .requestFactory(new HttpComponentsClientHttpRequestFactory())
                 .messageConverters(converters -> converters.add(new StringHttpMessageConverter()))
-                .baseUrl("https://staging.afriluck.com")
+                .baseUrl("https://app.afriluck.com")
                 .defaultHeader("Content-Type", "application/text")
                 .defaultHeader("x-afriluck-key", apiKey)
                 .build();
