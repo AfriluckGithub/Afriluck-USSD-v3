@@ -110,13 +110,18 @@ public class UssdController {
             } else if (s.getNextStep() == FIRST) {
                 boolean isEvening = ValidationUtils.isEveningGameTime();
                 try {
+//                    if (s.getNextStep() == FIRST && s.isSecondStep() == false) {
+//                        if(!getDayOfWeekInWords().equals("Sunday")) {
+//                            s.setGameType(1);
+//                            isEvening = true;
+//                        }else {
+//                            s.setGameType(Integer.valueOf(s.getData()));
+//                        }
+//                        updateSession(s, false);
+//                    }
+
                     if (s.getNextStep() == FIRST && s.isSecondStep() == false) {
-                        if(!getDayOfWeekInWords().equals("Sunday")) {
-                            s.setGameType(1);
-                            isEvening = true;
-                        }else {
-                            s.setGameType(Integer.valueOf(s.getData()));
-                        }
+                        s.setGameType(Integer.valueOf(s.getData()));
                         updateSession(s, false);
                     }
 
