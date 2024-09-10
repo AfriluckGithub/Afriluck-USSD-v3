@@ -85,4 +85,5 @@ public class AppConstants {
     );
     public static String PAYMENT_INIT_MESSAGE = "Payment request initiated.\nApprove to complete ticket purchase";
     public static String PAYMENT_INIT_MESSAGE_WALLET = "Payment request initiated.";
+    public static String SUNDAY = "Sunday";
 }

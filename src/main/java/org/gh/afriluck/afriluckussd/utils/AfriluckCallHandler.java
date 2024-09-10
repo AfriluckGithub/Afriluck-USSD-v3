@@ -12,11 +12,14 @@ public class AfriluckCallHandler {
     @Value("${env.data.apikey}")
     private String apiKey;
 
+    @Value("${env.data.baseUrl}")
+    private String baseUrl;
+
     public RestClient client() {
         return RestClient.builder()
                 .requestFactory(new HttpComponentsClientHttpRequestFactory())
                 .messageConverters(converters -> converters.add(new StringHttpMessageConverter()))
-                .baseUrl("https://app.afriluck.com")
+                .baseUrl(baseUrl)
                 .defaultHeader("Content-Type", "application/text")
                 .defaultHeader("x-afriluck-key", apiKey)
                 .build();

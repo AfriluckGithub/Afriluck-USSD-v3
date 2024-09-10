@@ -106,26 +106,25 @@ public class UssdController {
                 s.setNextStep(FIRST);
                 String dayOfWeekInWords = getDayOfWeekInWords();
                 updateSession(s, false);
-                message = menuResponse(session, 0, ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 6 : 7) : String.format(dayOfWeekInWords.equals("Sunday")? AppConstants.WELCOME_MENU_MESSAGE_NEW: AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 6 : 7));
+                message = menuResponse(session, 0, ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 6 : 7) : String.format(dayOfWeekInWords.equals("Sunday") ? AppConstants.WELCOME_MENU_MESSAGE_NEW : AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 6 : 7));
             } else if (s.getNextStep() == FIRST) {
                 boolean isEvening = ValidationUtils.isEveningGameTime();
                 try {
+
+                    /**
+                     * Current solution for Sunday's draw.
+                     */
+                    if (s.getNextStep() == FIRST && s.isSecondStep() == false) {
+                        isEvening = handleExceptionForSunday(s, isEvening);
+                    }
+
+                    // Previous solution not factoring Sunday.
 //                    if (s.getNextStep() == FIRST && s.isSecondStep() == false) {
-//                        if(!getDayOfWeekInWords().equals("Sunday")) {
-//                            s.setGameType(1);
-//                            isEvening = true;
-//                        }else {
-//                            s.setGameType(Integer.valueOf(s.getData()));
-//                        }
+//                        s.setGameType(Integer.valueOf(s.getData()));
 //                        updateSession(s, false);
 //                    }
 
-                    if (s.getNextStep() == FIRST && s.isSecondStep() == false) {
-                        s.setGameType(Integer.valueOf(s.getData()));
-                        updateSession(s, false);
-                    }
-
-                    message = isEvening? switch (s.getGameType()) {
+                    message = isEvening ? switch (s.getGameType()) {
                         case 1 -> eveningGameOptions(s);
                         case 5 -> account(s);
                         case 6 -> tnCsMessage(s);
@@ -159,7 +158,7 @@ public class UssdController {
                     updateSession(s, false);
                 }
 
-                message = !s.isMorning()? switch (s.getGameType()) {
+                message = !s.isMorning() ? switch (s.getGameType()) {
                     case 1 -> megaGameOptions(s.getGameType(), s.getPosition(), s);
                     case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
                     case 3 -> permGameOptions(s.getGameType(), s.getPosition(), s);
@@ -269,7 +268,7 @@ public class UssdController {
             } else {
                 try {
                     CustomerBalanceDto balance = getCustomerBalance(savedSession.msisdn);
-                    message = String.format("Your current balance is %s GHS", balance.balance);
+                    message = String.format("Your current balance is %s GHS & your bonus amount is %s GHS", balance.balance, balance.bonus);
                     continueFlag = 1;
                 } catch (Exception e) {
                     String response = e.getMessage();
@@ -304,7 +303,7 @@ public class UssdController {
         //List<Game> currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameDraw().endsWith("A")).sorted(Comparator.comparing(Game::getGameName)).toList();
         try {
             currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameTypeId() == 15).sorted(Comparator.comparing(Game::getGameName)).toList();
-        }catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         final Game gameDraw = s.isMorning() ? currentGameDraw.get(0) : currentGameDraw.get(1);
@@ -1516,5 +1515,17 @@ public class UssdController {
         LocalDate currentDate = ValidationUtils.isCurrentGameTime() ? LocalDate.now().plusDays(1) : LocalDate.now();
         DayOfWeek dayOfWeek = currentDate.getDayOfWeek();
         return dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH);
+    }
+
+    public boolean handleExceptionForSunday(Session s, boolean isEvening) {
+        String getDayOfWeekInWords = getDayOfWeekInWords();
+        if (getDayOfWeekInWords.equals(AppConstants.SUNDAY)) {
+            s.setGameType(1);
+            isEvening = true;
+        } else {
+            s.setGameType(Integer.valueOf(s.getData()));
+        }
+        updateSession(s, false);
+        return isEvening;
     }
 }

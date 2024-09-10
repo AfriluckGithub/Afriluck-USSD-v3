@@ -12,4 +12,6 @@ public class CustomerBalanceDto {
 
     @JsonProperty("balance")
     public String balance;
+    @JsonProperty("bonus")
+    public String bonus;
 }
