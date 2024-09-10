@@ -268,7 +268,7 @@ public class UssdController {
             } else {
                 try {
                     CustomerBalanceDto balance = getCustomerBalance(savedSession.msisdn);
-                    message = String.format("Your current balance is %s GHS & your bonus amount is %s GHS", balance.balance, balance.bonus);
+                    message = String.format("Your current balance is %s GHS and your bonus amount is %s GHS", balance.balance, balance.bonus);
                     continueFlag = 1;
                 } catch (Exception e) {
                     String response = e.getMessage();
