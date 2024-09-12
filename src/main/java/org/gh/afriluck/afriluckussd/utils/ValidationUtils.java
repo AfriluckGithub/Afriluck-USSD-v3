@@ -153,8 +153,8 @@ public class ValidationUtils {
 
 
     public static boolean isEveningGameTime() {
-        int startHour = 9;
-        int startMinute = 59;
+        int startHour = 10;
+        int startMinute = 0;
         int endHour = 19;
         int endMinute = 3;
         int currentTime = LocalTime.now().getHour() * 60 + LocalTime.now().getMinute();
