@@ -12,6 +12,7 @@ import java.util.Date;
 public class SessionTaskSchedulers implements Runnable {
 
     private CustomerSessionRepository customerSessionRepository;
+    Thread.Builder sessionThread = Thread.ofVirtual().name("Session Thread");
 
     public SessionTaskSchedulers(CustomerSessionRepository customerSessionRepository) {
         this.customerSessionRepository = customerSessionRepository;
@@ -27,6 +28,10 @@ public class SessionTaskSchedulers implements Runnable {
             Date date = new Date();
             int currentHour = LocalTime.now().getHour() - 1;
             System.out.printf("Hour => %s", String.valueOf(currentHour));
+            Runnable sessionTask = () -> {
+                System.out.println("Backup Session Data Thread running...");
+            };
+            sessionThread.start(sessionTask);
             customerSessionRepository.deleteOldSessions(String.valueOf(currentHour));
         }catch (Exception e) {
             System.out.println(e.getMessage());
