@@ -1520,8 +1520,13 @@ public class UssdController {
     public boolean handleExceptionForSunday(Session s, boolean isEvening) {
         String getDayOfWeekInWords = getDayOfWeekInWords();
         if (getDayOfWeekInWords.equals(AppConstants.SUNDAY)) {
-            s.setGameType(1);
-            isEvening = true;
+            if(s.getData().equals("2")) {
+                s.setGameType(1);
+                isEvening = true;
+            }else{
+                isEvening = true;
+                s.setGameType(Integer.valueOf(s.getData()));
+            }
         } else {
             s.setGameType(Integer.valueOf(s.getData()));
         }
