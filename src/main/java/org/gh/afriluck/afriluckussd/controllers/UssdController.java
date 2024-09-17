@@ -111,21 +111,13 @@ public class UssdController {
                 boolean isEvening = ValidationUtils.isEveningGameTime();
                 try {
 
-                    /**
-                     * Current solution for Sunday's draw.
-                     */
                     if (s.getNextStep() == FIRST && s.isSecondStep() == false) {
                         isEvening = handleExceptionForSunday(s, isEvening);
                     }
 
-                    // Previous solution not factoring Sunday.
-//                    if (s.getNextStep() == FIRST && s.isSecondStep() == false) {
-//                        s.setGameType(Integer.valueOf(s.getData()));
-//                        updateSession(s, false);
-//                    }
-
                     message = isEvening ? switch (s.getGameType()) {
                         case 1 -> eveningGameOptions(s);
+                        case 2 -> backOption(session, savedSession);
                         case 5 -> account(s);
                         case 6 -> tnCsMessage(s);
                         case 99 -> contactUsMessage(s);
