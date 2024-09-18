@@ -13,18 +13,18 @@ public class SessionBackup {
     public String network;
     private Double amount;
     private String timeStamp;
-    private Integer gameType;
+    private String gameTypeId;
 
 
     public SessionBackup() {
     }
 
-    public SessionBackup(String msisdn, String network, Double amount, String timeStamp, Integer gameType) {
+    public SessionBackup(String msisdn, String network, Double amount, String timeStamp, String gameTypeId) {
         this.msisdn = msisdn;
         this.network = network;
         this.amount = amount;
         this.timeStamp = timeStamp;
-        this.gameType = gameType;
+        this.gameTypeId = gameTypeId;
     }
 
     public String getMsisdn() {
@@ -59,11 +59,11 @@ public class SessionBackup {
         this.timeStamp = timeStamp;
     }
 
-    public Integer getGameType() {
-        return gameType;
+    public String getGameTypeId() {
+        return gameTypeId;
     }
 
-    public void setGameType(Integer gameType) {
-        this.gameType = gameType;
+    public void setGameTypeId(String gameType) {
+        this.gameTypeId = gameType;
     }
 }

@@ -13,7 +13,7 @@ public class SessionBackupMapper {
         sessionBackup.setAmount(session.getAmount());
         sessionBackup.setMsisdn(session.getMsisdn());
         sessionBackup.setNetwork(session.getNetwork());
-        sessionBackup.setGameType(session.getGameType());
+        sessionBackup.setGameTypeId(session.getGameTypeId());
         sessionBackup.setTimeStamp(LocalDateTime.now().toString());
         return sessionBackup;
     }

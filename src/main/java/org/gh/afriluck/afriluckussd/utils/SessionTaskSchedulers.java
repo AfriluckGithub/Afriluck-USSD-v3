@@ -22,6 +22,7 @@ public class SessionTaskSchedulers implements Runnable {
     private SessionBackupRepository sessionBackupRepository;
 
     Thread.Builder sessionThread = Thread.ofVirtual().name("Session Thread");
+    Thread.Builder sessionThreadBackup = Thread.ofVirtual().name("Session Backup Thread");
 
     public SessionTaskSchedulers(CustomerSessionRepository customerSessionRepository, SessionBackupRepository sessionBackupRepository) {
         this.customerSessionRepository = customerSessionRepository;
@@ -30,8 +31,8 @@ public class SessionTaskSchedulers implements Runnable {
 
     @Override
     //@Scheduled(cron = "0 0/70 * * * *", zone = "GMT")
-    //@Scheduled(cron = "0 * * * * *")
-    @Scheduled(fixedRate = 4200000)
+    @Scheduled(cron = "0 * * * * *")
+    //@Scheduled(fixedRate = 4200000)
     public void run() {
         try {
             System.out.println("Cleaning Session...\n");
@@ -44,8 +45,12 @@ public class SessionTaskSchedulers implements Runnable {
                 System.out.println("Backup Session Data Thread running...");
                 sessionBackupRepository.saveAll(sessionBackups);
             };
-            sessionThread.start(sessionTask);
-            customerSessionRepository.deleteOldSessions(String.valueOf(currentHour));
+            Runnable sessionDeleteTask = () -> {
+                customerSessionRepository.deleteOldSessions(String.valueOf(currentHour));
+            };
+            sessionThread.start(sessionTask).join();
+            sessionThreadBackup.start(sessionDeleteTask);
+
         }catch (Exception e) {
             System.out.println(e.getMessage());
         }
