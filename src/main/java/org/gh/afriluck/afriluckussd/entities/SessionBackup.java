@@ -1,30 +1,50 @@
 package org.gh.afriluck.afriluckussd.entities;
 
 import jakarta.persistence.*;
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.UuidGenerator;
+
+import java.util.UUID;
 
 @Entity
 @Table(name = "session_backup")
+@Data
+@Getter
+@Setter
 public class SessionBackup {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    public int id;
+    @UuidGenerator
+    public UUID id;
+    @Setter
+    @Getter
     public String msisdn;
+    @Setter
+    @Getter
     public String network;
+    @Setter
+    @Getter
     private Double amount;
+    @Setter
+    @Getter
     private String timeStamp;
+    @Setter
+    @Getter
     private String gameTypeId;
 
 
     public SessionBackup() {
     }
 
-    public SessionBackup(String msisdn, String network, Double amount, String timeStamp, String gameTypeId) {
-        this.msisdn = msisdn;
-        this.network = network;
-        this.amount = amount;
-        this.timeStamp = timeStamp;
-        this.gameTypeId = gameTypeId;
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
     }
 
     public String getMsisdn() {
@@ -63,7 +83,7 @@ public class SessionBackup {
         return gameTypeId;
     }
 
-    public void setGameTypeId(String gameType) {
-        this.gameTypeId = gameType;
+    public void setGameTypeId(String gameTypeId) {
+        this.gameTypeId = gameTypeId;
     }
 }

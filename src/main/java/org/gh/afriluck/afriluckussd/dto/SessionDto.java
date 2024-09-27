@@ -1,8 +1,10 @@
 package org.gh.afriluck.afriluckussd.dto;
 
+import java.util.UUID;
+
 public class SessionDto {
 
-    public Integer id;
+    public UUID id;
 
     public String msisdn;
 
@@ -21,4 +23,7 @@ public class SessionDto {
     public Double amount;
 
     public String timeStamp;
+
+    public String hour;
+    public String event;
 }

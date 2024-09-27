@@ -1,8 +1,11 @@
 package org.gh.afriluck.afriluckussd.entities;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.UuidGenerator;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "session")
@@ -12,8 +15,8 @@ public class Session {
     public String network;
     public String message;
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Integer id;
+    @UuidGenerator
+    private UUID id;
     private String sequenceID;
     public String data;
 
@@ -61,6 +64,9 @@ public class Session {
     @Column(name = "back_pressed")
     private boolean isBackPressed;
 
+    private String hour;
+    private String event;
+
 
     private LocalDateTime updatedDate;
 
@@ -68,7 +74,7 @@ public class Session {
     }
 
 
-    public Session(Integer id, String message, String sequenceID, String network, String msisdn, String data, Integer position, Integer gameType, String selectedNumbers, Double amount, String gameTypeId, String timeStamp, String gameId, String betTypeCode, Integer gameTypeCode, String currentGame, Integer max, Integer min, String callBackMessage, Boolean couponApplied, Double discountedAmount, Boolean passedWelcomeMessage, Boolean start, Boolean secondStep, Integer menuChoice, Integer nextStep, Boolean isMorning, Boolean reset, Boolean isBackPressed) {
+    public Session(UUID id, String message, String sequenceID, String network, String msisdn, String data, Integer position, Integer gameType, String selectedNumbers, Double amount, String gameTypeId, String timeStamp, String gameId, String betTypeCode, Integer gameTypeCode, String currentGame, Integer max, Integer min, String callBackMessage, Boolean couponApplied, Double discountedAmount, Boolean passedWelcomeMessage, Boolean start, Boolean secondStep, Integer menuChoice, Integer nextStep, Boolean isMorning, Boolean reset, Boolean isBackPressed) {
         this.id = id;
         this.sequenceID = sequenceID;
         this.network = network;
@@ -129,11 +135,11 @@ public class Session {
         this.message = message;
     }
 
-    public Integer getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
