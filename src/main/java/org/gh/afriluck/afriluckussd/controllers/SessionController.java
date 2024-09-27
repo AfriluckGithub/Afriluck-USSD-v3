@@ -31,7 +31,8 @@ public class SessionController {
             List<Session> streamed = sessions.stream().filter(session ->
                             session.getData() != null
                                     && session.getData().toLowerCase().contains("unknown")
-                                    || session.getPosition() > 9)
+                                    || session.getPosition() > 9
+                                    || session.getPosition().equals(1) && Integer.parseInt(session.getData()) > 6)
                     .collect(Collectors.toList());
             //List<Session> sessions = StreamSupport.stream(iterableSessions.spliterator(), false).collect(Collectors.toList());
             return ResponseEntity.ok().body(streamed);
