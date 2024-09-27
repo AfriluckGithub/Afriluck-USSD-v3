@@ -23,7 +23,7 @@ public interface CustomerSessionRepository extends CrudRepository<Session, UUID>
     @Query(value = "DELETE FROM Session s WHERE EXTRACT(HOUR FROM s.createdDate) >= 0 AND EXTRACT(HOUR FROM s.createdDate) <= :hour AND DATE(s.createdDate) = DATE(NOW())")
     void deleteOldSessions(@Param("hour") String hour);
 
-    @Query("SELECT s FROM Session s ORDER BY s.createdDate")
+    @Query("SELECT s FROM Session s ORDER BY s.createdDate DESC")
     List<Session> getSessionsOrderedByCreatedDateDesc();
 
 
