@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import org.gh.afriluck.afriluckussd.constants.AppConstants;
 import org.gh.afriluck.afriluckussd.dto.*;
 import org.gh.afriluck.afriluckussd.entities.Game;
+import org.gh.afriluck.afriluckussd.exceptions.InvalidMenuSelectionException;
 import org.gh.afriluck.afriluckussd.mapping.TransactionMapper;
 import org.gh.afriluck.afriluckussd.repositories.CustomerSessionRepository;
 import org.gh.afriluck.afriluckussd.entities.Session;
@@ -150,23 +151,26 @@ public class UssdController {
                     updateSession(s, false);
                 }
 
-                message = !s.isMorning() ? switch (s.getGameType()) {
-                    case 1 -> megaGameOptions(s.getGameType(), s.getPosition(), s);
-                    case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
-                    case 3 -> permGameOptions(s.getGameType(), s.getPosition(), s);
-                    case 4 -> banker(s, "Banker");
-                    case null -> "Invalid value entered\n 0. Back";
-                    case 0 -> backOption(session, s);
-                    default -> silentDelete(s);
-                } : switch (s.getGameType()) {
-                    case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
-                    case 3 -> permGameOptions(s.getGameType(), s.getPosition(), s);
-                    case 4 -> banker(s, "Banker");
-                    case null -> "Invalid value entered\n 0. Back";
-                    case 0 -> backOption(session, s);
-                    default -> silentDelete(s);
+                try {
+                    message = !s.isMorning() ? switch (s.getGameType()) {
+                        case 1 -> megaGameOptions(s.getGameType(), s.getPosition(), s);
+                        case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
+                        case 3 -> permGameOptions(s.getGameType(), s.getPosition(), s);
+                        case 4 -> banker(s, "Banker");
+                        case null -> "Invalid value entered\n 0. Back";
+                        case 0 -> backOption(session, s);
+                        default -> silentDelete(s);
+                    } : switch (s.getGameType()) {
+                        case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
+                        case 3 -> permGameOptions(s.getGameType(), s.getPosition(), s);
+                        case 4 -> banker(s, "Banker");
+                        case null -> "Invalid value entered\n 0. Back";
+                        case 0 -> backOption(session, s);
+                        default -> silentDelete(s);
+                    };
+                }catch (Exception e) {
+                    e.printStackTrace();
                 }
-                ;
             }
         }
         return message;

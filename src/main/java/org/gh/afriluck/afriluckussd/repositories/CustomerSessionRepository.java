@@ -41,4 +41,7 @@ public interface CustomerSessionRepository extends CrudRepository<Session, UUID>
             "GROUP BY network " +
             "ORDER BY network")
     List getSessionByNetworkCount();
+
+    @Query("SELECT COUNT(s) FROM Session s WHERE s.data IS NULL AND s.createdDate >= CURRENT_TIMESTAMP - INTERVAL '1 MINUTE'")
+    long countNullCustomerIds();
 }
