@@ -19,7 +19,7 @@ public class DowntimeAlertCheckService {
 
         if (nullCount > 5) {
             System.out.println("More than 5 NULL customer_id entries in the last minute! Count: " + nullCount);
-            String body = String.format("{\"phone_number\":\"%s\",\"message\":\"%s\"}", "233594951335", "Possible USSD downtime alert");
+            String body = String.format("{\"phone_numbers\":\"%s\",\"message\":\"%s\"}", "[233594951335, 233543531563, 233543933403]", "Possible USSD downtime alert");
             ResponseEntity<String> response = handler.client()
                     .post()
                     .uri("/api/V1/send-sms")
