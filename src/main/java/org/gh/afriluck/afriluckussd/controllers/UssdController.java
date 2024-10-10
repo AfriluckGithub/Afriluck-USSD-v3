@@ -4,7 +4,6 @@ import com.google.gson.JsonObject;
 import org.gh.afriluck.afriluckussd.constants.AppConstants;
 import org.gh.afriluck.afriluckussd.dto.*;
 import org.gh.afriluck.afriluckussd.entities.Game;
-import org.gh.afriluck.afriluckussd.exceptions.InvalidMenuSelectionException;
 import org.gh.afriluck.afriluckussd.mapping.TransactionMapper;
 import org.gh.afriluck.afriluckussd.repositories.CustomerSessionRepository;
 import org.gh.afriluck.afriluckussd.entities.Session;
@@ -180,7 +179,7 @@ public class UssdController {
         String dayOfWeekInWords = getDayOfWeekInWords();
         //deleteSession(savedSession);
         savedSession.setNextStep(FIRST);
-        savedSession.setPosition(FIRST);
+        savedSession.setPosition(ZERO);
         savedSession.setSequenceId(session.getSequenceID());
         savedSession.setMsisdn(session.getMsisdn());
         savedSession.setReset(false);
