@@ -75,82 +75,80 @@ public class UssdController {
      * @apiNote A controller that serves the ussd application
      */
     @PostMapping(path = "/ussd")
-    public String index(@RequestBody Session session) throws ExecutionException, InterruptedException {
-
+    public String index(@RequestBody Session session) {
         String message = null;
-        SimpleDateFormat formatter = new SimpleDateFormat(AppConstants.GLOBAL_DATE_FORMAT);
-        String timeStamp = formatter.format(new Date());
+        try {
+            SimpleDateFormat formatter = new SimpleDateFormat(AppConstants.GLOBAL_DATE_FORMAT);
+            String timeStamp = formatter.format(new Date());
 
-        session.setTimeStamp(timeStamp);
-        Session savedSession = sessionRepository.findBySequenceID(session.getSequenceID());
+            session.setTimeStamp(timeStamp);
+            Session savedSession = sessionRepository.findBySequenceID(session.getSequenceID());
 
-        if (savedSession == null) {
-            session.setPosition(0);
-            //session.setSequenceId(new Date().getTime() + session.getSequenceID());
-            sessionRepository.save(session);
-        } else {
-            System.out.println("--- Updating ---");
-            updateSession(session, true);
-        }
-
-        if (ValidationUtils.isBetweenGameTime()) {
-            message = menuResponse(session, 1, AppConstants.GAME_CLOSED_MESSAGE);
-        } else {
-            Session s = sessionRepository.findBySequenceID(session.getSequenceID());
-            if (s.isReset()) {
-                s.setNextStep(SECOND);
-                s.setPosition(SECOND);
-                s.setGameType(s.getGameType());
+            if (savedSession == null) {
+                session.setPosition(0);
+                //session.setSequenceId(new Date().getTime() + session.getSequenceID());
+                sessionRepository.save(session);
+            } else {
+                System.out.println("--- Updating ---");
+                updateSession(session, true);
             }
-            if (s.getNextStep() == ZERO) {
-                s.setNextStep(FIRST);
-                String dayOfWeekInWords = getDayOfWeekInWords();
-                updateSession(s, false);
-                message = menuResponse(session, 0, ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 5 : 7, dayOfWeekInWords.equals("Sunday") ? "30" : "00") : String.format(dayOfWeekInWords.equals("Sunday") ? AppConstants.WELCOME_MENU_MESSAGE_NEW : AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 5 : 7, dayOfWeekInWords.equals("Sunday") ? "30" : "00"));
-            } else if (s.getNextStep() == FIRST) {
-                boolean isEvening = ValidationUtils.isEveningGameTime();
-                try {
 
-                    if (s.getNextStep() == FIRST && s.isSecondStep() == false) {
-                        isEvening = handleExceptionForSunday(s, isEvening);
+            if (ValidationUtils.isBetweenGameTime()) {
+                message = menuResponse(session, 1, AppConstants.GAME_CLOSED_MESSAGE);
+            } else {
+                Session s = sessionRepository.findBySequenceID(session.getSequenceID());
+                if (s.isReset()) {
+                    s.setNextStep(SECOND);
+                    s.setPosition(SECOND);
+                    s.setGameType(s.getGameType());
+                }
+                if (s.getNextStep() == ZERO) {
+                    s.setNextStep(FIRST);
+                    String dayOfWeekInWords = getDayOfWeekInWords();
+                    updateSession(s, false);
+                    message = menuResponse(session, 0, ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 5 : 7, dayOfWeekInWords.equals("Sunday") ? "30" : "00") : String.format(dayOfWeekInWords.equals("Sunday") ? AppConstants.WELCOME_MENU_MESSAGE_NEW : AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 5 : 7, dayOfWeekInWords.equals("Sunday") ? "30" : "00"));
+                } else if (s.getNextStep() == FIRST) {
+                    boolean isEvening = ValidationUtils.isEveningGameTime();
+                    try {
+
+                        if (s.getNextStep() == FIRST && s.isSecondStep() == false) {
+                            isEvening = handleExceptionForSunday(s, isEvening);
+                        }
+
+                        message = isEvening ? switch (s.getGameType()) {
+                            case 1 -> eveningGameOptions(s);
+                            case 2 -> backOption(session, savedSession);
+                            case 5 -> account(s);
+                            case 6 -> tnCsMessage(s);
+                            case 99 -> contactUsMessage(s);
+                            case null -> "Invalid value entered\n 0. Back";
+                            default -> throw new IllegalStateException("Unexpected value: " + s.getData());
+                        } : switch (s.getGameType()) {
+                            case 1 -> anopaGameOptions(s);
+                            case 2 -> eveningGameOptions(s);
+                            case 5 -> account(s);
+                            case 6 -> tnCsMessage(s);
+                            case 99 -> contactUsMessage(s);
+                            case null -> "Invalid value entered\n 0. Back";
+                            default -> throw new IllegalStateException("Unexpected value: " + s.getData());
+                        };
+                    } catch (Exception e) {
+                        message = menuResponse(session, 1, "Invalid value entered");
+                        e.printStackTrace();
+                    }
+                } else if (s.getNextStep() == SECOND) {
+                    String dayOfWeekInWords = getDayOfWeekInWords();
+                    if (s.getPosition() == SECOND && !s.isReset()) {
+                        s.setGameType(Integer.valueOf(s.getData()));
+                        updateSession(s, false);
                     }
 
-                    message = isEvening ? switch (s.getGameType()) {
-                        case 1 -> eveningGameOptions(s);
-                        case 2 -> backOption(session, savedSession);
-                        case 5 -> account(s);
-                        case 6 -> tnCsMessage(s);
-                        case 99 -> contactUsMessage(s);
-                        case null -> "Invalid value entered\n 0. Back";
-                        default -> throw new IllegalStateException("Unexpected value: " + s.getData());
-                    } : switch (s.getGameType()) {
-                        case 1 -> anopaGameOptions(s);
-                        case 2 -> eveningGameOptions(s);
-                        case 5 -> account(s);
-                        case 6 -> tnCsMessage(s);
-                        case 99 -> contactUsMessage(s);
-                        case null -> "Invalid value entered\n 0. Back";
-                        default -> throw new IllegalStateException("Unexpected value: " + s.getData());
-                    };
-                } catch (Exception e) {
-                    message = menuResponse(session, 1, "Invalid value entered");
-                    e.printStackTrace();
-                }
-            } else if (s.getNextStep() == SECOND) {
-                String dayOfWeekInWords = getDayOfWeekInWords();
-                if (s.getPosition() == SECOND && !s.isReset()) {
-                    s.setGameType(Integer.valueOf(s.getData()));
-                    updateSession(s, false);
-                }
-
-                if (s.isBackPressed()) {
-                    s.setGameType(Integer.parseInt(s.getData()));
-                    s.setBackPressed(false);
-                    s.setPosition(SECOND);
-                    updateSession(s, false);
-                }
-
-                try {
+                    if (s.isBackPressed()) {
+                        s.setGameType(Integer.parseInt(s.getData()));
+                        s.setBackPressed(false);
+                        s.setPosition(SECOND);
+                        updateSession(s, false);
+                    }
                     message = !s.isMorning() ? switch (s.getGameType()) {
                         case 1 -> megaGameOptions(s.getGameType(), s.getPosition(), s);
                         case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
@@ -167,10 +165,11 @@ public class UssdController {
                         case 0 -> backOption(session, s);
                         default -> silentDelete(s);
                     };
-                }catch (Exception e) {
-                    e.printStackTrace();
                 }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return menuResponse(session, 0, "System EC occurred. Please try again");
         }
         return message;
     }
@@ -184,9 +183,11 @@ public class UssdController {
         savedSession.setMsisdn(session.getMsisdn());
         savedSession.setReset(false);
         savedSession.setBackPressed(true);
+        //savedSession.setMorning(session.isMorning());
         updateSession(savedSession, false);
-        return menuResponse(session, 0, savedSession.isMorning() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 5 : 7, dayOfWeekInWords.equals("Sunday") ? "30" : "00")
-                : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 5 : 7, dayOfWeekInWords.equals("Sunday") ? "30" : "00"));
+        return menuResponse(session, 0, ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 5 : 7, dayOfWeekInWords.equals("Sunday") ? "30" : "00") : String.format(dayOfWeekInWords.equals("Sunday") ? AppConstants.WELCOME_MENU_MESSAGE_NEW : AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 5 : 7, dayOfWeekInWords.equals("Sunday") ? "30" : "00"));
+        //return menuResponse(session, 0, ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 5 : 7, dayOfWeekInWords.equals("Sunday") ? "30" : "00")
+        //        : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 5 : 7, dayOfWeekInWords.equals("Sunday") ? "30" : "00"));
     }
 
     private String anopaGameOptions(Session session) {
@@ -1515,10 +1516,10 @@ public class UssdController {
     public boolean handleExceptionForSunday(Session s, boolean isEvening) {
         String getDayOfWeekInWords = getDayOfWeekInWords();
         if (getDayOfWeekInWords.equals(AppConstants.SUNDAY)) {
-            if(s.getData().equals("2")) {
+            if (s.getData().equals("2")) {
                 s.setGameType(1);
                 isEvening = true;
-            }else{
+            } else {
                 isEvening = true;
                 s.setGameType(Integer.valueOf(s.getData()));
             }
