@@ -152,14 +152,14 @@ public class UssdController {
                         case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
                         case 3 -> permGameOptions(s.getGameType(), s.getPosition(), s);
                         case 4 -> banker(s, "Banker");
-                        case null -> "Invalid value entered\n 0. Back";
+                        case null -> menuResponse(session, 0, "Invalid value entered\n 0. Back");
                         case 0 -> backOption(session, s);
                         default -> silentDelete(s);
                     } : switch (s.getGameType()) {
                         case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
                         case 3 -> permGameOptions(s.getGameType(), s.getPosition(), s);
                         case 4 -> banker(s, "Banker");
-                        case null -> "Invalid value entered\n 0. Back";
+                        case null -> menuResponse(session, 0, "Invalid value entered\n 0. Back");
                         case 0 -> backOption(session, s);
                         default -> silentDelete(s);
                     };
