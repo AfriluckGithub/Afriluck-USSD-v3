@@ -121,16 +121,14 @@ public class UssdController {
                             case 5 -> account(s);
                             case 6 -> tnCsMessage(s);
                             case 99 -> contactUsMessage(s);
-                            case null -> "Invalid value entered\n 0. Back";
-                            default -> throw new IllegalStateException("Unexpected value: " + s.getData());
+                            case null, default -> "Invalid value entered\n 0. Back";
                         } : switch (s.getGameType()) {
                             case 1 -> anopaGameOptions(s);
                             case 2 -> eveningGameOptions(s);
                             case 5 -> account(s);
                             case 6 -> tnCsMessage(s);
                             case 99 -> contactUsMessage(s);
-                            case null -> "Invalid value entered\n 0. Back";
-                            default -> throw new IllegalStateException("Unexpected value: " + s.getData());
+                            case null, default -> "Invalid value entered\n 0. Back";
                         };
                     } catch (Exception e) {
                         message = menuResponse(session, 1, "Invalid value entered");
@@ -186,7 +184,7 @@ public class UssdController {
         //savedSession.setMorning(session.isMorning());
         updateSession(savedSession, false);
         return menuResponse(session, 0, ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 5 : 7, dayOfWeekInWords.equals("Sunday") ? "30" : "00") : String.format(dayOfWeekInWords.equals("Sunday") ? AppConstants.WELCOME_MENU_MESSAGE_NEW : AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 5 : 7, dayOfWeekInWords.equals("Sunday") ? "30" : "00"));
-        //return menuResponse(session, 0, ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 5 : 7, dayOfWeekInWords.equals("Sunday") ? "30" : "00")
+        // return menuResponse(session, 0, ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 5 : 7, dayOfWeekInWords.equals("Sunday") ? "30" : "00")
         //        : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 5 : 7, dayOfWeekInWords.equals("Sunday") ? "30" : "00"));
     }
 
