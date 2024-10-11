@@ -121,14 +121,14 @@ public class UssdController {
                             case 5 -> account(s);
                             case 6 -> tnCsMessage(s);
                             case 99 -> contactUsMessage(s);
-                            case null, default -> "Invalid value entered\n 0. Back";
+                            case null, default -> invalidMenuOption(session, "Invalid value entered\n 0. Back");
                         } : switch (s.getGameType()) {
                             case 1 -> anopaGameOptions(s);
                             case 2 -> eveningGameOptions(s);
                             case 5 -> account(s);
                             case 6 -> tnCsMessage(s);
                             case 99 -> contactUsMessage(s);
-                            case null, default -> "Invalid value entered\n 0. Back";
+                            case null, default -> invalidMenuOption(session, "Invalid value entered\n 0. Back");
                         };
                     } catch (Exception e) {
                         message = menuResponse(session, 1, "Invalid value entered");
@@ -152,14 +152,14 @@ public class UssdController {
                         case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
                         case 3 -> permGameOptions(s.getGameType(), s.getPosition(), s);
                         case 4 -> banker(s, "Banker");
-                        case null -> menuResponse(session, 0, "Invalid value entered\n 0. Back");
+                        case null -> invalidMenuOption(session, "Invalid value entered\n 0. Back");
                         case 0 -> backOption(session, s);
                         default -> silentDelete(s);
                     } : switch (s.getGameType()) {
                         case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
                         case 3 -> permGameOptions(s.getGameType(), s.getPosition(), s);
                         case 4 -> banker(s, "Banker");
-                        case null -> menuResponse(session, 0, "Invalid value entered\n 0. Back");
+                        case null -> invalidMenuOption(session, "Invalid value entered\n 0. Back");
                         case 0 -> backOption(session, s);
                         default -> silentDelete(s);
                     };
@@ -200,6 +200,10 @@ public class UssdController {
         session.setMorning(false);
         updateSession(session, false);
         return menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE);
+    }
+
+    public String invalidMenuOption(Session session, String message) {
+        return menuResponse(session, 0, message);
     }
 
     /**
