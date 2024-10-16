@@ -24,6 +24,7 @@ public class TransactionMapper {
     public Transaction mapTransactionFromSession(Session session, Game game, boolean wallet) {
         Transaction t = new Transaction();
         t.setGameId(session.getGameId());
+        t.setGame(session.isMorning()? "anopa": "657");
         String result = session.getGameType() == 1 ? "mega" : (session.getGameType() == 2 ? "direct" : "perm");
         t.setBetType(result);
         t.setSelectedNumbers(session.getSelectedNumbers());
@@ -33,7 +34,7 @@ public class TransactionMapper {
         t.setTotalAmount(session.getAmount());
         int betTypeCode = result == "mega" ? 1 : session.getGameTypeCode();
         t.setBetTypeCode(betTypeCode);
-        t.setDrawCode(session.getGameTypeId());
+        //t.setDrawCode(session.getGameTypeId());
         t.setDiscountedAmount(session.getDiscountedAmount());
         t.setMedium("ussd");
         t.setChannel(session.getNetwork());
@@ -41,11 +42,10 @@ public class TransactionMapper {
         return t;
     }
 
-    ;
-
 
     public Transaction mapTransactionFromSessionPerm(Session session) {
         Transaction t = new Transaction();
+        t.setGame(session.isMorning()? "anopa": "657");
         t.setGameId(session.getGameId());
         t.setBetType(AppConstants.PERM);
         t.setSelectedNumbers(session.getSelectedNumbers());
@@ -54,13 +54,14 @@ public class TransactionMapper {
         t.setChannel(session.getNetwork());
         t.setTotalAmount(session.getAmount());
         t.setBetTypeCode(session.getGameTypeCode());
-        t.setDrawCode(session.getGameTypeId());
+        // t.setDrawCode(session.getGameTypeId());
         t.setDiscountedAmount(session.getDiscountedAmount());
         return t;
     }
 
     public Transaction mapTransactionFromSessionBanker(Session session, boolean wallet) {
         Transaction t = new Transaction();
+        t.setGame(session.isMorning()? "anopa": "657");
         t.setGameId(session.getGameId());
         t.setBetType(AppConstants.BANKER);
         t.setSelectedNumbers(session.getSelectedNumbers());
@@ -69,7 +70,7 @@ public class TransactionMapper {
         t.setChannel(session.getNetwork());
         t.setTotalAmount(session.getAmount());
         t.setBetTypeCode(2);
-        t.setDrawCode(session.getGameTypeId());
+        // t.setDrawCode(session.getGameTypeId());
         t.setDiscountedAmount(session.getDiscountedAmount());
         t.setMedium("ussd");
         t.setChannel(session.getNetwork());
