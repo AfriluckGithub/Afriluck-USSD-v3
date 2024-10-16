@@ -175,6 +175,7 @@ public class Transaction {
                 ", discountedAmount='" + discountedAmount + '\'' +
                 ", medium='" + medium + '\'' +
                 ", useWallet='" + useWallet + '\'' +
+                ", game='" + game + '\'' +
                 '}';
     }
 }
