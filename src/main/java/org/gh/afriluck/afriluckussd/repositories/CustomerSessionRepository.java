@@ -26,7 +26,6 @@ public interface CustomerSessionRepository extends CrudRepository<Session, UUID>
     @Query("SELECT s FROM Session s ORDER BY s.createdDate DESC")
     List<Session> getSessionsOrderedByCreatedDateDesc();
 
-
     @Query("SELECT COUNT(s) AS event, EXTRACT(HOUR FROM s.createdDate) AS hour " +
             "FROM Session s " +
             "WHERE DATE(s.createdDate)=DATE(NOW())" +
