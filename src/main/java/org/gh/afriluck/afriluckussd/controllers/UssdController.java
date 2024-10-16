@@ -907,20 +907,25 @@ public class UssdController {
                     savedSession.setCurrentGame("direct");
                     updateSession(s, true);
                     message = AppConstants.PAYMENT_INIT_MESSAGE;
-                    Runnable paymentTask = () -> {
-                        Transaction t = mapper.mapTransactionFromSession(s, gameDraw, false);
-                        System.out.println(t.toString());
-                        ResponseEntity<String> response = handler.client()
-                                .post()
-                                .uri("/api/V1/place-bet")
-                                .body(t)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .retrieve()
-                                .toEntity(String.class);
-                        System.out.println(response.getBody());
 
-                        sessionRepository.deleteById(savedSession.getId());
-                        System.out.println("Payment Thread running...");
+                    Runnable paymentTask = () -> {
+                        try {
+                            Transaction t = mapper.mapTransactionFromSession(s, gameDraw, false);
+                            System.out.println(t.toString());
+                            ResponseEntity<String> response = handler.client()
+                                    .post()
+                                    .uri("/api/V1/place-bet")
+                                    .body(t)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .retrieve()
+                                    .toEntity(String.class);
+                            System.out.println(response.getBody());
+
+                            sessionRepository.deleteById(savedSession.getId());
+                            System.out.println("Payment Thread running...");
+                        }catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     };
                     Runnable sessionTask = () -> {
                         sessionRepository.deleteById(savedSession.getId());
@@ -935,19 +940,23 @@ public class UssdController {
                     // Pay with MOMO
                     message = AppConstants.PAYMENT_INIT_MESSAGE;
                     Runnable paymentTask = () -> {
-                        Transaction t = mapper.mapTransactionFromSession(s, gameDraw, false);
-                        System.out.println(t.toString());
-                        ResponseEntity<String> response = handler.client()
-                                .post()
-                                .uri("/api/V1/place-bet")
-                                .body(t)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .retrieve()
-                                .toEntity(String.class);
-                        System.out.println(response.getBody());
+                        try {
+                            Transaction t = mapper.mapTransactionFromSession(s, gameDraw, false);
+                            System.out.println(t.toString());
+                            ResponseEntity<String> response = handler.client()
+                                    .post()
+                                    .uri("/api/V1/place-bet")
+                                    .body(t)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .retrieve()
+                                    .toEntity(String.class);
+                            System.out.println(response.getBody());
 
-                        sessionRepository.deleteById(savedSession.getId());
-                        System.out.println("Payment Thread running...");
+                            sessionRepository.deleteById(savedSession.getId());
+                            System.out.println("Payment Thread running...");
+                        }catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     };
                     Runnable sessionTask = () -> {
                         sessionRepository.deleteById(savedSession.getId());
@@ -960,19 +969,23 @@ public class UssdController {
                     // Pay with Wallet
                     message = AppConstants.PAYMENT_INIT_MESSAGE_WALLET;
                     Runnable paymentTask = () -> {
-                        Transaction t = mapper.mapTransactionFromSession(s, gameDraw, true);
-                        System.out.println(t.toString());
-                        ResponseEntity<String> response = handler.client()
-                                .post()
-                                .uri("/api/V1/place-bet")
-                                .body(t)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .retrieve()
-                                .toEntity(String.class);
-                        System.out.println(response.getBody());
+                        try {
+                            Transaction t = mapper.mapTransactionFromSession(s, gameDraw, true);
+                            System.out.println(t.toString());
+                            ResponseEntity<String> response = handler.client()
+                                    .post()
+                                    .uri("/api/V1/place-bet")
+                                    .body(t)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .retrieve()
+                                    .toEntity(String.class);
+                            System.out.println(response.getBody());
 
-                        sessionRepository.deleteById(savedSession.getId());
-                        System.out.println("Payment Thread running...");
+                            sessionRepository.deleteById(savedSession.getId());
+                            System.out.println("Payment Thread running...");
+                        }catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     };
                     Runnable sessionTask = () -> {
                         sessionRepository.deleteById(savedSession.getId());
@@ -998,19 +1011,23 @@ public class UssdController {
                 if (savedSession.getData().equals("1")) {
                     message = AppConstants.PAYMENT_INIT_MESSAGE;
                     Runnable paymentTask = () -> {
-                        Transaction t = mapper.mapTransactionFromSession(s, gameDraw, false);
-                        System.out.println(t.toString());
-                        ResponseEntity<String> response = handler.client()
-                                .post()
-                                .uri("/api/V1/place-bet")
-                                .body(t)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .retrieve()
-                                .toEntity(String.class);
-                        System.out.println(response.getBody());
+                        try {
+                            Transaction t = mapper.mapTransactionFromSession(s, gameDraw, false);
+                            System.out.println(t.toString());
+                            ResponseEntity<String> response = handler.client()
+                                    .post()
+                                    .uri("/api/V1/place-bet")
+                                    .body(t)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .retrieve()
+                                    .toEntity(String.class);
+                            System.out.println(response.getBody());
 
-                        sessionRepository.deleteById(savedSession.getId());
-                        System.out.println("Payment Thread running...");
+                            sessionRepository.deleteById(savedSession.getId());
+                            System.out.println("Payment Thread running...");
+                        }catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     };
                     Runnable sessionTask = () -> {
                         sessionRepository.deleteById(savedSession.getId());
@@ -1022,19 +1039,23 @@ public class UssdController {
                 } else if (savedSession.getData().equals("2")) {
                     message = AppConstants.PAYMENT_INIT_MESSAGE_WALLET;
                     Runnable paymentTask = () -> {
-                        Transaction t = mapper.mapTransactionFromSession(s, gameDraw, true);
-                        System.out.println(t.toString());
-                        ResponseEntity<String> response = handler.client()
-                                .post()
-                                .uri("/api/V1/place-bet")
-                                .body(t)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .retrieve()
-                                .toEntity(String.class);
-                        System.out.println(response.getBody());
+                        try {
+                            Transaction t = mapper.mapTransactionFromSession(s, gameDraw, true);
+                            System.out.println(t.toString());
+                            ResponseEntity<String> response = handler.client()
+                                    .post()
+                                    .uri("/api/V1/place-bet")
+                                    .body(t)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .retrieve()
+                                    .toEntity(String.class);
+                            System.out.println(response.getBody());
 
-                        sessionRepository.deleteById(savedSession.getId());
-                        System.out.println("Payment Thread running...");
+                            sessionRepository.deleteById(savedSession.getId());
+                            System.out.println("Payment Thread running...");
+                        }catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     };
                     Runnable sessionTask = () -> {
                         sessionRepository.deleteById(savedSession.getId());
@@ -1049,17 +1070,21 @@ public class UssdController {
                 updateSession(s, true);
                 message = AppConstants.PAYMENT_INIT_MESSAGE;
                 Runnable paymentTask = () -> {
-                    Transaction t = mapper.mapTransactionFromSession(savedSession, gameDraw, false);
-                    System.out.println(t.toString());
-                    ResponseEntity<String> response = handler.client()
-                            .post()
-                            .uri("/api/V1/place-bet")
-                            .body(t)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .retrieve()
-                            .toEntity(String.class);
-                    System.out.println(response.getBody());
-                    System.out.println("Payment Thread running...");
+                    try {
+                        Transaction t = mapper.mapTransactionFromSession(savedSession, gameDraw, false);
+                        System.out.println(t.toString());
+                        ResponseEntity<String> response = handler.client()
+                                .post()
+                                .uri("/api/V1/place-bet")
+                                .body(t)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .retrieve()
+                                .toEntity(String.class);
+                        System.out.println(response.getBody());
+                        System.out.println("Payment Thread running...");
+                    }catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 };
 
                 Runnable sessionTask = () -> {

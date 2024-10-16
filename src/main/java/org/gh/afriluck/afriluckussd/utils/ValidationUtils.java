@@ -133,8 +133,8 @@ public class ValidationUtils {
     public static boolean isBetweenGameTime() {
         int startHour = 19;
         int startMinute = 3;
-        int endHour = 20;
-        int endMinute = 19;
+        int endHour = 19;
+        int endMinute = 45;
 
         int dayOfWeekNumber = LocalDate.now().getDayOfWeek().getValue();
 
@@ -142,8 +142,8 @@ public class ValidationUtils {
         if (dayOfWeekNumber == 7) {
             startHour = 17;
             startMinute = 33;
-            endHour = 20;
-            endMinute = 20;
+            endHour = 19;
+            endMinute = 45;
         }
         int currentTime = LocalTime.now().getHour() * 60 + LocalTime.now().getMinute();
         int startTime = startHour * 60 + startMinute;
