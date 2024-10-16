@@ -641,19 +641,23 @@ public class UssdController {
                     gameDraw = new Game();
                     message = AppConstants.PAYMENT_INIT_MESSAGE;
                     Runnable paymentTask = () -> {
-                        Transaction t = mapper.mapTransactionFromSession(s, gameDraw, false);
-                        System.out.println(t.toString());
-                        ResponseEntity<String> response = handler.client()
-                                .post()
-                                .uri("/api/V1/place-bet")
-                                .body(t)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .retrieve()
-                                .toEntity(String.class);
-                        System.out.println(response.getBody());
+                        try {
+                            Transaction t = mapper.mapTransactionFromSession(s, gameDraw, false);
+                            System.out.println(t.toString());
+                            ResponseEntity<String> response = handler.client()
+                                    .post()
+                                    .uri("/api/V1/place-bet")
+                                    .body(t)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .retrieve()
+                                    .toEntity(String.class);
+                            System.out.println(response.getBody());
 
-                        sessionRepository.deleteById(savedSession.getId());
-                        System.out.println("Payment Thread running...");
+                            sessionRepository.deleteById(savedSession.getId());
+                            System.out.println("Payment Thread running...");
+                        }catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     };
                     Runnable sessionTask = () -> {
                         sessionRepository.deleteById(savedSession.getId());
@@ -666,19 +670,23 @@ public class UssdController {
                     gameDraw = new Game();
                     message = AppConstants.PAYMENT_INIT_MESSAGE_WALLET;
                     Runnable paymentTask = () -> {
-                        Transaction t = mapper.mapTransactionFromSession(s, gameDraw, true);
-                        System.out.println(t.toString());
-                        ResponseEntity<String> response = handler.client()
-                                .post()
-                                .uri("/api/V1/place-bet")
-                                .body(t)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .retrieve()
-                                .toEntity(String.class);
-                        System.out.println(response.getBody());
+                        try {
+                            Transaction t = mapper.mapTransactionFromSession(s, gameDraw, true);
+                            System.out.println(t.toString());
+                            ResponseEntity<String> response = handler.client()
+                                    .post()
+                                    .uri("/api/V1/place-bet")
+                                    .body(t)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .retrieve()
+                                    .toEntity(String.class);
+                            System.out.println(response.getBody());
 
-                        sessionRepository.deleteById(savedSession.getId());
-                        System.out.println("Payment Thread running...");
+                            sessionRepository.deleteById(savedSession.getId());
+                            System.out.println("Payment Thread running...");
+                        }catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     };
                     Runnable sessionTask = () -> {
                         sessionRepository.deleteById(savedSession.getId());
@@ -704,17 +712,21 @@ public class UssdController {
                         continueFlag = 1;
                         message = AppConstants.PAYMENT_INIT_MESSAGE;
                         Runnable paymentTask = () -> {
-                            Transaction t = mapper.mapTransactionFromSession(s, gameDraw, false);
-                            System.out.println(t.toString());
-                            ResponseEntity<String> response = handler.client()
-                                    .post()
-                                    .uri("/api/V1/place-bet")
-                                    .body(t)
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .retrieve()
-                                    .toEntity(String.class);
-                            System.out.println(response.getBody());
-                            System.out.println("--- Running Payment ---");
+                            try{
+                                Transaction t = mapper.mapTransactionFromSession(s, gameDraw, false);
+                                System.out.println(t.toString());
+                                ResponseEntity<String> response = handler.client()
+                                        .post()
+                                        .uri("/api/V1/place-bet")
+                                        .body(t)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .retrieve()
+                                        .toEntity(String.class);
+                                System.out.println(response.getBody());
+                                System.out.println("--- Running Payment ---");
+                            }catch (Exception e) {
+                                e.printStackTrace();
+                            }
                         };
                         Runnable sessionTask = () -> {
                             sessionRepository.deleteById(savedSession.getId());
@@ -728,17 +740,21 @@ public class UssdController {
                         continueFlag = 1;
                         message = AppConstants.PAYMENT_INIT_MESSAGE_WALLET;
                         Runnable paymentTask = () -> {
-                            Transaction t = mapper.mapTransactionFromSession(s, gameDraw, true);
-                            System.out.println(t.toString());
-                            ResponseEntity<String> response = handler.client()
-                                    .post()
-                                    .uri("/api/V1/place-bet")
-                                    .body(t)
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .retrieve()
-                                    .toEntity(String.class);
-                            System.out.println(response.getBody());
-                            System.out.println("--- Running Payment ---");
+                            try {
+                                Transaction t = mapper.mapTransactionFromSession(s, gameDraw, true);
+                                System.out.println(t.toString());
+                                ResponseEntity<String> response = handler.client()
+                                        .post()
+                                        .uri("/api/V1/place-bet")
+                                        .body(t)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .retrieve()
+                                        .toEntity(String.class);
+                                System.out.println(response.getBody());
+                                System.out.println("--- Running Payment ---");
+                            }catch (Exception e) {
+                                e.printStackTrace();
+                            }
                         };
                         Runnable sessionTask = () -> {
                             sessionRepository.deleteById(savedSession.getId());
@@ -753,15 +769,18 @@ public class UssdController {
                     Runnable paymentTask = () -> {
                         Transaction t = mapper.mapTransactionFromSession(s, gameDraw, false);
                         System.out.println(t.toString());
-                        ResponseEntity<String> response = handler.client()
-                                .post()
-                                .uri("/api/V1/place-bet")
-                                .body(t)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .retrieve()
-                                .toEntity(String.class);
-                        System.out.println(response.getBody());
-
+                        try {
+                            ResponseEntity<String> response = handler.client()
+                                    .post()
+                                    .uri("/api/V1/place-bet")
+                                    .body(t)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .retrieve()
+                                    .toEntity(String.class);
+                            System.out.println(response.getBody());
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                         sessionRepository.deleteById(savedSession.getId());
                         System.out.println("Payment Thread running...");
                     };
@@ -1514,7 +1533,7 @@ public class UssdController {
     }
 
     public boolean handleExceptionForSunday(Session s, boolean isEvening) {
-        try{
+        try {
             String getDayOfWeekInWords = getDayOfWeekInWords();
             if (getDayOfWeekInWords.equals(AppConstants.SUNDAY)) {
                 if (s.getData().equals("2")) {
@@ -1528,7 +1547,7 @@ public class UssdController {
                 s.setGameType(Integer.valueOf(s.getData()));
             }
             updateSession(s, false);
-        }catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             s.setGameType(Integer.valueOf("2"));
         }
