@@ -188,7 +188,6 @@ public class UssdController {
         return message;
     }
 
-
     private String depositToWallet(Session session) {
         int continueFlag = 0;
         String message = null;
