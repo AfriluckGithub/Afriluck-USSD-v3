@@ -134,7 +134,7 @@ public class UssdController {
                         message = isEvening ? switch (s.getGameType()) {
                             case 1 -> eveningGameOptions(s);
                             case 2 -> backOption(session, savedSession);
-                            //case 4 -> depositToWallet(s);
+                            case 4 -> depositToWallet(s);
                             case 5 -> account(s);
                             case 6 -> tnCsMessage(s);
                             case 99 -> contactUsMessage(s);
@@ -142,7 +142,7 @@ public class UssdController {
                         } : switch (s.getGameType()) {
                             case 1 -> anopaGameOptions(s);
                             case 2 -> eveningGameOptions(s);
-                            //case 4 -> depositToWallet(s);
+                            case 4 -> depositToWallet(s);
                             case 5 -> account(s);
                             case 6 -> tnCsMessage(s);
                             case 99 -> contactUsMessage(s);
@@ -186,6 +186,27 @@ public class UssdController {
             return menuResponse(session, 0, "System EC occurred. Please try again");
         }
         return message;
+    }
+
+    private String depositToWallet(Session session) {
+        int continueFlag = 0;
+        String message = null;
+        if (session.getPosition() == FIRST) {
+            continueFlag = 0;
+            message = "Enter amount to deposit\n";
+        }else if(session.getPosition() == SECOND) {
+            try{
+                CustomerDepositResponseDto depositResponse = customerDeposit(session.getMsisdn(), session.getData(), session.getNetwork());
+                String msg = depositResponse.success;
+                System.out.println(msg);
+            }catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            message = "Deposit initiated. You will receive a prompt soon";
+            continueFlag = 1;
+        }
+        return menuResponse(session, continueFlag, message);
     }
 
     private String backOption(Session session, Session savedSession) {
