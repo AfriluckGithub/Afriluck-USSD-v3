@@ -134,6 +134,7 @@ public class UssdController {
                         message = isEvening ? switch (s.getGameType()) {
                             case 1 -> eveningGameOptions(s);
                             case 2 -> backOption(session, savedSession);
+                            case 4 -> depositToWallet(s);
                             case 5 -> account(s);
                             case 6 -> tnCsMessage(s);
                             case 99 -> contactUsMessage(s);
@@ -141,6 +142,7 @@ public class UssdController {
                         } : switch (s.getGameType()) {
                             case 1 -> anopaGameOptions(s);
                             case 2 -> eveningGameOptions(s);
+                            case 4 -> depositToWallet(session);
                             case 5 -> account(s);
                             case 6 -> tnCsMessage(s);
                             case 99 -> contactUsMessage(s);
@@ -184,6 +186,19 @@ public class UssdController {
             return menuResponse(session, 0, "System EC occurred. Please try again");
         }
         return message;
+    }
+
+    private String depositToWallet(Session session) {
+        int continueFlag = 0;
+        String message = null;
+        if (session.getPosition() == FIRST) {
+            message = "Enter amount to deposit\n";
+        }else if(session.getPosition() == SECOND) {
+            CustomerDepositResponseDto depositResponse = customerDeposit(session.getMsisdn(), session.getData(), session.getNetwork());
+            message = depositResponse.success;
+            continueFlag = 1;
+        }
+        return menuResponse(session, continueFlag, message);
     }
 
     private String backOption(Session session, Session savedSession) {
@@ -671,7 +686,7 @@ public class UssdController {
 
                             sessionRepository.deleteById(savedSession.getId());
                             System.out.println("Payment Thread running...");
-                        }catch (Exception e) {
+                        } catch (Exception e) {
                             e.printStackTrace();
                         }
                     };
@@ -700,7 +715,7 @@ public class UssdController {
 
                             sessionRepository.deleteById(savedSession.getId());
                             System.out.println("Payment Thread running...");
-                        }catch (Exception e) {
+                        } catch (Exception e) {
                             e.printStackTrace();
                         }
                     };
@@ -728,7 +743,7 @@ public class UssdController {
                         continueFlag = 1;
                         message = AppConstants.PAYMENT_INIT_MESSAGE;
                         Runnable paymentTask = () -> {
-                            try{
+                            try {
                                 Transaction t = mapper.mapTransactionFromSession(s, gameDraw, false);
                                 System.out.println(t.toString());
                                 ResponseEntity<String> response = handler.client()
@@ -740,7 +755,7 @@ public class UssdController {
                                         .toEntity(String.class);
                                 System.out.println(response.getBody());
                                 System.out.println("--- Running Payment ---");
-                            }catch (Exception e) {
+                            } catch (Exception e) {
                                 e.printStackTrace();
                             }
                         };
@@ -768,7 +783,7 @@ public class UssdController {
                                         .toEntity(String.class);
                                 System.out.println(response.getBody());
                                 System.out.println("--- Running Payment ---");
-                            }catch (Exception e) {
+                            } catch (Exception e) {
                                 e.printStackTrace();
                             }
                         };
@@ -939,7 +954,7 @@ public class UssdController {
 
                             sessionRepository.deleteById(savedSession.getId());
                             System.out.println("Payment Thread running...");
-                        }catch (Exception e) {
+                        } catch (Exception e) {
                             e.printStackTrace();
                         }
                     };
@@ -970,7 +985,7 @@ public class UssdController {
 
                             sessionRepository.deleteById(savedSession.getId());
                             System.out.println("Payment Thread running...");
-                        }catch (Exception e) {
+                        } catch (Exception e) {
                             e.printStackTrace();
                         }
                     };
@@ -999,7 +1014,7 @@ public class UssdController {
 
                             sessionRepository.deleteById(savedSession.getId());
                             System.out.println("Payment Thread running...");
-                        }catch (Exception e) {
+                        } catch (Exception e) {
                             e.printStackTrace();
                         }
                     };
@@ -1041,7 +1056,7 @@ public class UssdController {
 
                             sessionRepository.deleteById(savedSession.getId());
                             System.out.println("Payment Thread running...");
-                        }catch (Exception e) {
+                        } catch (Exception e) {
                             e.printStackTrace();
                         }
                     };
@@ -1069,7 +1084,7 @@ public class UssdController {
 
                             sessionRepository.deleteById(savedSession.getId());
                             System.out.println("Payment Thread running...");
-                        }catch (Exception e) {
+                        } catch (Exception e) {
                             e.printStackTrace();
                         }
                     };
@@ -1098,7 +1113,7 @@ public class UssdController {
                                 .toEntity(String.class);
                         System.out.println(response.getBody());
                         System.out.println("Payment Thread running...");
-                    }catch (Exception e) {
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                 };
