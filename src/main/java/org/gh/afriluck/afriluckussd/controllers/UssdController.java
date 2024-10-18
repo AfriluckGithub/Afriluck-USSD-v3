@@ -4,10 +4,12 @@ import com.google.gson.JsonObject;
 import org.gh.afriluck.afriluckussd.constants.AppConstants;
 import org.gh.afriluck.afriluckussd.dto.*;
 import org.gh.afriluck.afriluckussd.entities.Game;
+import org.gh.afriluck.afriluckussd.entities.SessionRequest;
 import org.gh.afriluck.afriluckussd.mapping.TransactionMapper;
 import org.gh.afriluck.afriluckussd.repositories.CustomerSessionRepository;
 import org.gh.afriluck.afriluckussd.entities.Session;
 import org.gh.afriluck.afriluckussd.repositories.GameRepository;
+import org.gh.afriluck.afriluckussd.repositories.SessionRequestRepository;
 import org.gh.afriluck.afriluckussd.utils.AfriluckCallHandler;
 import org.gh.afriluck.afriluckussd.utils.ValidationUtils;
 import org.json.JSONObject;
@@ -43,6 +45,7 @@ public class UssdController {
     private final AfriluckCallHandler handler;
     private final TransactionMapper mapper;
     private final GameRepository gameRepository;
+    private final SessionRequestRepository sessionRequestRepository;
     List<Game> games = null;
     Thread.Builder paymentThread = Thread.ofVirtual().name("Payment Thread");
     Thread.Builder sessionThread = Thread.ofVirtual().name("Session Thread");
@@ -59,12 +62,14 @@ public class UssdController {
             CustomerSessionRepository sessionRepository,
             AfriluckCallHandler handler,
             TransactionMapper mapper,
-            GameRepository gameRepository
+            GameRepository gameRepository,
+            SessionRequestRepository sessionRequestRepository
     ) {
         this.sessionRepository = sessionRepository;
         this.handler = handler;
         this.mapper = mapper;
         this.gameRepository = gameRepository;
+        this.sessionRequestRepository = sessionRequestRepository;
     }
 
     /**
@@ -86,7 +91,17 @@ public class UssdController {
 
             if (savedSession == null) {
                 session.setPosition(0);
-                //session.setSequenceId(new Date().getTime() + session.getSequenceID());
+
+                sessionRequestRepository.save(
+                        new SessionRequest(
+                                session.msisdn,
+                                session.network,
+                                session.data,
+                                session.getSequenceID(),
+                                session.getTimeStamp(),
+                                session.message
+                        )
+                );
                 sessionRepository.save(session);
             } else {
                 System.out.println("--- Updating ---");
