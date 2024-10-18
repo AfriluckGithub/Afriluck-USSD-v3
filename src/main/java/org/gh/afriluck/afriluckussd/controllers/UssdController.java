@@ -194,8 +194,8 @@ public class UssdController {
         session.setGameType(4);
         updateSession(session, false);
         if (savedSession.getGameType() == FOURTH && session.getPosition() == FIRST) {
-            message = "Enter amount to deposit\n";
             continueFlag = 0;
+            return menuResponse(session, continueFlag, "Enter amount to deposit\n");
         }else if(savedSession.getGameType() == FOURTH && savedSession.getPosition() == SECOND) {
             try{
                 CustomerDepositResponseDto depositResponse = customerDeposit(savedSession.getMsisdn(), savedSession.getData(), savedSession.getNetwork());
@@ -204,10 +204,11 @@ public class UssdController {
             }catch (Exception e) {
                 e.printStackTrace();
             }
-            message = "Deposit initiated. You will receive a prompt soon";
             continueFlag = 1;
+            return menuResponse(session, continueFlag, "Deposit initiated. You will receive a prompt soon");
         }
-        return menuResponse(session, continueFlag, message);
+        return null;
+
     }
 
     private String backOption(Session session, Session savedSession) {
