@@ -195,14 +195,6 @@ public class UssdController {
             message = "Enter amount to deposit\n";
             continueFlag = 0;
         }else if(session.getPosition() == SECOND) {
-            try{
-                CustomerDepositResponseDto depositResponse = customerDeposit(session.getMsisdn(), session.getData(), session.getNetwork());
-                String msg = depositResponse.success;
-                System.out.println(msg);
-            }catch (Exception e) {
-                e.printStackTrace();
-            }
-
             message = "Deposit initiated. You will receive a prompt soon";
             continueFlag = 1;
         }
