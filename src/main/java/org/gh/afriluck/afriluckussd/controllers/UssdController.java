@@ -103,6 +103,7 @@ public class UssdController {
                         )
                 );
                 sessionRepository.save(session);
+
             } else {
                 System.out.println("--- Updating ---");
                 updateSession(session, true);
