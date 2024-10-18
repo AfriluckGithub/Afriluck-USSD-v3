@@ -200,6 +200,7 @@ public class UssdController {
                 String msg = depositResponse.success;
                 System.out.println(msg);
             }catch (Exception e) {
+                e.printStackTrace();
                 message = "Deposit initiated. You will receive a prompt soon";
             }
 
