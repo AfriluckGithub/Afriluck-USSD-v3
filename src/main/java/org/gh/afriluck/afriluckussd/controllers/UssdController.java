@@ -134,7 +134,7 @@ public class UssdController {
                         message = isEvening ? switch (s.getGameType()) {
                             case 1 -> eveningGameOptions(s);
                             case 2 -> backOption(session, savedSession);
-                            //case 4 -> depositToWallet(s, savedSession);
+                            //case 4 -> depositToWallet(s);
                             case 5 -> account(s);
                             case 6 -> tnCsMessage(s);
                             case 99 -> contactUsMessage(s);
@@ -142,7 +142,7 @@ public class UssdController {
                         } : switch (s.getGameType()) {
                             case 1 -> anopaGameOptions(s);
                             case 2 -> eveningGameOptions(s);
-                            //case 4 -> depositToWallet(s, savedSession);
+                            //case 4 -> depositToWallet(s);
                             case 5 -> account(s);
                             case 6 -> tnCsMessage(s);
                             case 99 -> contactUsMessage(s);
@@ -186,29 +186,6 @@ public class UssdController {
             return menuResponse(session, 0, "System EC occurred. Please try again");
         }
         return message;
-    }
-
-    private String depositToWallet(Session session, Session savedSession) {
-        int continueFlag = 0;
-        String message = null;
-        session.setGameType(4);
-        updateSession(session, false);
-        if (savedSession.getGameType() == FOURTH && session.getPosition() == FIRST) {
-            continueFlag = 0;
-            return menuResponse(session, continueFlag, "Enter amount to deposit\n");
-        }else if(savedSession.getGameType() == FOURTH && savedSession.getPosition() == SECOND) {
-            try{
-                CustomerDepositResponseDto depositResponse = customerDeposit(savedSession.getMsisdn(), savedSession.getData(), savedSession.getNetwork());
-                String msg = depositResponse.success;
-                System.out.println(msg);
-            }catch (Exception e) {
-                e.printStackTrace();
-            }
-            continueFlag = 1;
-            return menuResponse(session, continueFlag, "Deposit initiated. You will receive a prompt soon");
-        }
-        return null;
-
     }
 
     private String backOption(Session session, Session savedSession) {
