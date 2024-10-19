@@ -99,7 +99,7 @@ public class UssdController {
                                 session.network,
                                 session.data,
                                 session.getSequenceID(),
-                                LocalDateTime.now().toString(),
+                                LocalDateTime.now(),
                                 session.message
                         )
                 );

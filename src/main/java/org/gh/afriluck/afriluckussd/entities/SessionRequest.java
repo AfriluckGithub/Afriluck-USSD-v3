@@ -3,6 +3,7 @@ package org.gh.afriluck.afriluckussd.entities;
 import jakarta.persistence.*;
 import org.hibernate.annotations.UuidGenerator;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -14,10 +15,11 @@ public class SessionRequest {
     private UUID id;
     public String msisdn;
     public String network;
-    public String data, sequenceID, timestamp, message;
+    public String data, sequenceID, message;
+    public LocalDateTime timestamp;
 
 
-    public SessionRequest(String msisdn, String network, String data, String sequenceID, String timestamp, String message) {
+    public SessionRequest(String msisdn, String network, String data, String sequenceID, LocalDateTime timestamp, String message) {
         this.msisdn = msisdn;
         this.network = network;
         this.data = data;
