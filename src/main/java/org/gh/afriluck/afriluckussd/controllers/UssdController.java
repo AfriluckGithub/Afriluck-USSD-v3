@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.TextStyle;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -98,7 +99,7 @@ public class UssdController {
                                 session.network,
                                 session.data,
                                 session.getSequenceID(),
-                                session.getTimeStamp(),
+                                LocalDateTime.now().toString(),
                                 session.message
                         )
                 );
