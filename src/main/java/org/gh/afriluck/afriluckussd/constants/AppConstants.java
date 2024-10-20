@@ -22,7 +22,7 @@ public class AppConstants {
     public static final String BANKER_MENU_MESSAGE = "1) Banker";
     public static final String MEGA_VALIDATION_MESSAGE = "Numbers must be a total of 6 starting from 1 to 57.\n 0) Back";
     public static final String DISCOUNT_PROMPT_MESSAGE = "Enter your coupon code:";
-    public static final String GAME_CLOSED_MESSAGE = "Game is closed for now. Try again later at 8:20 PM";
+    public static final String GAME_CLOSED_MESSAGE = "Game is closed for now. Try again later at 7:45 PM";
     public static final String DISCOUNT_VALID_MESSAGE = """
             Invalid coupon code. Amount to pay: %s GHS.\n
             Enter 1 to proceed with payment or 0 to cancel.
