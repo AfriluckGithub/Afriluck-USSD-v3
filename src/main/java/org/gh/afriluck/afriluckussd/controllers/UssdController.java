@@ -199,7 +199,9 @@ public class UssdController {
                 String message = depositResponse.success;
                 System.out.println(message);
                 System.out.println("Deposit call done....");
-                return menuResponse(session, 1, message);
+                String returnMessage = menuResponse(session, 1, message);
+                System.out.println(returnMessage);
+                return returnMessage;
             }catch (Exception e) {
                 e.printStackTrace();
             }
