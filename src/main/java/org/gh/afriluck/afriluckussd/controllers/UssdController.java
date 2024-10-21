@@ -135,7 +135,7 @@ public class UssdController {
                         message = isEvening ? switch (s.getGameType()) {
                             case 1 -> eveningGameOptions(s);
                             case 2 -> backOption(session, savedSession);
-                            //case 4 -> depositToWallet(s);
+                            case 4 -> depositToWallet(s);
                             case 5 -> account(s);
                             case 6 -> tnCsMessage(s);
                             case 99 -> contactUsMessage(s);
@@ -143,7 +143,7 @@ public class UssdController {
                         } : switch (s.getGameType()) {
                             case 1 -> anopaGameOptions(s);
                             case 2 -> eveningGameOptions(s);
-                            //case 4 -> depositToWallet(s);
+                            case 4 -> depositToWallet(s);
                             case 5 -> account(s);
                             case 6 -> tnCsMessage(s);
                             case 99 -> contactUsMessage(s);
@@ -198,14 +198,13 @@ public class UssdController {
         }else if(session.getPosition() == SECOND) {
             try{
                 CustomerDepositResponseDto depositResponse = customerDeposit(session.getMsisdn(), session.getData(), session.getNetwork());
-                String msg = depositResponse.success;
-                System.out.println(msg);
+                message = depositResponse.success;
+                System.out.println(message);
+                continueFlag = 1;
             }catch (Exception e) {
                 e.printStackTrace();
             }
-
-            message = "Deposit initiated. You will receive a prompt soon";
-            continueFlag = 1;
+            // message = "Deposit initiated. You will receive a prompt soon";
         }
         return menuResponse(session, continueFlag, message);
     }

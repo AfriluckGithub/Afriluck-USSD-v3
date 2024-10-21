@@ -14,8 +14,8 @@ public class AppConstants {
     public static final int THIRD = 3;
 
     public static final String WELCOME_MENU_MESSAGE = "Welcome to Afriluck-NLA\n1. Mega Jackpot\n2. Direct Game\n3. Perm Game\n4. Banker\n 0. Back".trim();
-    public static final String WELCOME_MENU_MESSAGE_NEW_EVENING = "Welcome to Afriluck-NLA\n--\n\n1. Anopa Bosuo (10:00 am)\n2. 6/57 Super %s (%s:00 pm)\n\n5. Account\n6. TnCs\n99. Contact Us".trim();
-    public static final String WELCOME_MENU_MESSAGE_NEW = "Welcome to Afriluck-NLA\n--\n\n1. 6/57 Super %s (%s:%s pm)\n\n5. Account\n6. TnCs\n99. Contact Us".trim();
+    public static final String WELCOME_MENU_MESSAGE_NEW_EVENING = "Welcome to Afriluck-NLA\n--\n\n1. Anopa Bosuo (10:00 am)\n2. 6/57 Super %s (%s:00 pm)\n\n4. Deposit to wallet\n5. Account\n6. TnCs\n99. Contact Us".trim();
+    public static final String WELCOME_MENU_MESSAGE_NEW = "Welcome to Afriluck-NLA\n--\n\n1. 6/57 Super %s (%s:%s pm)\n\n4. Deposit to wallet\n5. Account\n6. TnCs\n99. Contact Us".trim();
     public static final String WELCOME_MENU_MESSAGE_NEW_SUNDAY = "Welcome to Afriluck-NLA\n--\n\n1. 6/57 Super %s (5:30 pm)\n\n5. Account\n6. TnCs\n99. Contact Us".trim();
     public static final String WELCOME_MENU_MESSAGE_MORNING = "Welcome to Afriluck-NLA\n2. Direct Game\n3. Perm Game\n4. Banker\n 0. Back".trim();
     public static final String ACCOUNT_MENU_MESSAGE = "1) Last Draw Results\n2) Recent Transactions\n3) Wallet \n0. Back";
