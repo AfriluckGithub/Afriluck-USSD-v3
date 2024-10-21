@@ -202,7 +202,7 @@ public class UssdController {
                 e.printStackTrace();
             }
         }
-        return null;
+        return menuResponse(session, 1, "Deposit has been initiated. Expect a payment prompt shortly");
     }
 
     private String backOption(Session session, Session savedSession) {
