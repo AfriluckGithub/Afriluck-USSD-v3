@@ -194,9 +194,11 @@ public class UssdController {
             return menuResponse(session, 0, "Enter amount to deposit\n");
         } else if(session.getPosition() == SECOND) {
             try{
+                System.out.println("Making deposit call....");
                 CustomerDepositResponseDto depositResponse = customerDeposit(session.getMsisdn(), session.getData(), session.getNetwork());
                 String message = depositResponse.success;
                 System.out.println(message);
+                System.out.println("Deposit call done....");
                 return menuResponse(session, 1, message);
             }catch (Exception e) {
                 e.printStackTrace();
