@@ -34,6 +34,7 @@ services:
   #      - "80:80"
   #    networks:
   #      - app-network
+
   db:
     image: postgres:13
     container_name: db

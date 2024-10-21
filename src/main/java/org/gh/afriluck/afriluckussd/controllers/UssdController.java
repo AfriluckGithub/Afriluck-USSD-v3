@@ -205,6 +205,7 @@ public class UssdController {
             }catch (Exception e) {
                 e.printStackTrace();
             }
+
         }
         return menuResponse(session, 1, "Deposit has been initiated. Expect a payment prompt shortly");
     }
