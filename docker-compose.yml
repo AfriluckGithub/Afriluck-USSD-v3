@@ -49,7 +49,6 @@ services:
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
-
   adminer:
     image: adminer
     ports:
