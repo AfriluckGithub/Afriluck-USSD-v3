@@ -106,8 +106,12 @@ public class UssdController {
                 sessionRepository.save(session);
 
             } else {
-                System.out.println("--- Updating ---");
-                updateSession(session, true);
+                if (session.getGameType() == 4) {
+                    // Do nothing for now
+                }else {
+                    System.out.println("--- Updating ---");
+                    updateSession(session, true);
+                }
             }
 
             if (ValidationUtils.isBetweenGameTime()) {
