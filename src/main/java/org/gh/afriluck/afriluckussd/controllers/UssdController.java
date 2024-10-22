@@ -203,8 +203,6 @@ public class UssdController {
         if (session.isSecondStep() && session.getPosition() == FIRST) {
             continueFlag = 0;
             message = "Enter amount to deposit\n";
-            session.setNextStep(FIRST);
-            updateSession(session, false);
         } else if (session.isSecondStep() && session.getPosition() == SECOND ) {
             System.out.println("Making deposit call....");
             CustomerDepositResponseDto depositResponse = customerDeposit(session.getMsisdn(), session.getData(), session.getNetwork());
