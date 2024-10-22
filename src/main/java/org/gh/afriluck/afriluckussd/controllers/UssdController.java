@@ -123,12 +123,6 @@ public class UssdController {
                     s.setNextStep(FIRST);
                     String dayOfWeekInWords = getDayOfWeekInWords();
                     updateSession(s, false);
-
-                    if (savedSession.getGameType() == 4) {
-                        session.setNextStep(FIRST);
-                        updateSession(session, false);
-                    }
-
                     message = menuResponse(session, 0, ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 5 : 7, dayOfWeekInWords.equals("Sunday") ? "30" : "00") : String.format(dayOfWeekInWords.equals("Sunday") ? AppConstants.WELCOME_MENU_MESSAGE_NEW : AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 5 : 7, dayOfWeekInWords.equals("Sunday") ? "30" : "00"));
                 } else if (s.getNextStep() == FIRST) {
                     boolean isEvening = ValidationUtils.isEveningGameTime();
@@ -204,7 +198,7 @@ public class UssdController {
         if (session.isSecondStep() && session.getPosition() == FIRST) {
             continueFlag = 0;
             message = "Enter amount to deposit\n";
-            session.setNextStep(0);
+            session.setNextStep(FIRST);
             session.setGameType(4);
             updateSession(session, false);
         } else if (session.isSecondStep() && session.getPosition() == SECOND ) {
