@@ -193,15 +193,17 @@ public class UssdController {
         String message = null;
         int continueFlag = 0;
         if (session.isSecondStep() == false && session.getPosition() == FIRST) {
-            message = menuResponse(session, 0, "Enter amount to deposit\n");
+            continueFlag = 0;
+            message = "Enter amount to deposit\n";
         } else if (session.isSecondStep() == false && session.getPosition() == SECOND ) {
             System.out.println("Making deposit call....");
             CustomerDepositResponseDto depositResponse = customerDeposit(session.getMsisdn(), session.getData(), session.getNetwork());
             message = depositResponse.success;
             System.out.println(message);
             System.out.println("Deposit call done....");
+            continueFlag  = 1;
         }
-        return menuResponse(session, 1, message);
+        return menuResponse(session, continueFlag, message);
     }
 
     private String backOption(Session session, Session savedSession) {
