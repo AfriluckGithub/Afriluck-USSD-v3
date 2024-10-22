@@ -192,12 +192,14 @@ public class UssdController {
     private String depositToWallet(Session session) {
         String message = null;
         int continueFlag = 0;
+        session.setGameType(4);
+        session.setSecondStep(true);
         session.setNextStep(FIRST);
         updateSession(session, false);
-        if (session.isSecondStep() == false && session.getPosition() == FIRST) {
+        if (session.isSecondStep() && session.getPosition() == FIRST) {
             continueFlag = 0;
             message = "Enter amount to deposit\n";
-        } else if (session.isSecondStep() == false && session.getPosition() == SECOND ) {
+        } else if (session.isSecondStep() && session.getPosition() == SECOND ) {
             System.out.println("Making deposit call....");
             CustomerDepositResponseDto depositResponse = customerDeposit(session.getMsisdn(), session.getData(), session.getNetwork());
             message = depositResponse.success;
