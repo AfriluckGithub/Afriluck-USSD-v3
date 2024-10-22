@@ -109,6 +109,8 @@ public class UssdController {
                 Session s = sessionRepository.findBySequenceID(session.getSequenceID());
                 if (s.getGameType() == 4) {
                     // Do nothing for now
+                    s.setPosition(2);
+                    updateSession(s, false);
                 }else {
                     System.out.println("--- Updating ---");
                     updateSession(session, true);
