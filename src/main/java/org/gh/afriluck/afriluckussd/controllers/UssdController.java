@@ -197,26 +197,30 @@ public class UssdController {
     }
 
     private String depositToWallet(Session session) {
-        String message = null;
-        int continueFlag = 0;
-        session.setGameType(4);
-        session.setSecondStep(true);
-        updateSession(session, false);
-        if (session.isSecondStep() && session.getPosition() == FIRST) {
-            continueFlag = 0;
-            message = "Enter amount to deposit\n";
-            session.setNextStep(FIRST);
+        try {
+            String message = null;
+            int continueFlag = 0;
             session.setGameType(4);
+            session.setSecondStep(true);
             updateSession(session, false);
-        } else if (session.isSecondStep() && session.getPosition() == SECOND ) {
-            System.out.println("Making deposit call....");
-            CustomerDepositResponseDto depositResponse = customerDeposit(session.getMsisdn(), session.getData(), session.getNetwork());
-            message = depositResponse.success;
-            System.out.println(message);
-            System.out.println("Deposit call done....");
-            continueFlag  = 1;
+            if (session.isSecondStep() && session.getPosition() == FIRST) {
+                continueFlag = 0;
+                message = "Enter amount to deposit\n";
+                session.setNextStep(FIRST);
+                session.setGameType(4);
+                updateSession(session, false);
+            } else if (session.isSecondStep() && session.getPosition() == SECOND ) {
+                System.out.println("Making deposit call....");
+                CustomerDepositResponseDto depositResponse = customerDeposit(session.getMsisdn(), session.getData(), session.getNetwork());
+                message = depositResponse.success;
+                System.out.println(message);
+                System.out.println("Deposit call done....");
+                continueFlag  = 1;
+            }
+            return menuResponse(session, continueFlag, message);
+        } catch (Exception e) {
+            return menuResponse(session, 1, "System EC occurred. Please try again");
         }
-        return menuResponse(session, continueFlag, message);
     }
 
     private String backOption(Session session, Session savedSession) {
