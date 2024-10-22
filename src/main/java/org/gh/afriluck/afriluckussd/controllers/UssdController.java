@@ -108,7 +108,6 @@ public class UssdController {
             } else {
                 Session s = sessionRepository.findBySequenceID(session.getSequenceID());
                 if (s.getGameType() == 4 && s.getNextStep() == 1) {
-                    // Make provision for deposit on main menu
                     s.setPosition(2);
                     updateSession(s, false);
                 }else {
@@ -142,7 +141,7 @@ public class UssdController {
                         message = isEvening ? switch (s.getGameType()) {
                             case 1 -> eveningGameOptions(s);
                             case 2 -> backOption(session, savedSession);
-                            case 4 -> depositToWallet(s);
+                            case 4 -> depositToWallet(s, session);
                             case 5 -> account(s);
                             case 6 -> tnCsMessage(s);
                             case 99 -> contactUsMessage(s);
@@ -150,7 +149,7 @@ public class UssdController {
                         } : switch (s.getGameType()) {
                             case 1 -> anopaGameOptions(s);
                             case 2 -> eveningGameOptions(s);
-                            case 4 -> depositToWallet(s);
+                            case 4 -> depositToWallet(s, session);
                             case 5 -> account(s);
                             case 6 -> tnCsMessage(s);
                             case 99 -> contactUsMessage(s);
@@ -196,26 +195,30 @@ public class UssdController {
         return message;
     }
 
-    private String depositToWallet(Session session) {
+    private String depositToWallet(Session session, Session savedSession) {
         try {
             String message = null;
             int continueFlag = 0;
-            session.setGameType(4);
-            session.setSecondStep(true);
-            updateSession(session, false);
+            if(session.isSecondStep() == false) {
+                session.setGameType(4);
+                session.setSecondStep(true);
+                updateSession(session, false);
+            }
             if (session.isSecondStep() && session.getPosition() == FIRST) {
                 continueFlag = 0;
                 message = "Enter amount to deposit\n";
                 session.setNextStep(FIRST);
                 session.setGameType(4);
                 updateSession(session, false);
-            } else if (session.isSecondStep() && session.getPosition() == SECOND ) {
+            } else if (session.isSecondStep() && session.getPosition() == SECOND) {
+                updateSession(session, false);
+                System.out.printf("SESSION => %s", savedSession);
                 System.out.println("Making deposit call....");
-                CustomerDepositResponseDto depositResponse = customerDeposit(session.getMsisdn(), session.getData(), session.getNetwork());
+                CustomerDepositResponseDto depositResponse = customerDeposit(session.getMsisdn(), savedSession.getData(), session.getNetwork());
                 message = depositResponse.success;
                 System.out.println(message);
                 System.out.println("Deposit call done....");
-                continueFlag  = 1;
+                continueFlag = 1;
             }
             return menuResponse(session, continueFlag, message);
         } catch (Exception e) {
@@ -567,6 +570,11 @@ public class UssdController {
         Session savedSession = sessionRepository.findBySequenceID(session.getSequenceID());
         try {
             savedSession.setData(session.getData());
+
+//            if (savedSession.getGameType() == 4 && savedSession.getPosition() == 2) {
+//                System.out.println("HAPPENING.........");
+//                session.setAmount(Double.valueOf(session.getData()));
+//            }
 
             if (increment) {
                 savedSession.setPosition(savedSession.getPosition() + 1);
