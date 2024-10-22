@@ -132,11 +132,6 @@ public class UssdController {
                             isEvening = handleExceptionForSunday(s, isEvening);
                         }
 
-                        if (s.getGameType() == 4) {
-                            s.setNextStep(FIRST);
-                            updateSession(session, false);
-                        }
-
                         message = isEvening ? switch (s.getGameType()) {
                             case 1 -> eveningGameOptions(s);
                             case 2 -> backOption(session, savedSession);
