@@ -192,22 +192,16 @@ public class UssdController {
     private String depositToWallet(Session session) {
         if (session.getPosition() == FIRST) {
             return menuResponse(session, 0, "Enter amount to deposit\n");
-        } else if(session.getPosition() == SECOND) {
-            try{
-                System.out.println("Making deposit call....");
-                CustomerDepositResponseDto depositResponse = customerDeposit(session.getMsisdn(), session.getData(), session.getNetwork());
-                String message = depositResponse.success;
-                System.out.println(message);
-                System.out.println("Deposit call done....");
-                String returnMessage = menuResponse(session, 1, message);
-                System.out.println(returnMessage);
-                return returnMessage;
-            }catch (Exception e) {
-                e.printStackTrace();
-            }
-
+        } else {
+            System.out.println("Making deposit call....");
+            CustomerDepositResponseDto depositResponse = customerDeposit(session.getMsisdn(), session.getData(), session.getNetwork());
+            String message = depositResponse.success;
+            System.out.println(message);
+            System.out.println("Deposit call done....");
+            String returnMessage = menuResponse(session, 1, message);
+            System.out.println(returnMessage);
+            return returnMessage;
         }
-        return menuResponse(session, 1, "Deposit has been initiated. Expect a payment prompt shortly");
     }
 
     private String backOption(Session session, Session savedSession) {
