@@ -198,7 +198,7 @@ public class UssdController {
         if (session.isSecondStep() && session.getPosition() == FIRST) {
             continueFlag = 0;
             message = "Enter amount to deposit\n";
-            session.setNextStep(1);
+            session.setNextStep(0);
             session.setGameType(4);
             updateSession(session, false);
         } else if (session.isSecondStep() && session.getPosition() == SECOND ) {
