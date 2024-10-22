@@ -106,7 +106,8 @@ public class UssdController {
                 sessionRepository.save(session);
 
             } else {
-                if (session.getGameType() == 4) {
+                Session s = sessionRepository.findBySequenceID(session.getSequenceID());
+                if (s.getGameType() == 4) {
                     // Do nothing for now
                 }else {
                     System.out.println("--- Updating ---");
