@@ -192,6 +192,8 @@ public class UssdController {
     private String depositToWallet(Session session) {
         String message = null;
         int continueFlag = 0;
+        session.setNextStep(FIRST);
+        updateSession(session, false);
         if (session.isSecondStep() == false && session.getPosition() == FIRST) {
             continueFlag = 0;
             message = "Enter amount to deposit\n";
