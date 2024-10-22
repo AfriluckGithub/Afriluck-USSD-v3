@@ -190,19 +190,18 @@ public class UssdController {
     }
 
     private String depositToWallet(Session session) {
+        String message = null;
+        int continueFlag = 0;
         if (session.isSecondStep() == false && session.getPosition() == FIRST) {
-            return menuResponse(session, 0, "Enter amount to deposit\n");
+            message = menuResponse(session, 0, "Enter amount to deposit\n");
         } else if (session.isSecondStep() == false && session.getPosition() == SECOND ) {
             System.out.println("Making deposit call....");
             CustomerDepositResponseDto depositResponse = customerDeposit(session.getMsisdn(), session.getData(), session.getNetwork());
-            String message = depositResponse.success;
+            message = depositResponse.success;
             System.out.println(message);
             System.out.println("Deposit call done....");
-            String returnMessage = menuResponse(session, 1, message);
-            System.out.println(returnMessage);
-            return returnMessage;
         }
-        return null;
+        return menuResponse(session, 1, message);
     }
 
     private String backOption(Session session, Session savedSession) {
