@@ -48,7 +48,7 @@ services:
       - app-network
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-      - pgdata:/var/lib/postgresql/data
+      - ./postgres-data:/var/lib/postgresql/data
 
   adminer:
     image: adminer
@@ -60,6 +60,3 @@ services:
 networks:
   app-network:
     driver: bridge
-
-volumes:
-  pgdata:
