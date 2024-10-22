@@ -124,7 +124,7 @@ public class UssdController {
                     String dayOfWeekInWords = getDayOfWeekInWords();
                     updateSession(s, false);
 
-                    if (session.getGameType() == 4) {
+                    if (savedSession.getGameType() == 4) {
                         session.setNextStep(FIRST);
                         updateSession(session, false);
                     }
