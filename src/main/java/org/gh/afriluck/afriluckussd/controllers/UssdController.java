@@ -107,8 +107,8 @@ public class UssdController {
 
             } else {
                 Session s = sessionRepository.findBySequenceID(session.getSequenceID());
-                if (s.getGameType() == 4) {
-                    // Do nothing for now
+                if (s.getGameType() == 4 && s.getNextStep() == 1) {
+                    // Make provision for deposit on main menu
                     s.setPosition(2);
                     updateSession(s, false);
                 }else {
