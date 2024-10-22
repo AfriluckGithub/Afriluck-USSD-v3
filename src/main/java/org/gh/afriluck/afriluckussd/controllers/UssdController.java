@@ -132,6 +132,11 @@ public class UssdController {
                             isEvening = handleExceptionForSunday(s, isEvening);
                         }
 
+                        if (s.getGameType() == 4) {
+                            s.setNextStep(FIRST);
+                            updateSession(session, false);
+                        }
+
                         message = isEvening ? switch (s.getGameType()) {
                             case 1 -> eveningGameOptions(s);
                             case 2 -> backOption(session, savedSession);
@@ -194,11 +199,12 @@ public class UssdController {
         int continueFlag = 0;
         session.setGameType(4);
         session.setSecondStep(true);
-        session.setNextStep(FIRST);
         updateSession(session, false);
         if (session.isSecondStep() && session.getPosition() == FIRST) {
             continueFlag = 0;
             message = "Enter amount to deposit\n";
+            session.setNextStep(FIRST);
+            updateSession(session, false);
         } else if (session.isSecondStep() && session.getPosition() == SECOND ) {
             System.out.println("Making deposit call....");
             CustomerDepositResponseDto depositResponse = customerDeposit(session.getMsisdn(), session.getData(), session.getNetwork());
