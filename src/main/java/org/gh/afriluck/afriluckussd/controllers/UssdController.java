@@ -74,10 +74,6 @@ public class UssdController {
     }
 
     /**
-     * @param session
-     * @return
-     * @throws ExecutionException
-     * @throws InterruptedException
      * @apiNote A controller that serves the ussd application
      */
     @PostMapping(path = "/ussd")
@@ -527,7 +523,7 @@ public class UssdController {
                         sessionThread.start(sessionTask);
                     } else {
                         DiscountResponse response = applyCoupon(s.getAmount(), s.getData());
-                        System.out.printf("Discount => ", response);
+                        System.out.printf("Discount %s => ", response);
                         message = discountMessage(response);
                         if (response.getValid()) {
                             savedSession.setDiscountedAmount(response.getAmount());
@@ -882,6 +878,9 @@ public class UssdController {
                 StringBuilder builder = new StringBuilder();
                 directGames.stream().forEachOrdered(game -> {
                     int currentIndex = index.getAndIncrement();
+                    if (currentIndex == 5) { // Skip the element at index 4
+                        return;
+                    }
                     builder.append(String.format("%s) %s\n", currentIndex, game.toString()));
                 });
                 message = builder.toString();
@@ -1184,6 +1183,9 @@ public class UssdController {
                 StringBuilder builder = new StringBuilder();
                 permGames.stream().forEachOrdered(game -> {
                     int currentIndex = index.updateAndGet(v -> v + 1);
+                    if (currentIndex == 4) { // Skip the element at index 5
+                        return;
+                    }
                     builder.append(String.format("%s) %s\n", currentIndex, game.toString()));
                 });
                 message = builder.toString();
