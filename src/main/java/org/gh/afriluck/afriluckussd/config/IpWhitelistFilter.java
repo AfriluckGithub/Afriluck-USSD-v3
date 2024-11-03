@@ -59,7 +59,6 @@ public class IpWhitelistFilter implements Filter {
             sendErrorResponse(httpResponse, "Access denied for IP: " + clientIp, HttpStatus.FORBIDDEN.value());
             return; // Stop further processing
         }
-
         chain.doFilter(request, response);
     }
 
