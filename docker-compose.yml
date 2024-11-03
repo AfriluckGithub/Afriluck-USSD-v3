@@ -68,5 +68,5 @@ networks:
     driver: bridge
 
 volumes:
-  pgdata:
+  postgres_data:
     driver: local
