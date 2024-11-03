@@ -16,7 +16,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class SecurityConfig {
 
-
     private static final String HAS_SONG_SERVICE_IPS = "hasIpAddress('20.224.12.108/11') or hasIpAddress('0:0:0:0:0:0:0:1')";
 
 //    @Bean
