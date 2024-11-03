@@ -42,14 +42,14 @@ services:
       - POSTGRES_DB=afriluck-v2
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=root
-      - PGDATA=/var/lib/postgresql/data/pgdata
+      #- PGDATA=/var/lib/postgresql/data/pgdata
     ports:
       - "5431:5432"
     networks:
       - app-network
     volumes:
       #- ./init.sql:/docker-entrypoint-initdb.d/init.sql
-      - pgdata:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     deploy:
       update_config:
         parallelism: 1
