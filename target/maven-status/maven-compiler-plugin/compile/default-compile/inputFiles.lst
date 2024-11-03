@@ -6,6 +6,7 @@
 /Users/bezomoney/IdeaProjects/afriluck/AfrIluck_ussd_v2/src/main/java/org/gh/afriluck/afriluckussd/repositories/SessionRequestRepository.java
 /Users/bezomoney/IdeaProjects/afriluck/AfrIluck_ussd_v2/src/main/java/org/gh/afriluck/afriluckussd/repositories/GameRepository.java
 /Users/bezomoney/IdeaProjects/afriluck/AfrIluck_ussd_v2/src/main/java/org/gh/afriluck/afriluckussd/repositories/CustomerSessionRepository.java
+/Users/bezomoney/IdeaProjects/afriluck/AfrIluck_ussd_v2/src/main/java/org/gh/afriluck/afriluckussd/dto/ErrorResponse.java
 /Users/bezomoney/IdeaProjects/afriluck/AfrIluck_ussd_v2/src/main/java/org/gh/afriluck/afriluckussd/utils/SessionTaskSchedulers.java
 /Users/bezomoney/IdeaProjects/afriluck/AfrIluck_ussd_v2/src/main/java/org/gh/afriluck/afriluckussd/entities/Session.java
 /Users/bezomoney/IdeaProjects/afriluck/AfrIluck_ussd_v2/src/main/java/org/gh/afriluck/afriluckussd/utils/TaskSchedulers.java
@@ -15,11 +16,13 @@
 /Users/bezomoney/IdeaProjects/afriluck/AfrIluck_ussd_v2/src/main/java/org/gh/afriluck/afriluckussd/entities/SessionBackup.java
 /Users/bezomoney/IdeaProjects/afriluck/AfrIluck_ussd_v2/src/main/java/org/gh/afriluck/afriluckussd/exceptions/InvalidMenuSelectionException.java
 /Users/bezomoney/IdeaProjects/afriluck/AfrIluck_ussd_v2/src/main/java/org/gh/afriluck/afriluckussd/mapping/TransactionMapper.java
+/Users/bezomoney/IdeaProjects/afriluck/AfrIluck_ussd_v2/src/main/java/org/gh/afriluck/afriluckussd/config/RequestLoggingFilter.java
 /Users/bezomoney/IdeaProjects/afriluck/AfrIluck_ussd_v2/src/main/java/org/gh/afriluck/afriluckussd/controllers/UssdController.java
 /Users/bezomoney/IdeaProjects/afriluck/AfrIluck_ussd_v2/src/main/java/org/gh/afriluck/afriluckussd/dto/SessionDto.java
 /Users/bezomoney/IdeaProjects/afriluck/AfrIluck_ussd_v2/src/main/java/org/gh/afriluck/afriluckussd/dto/DiscountResponse.java
 /Users/bezomoney/IdeaProjects/afriluck/AfrIluck_ussd_v2/src/main/java/org/gh/afriluck/afriluckussd/config/SentryConfiguration.java
 /Users/bezomoney/IdeaProjects/afriluck/AfrIluck_ussd_v2/src/main/java/org/gh/afriluck/afriluckussd/dto/Event.java
+/Users/bezomoney/IdeaProjects/afriluck/AfrIluck_ussd_v2/src/main/java/org/gh/afriluck/afriluckussd/config/IpWhitelistFilter.java
 /Users/bezomoney/IdeaProjects/afriluck/AfrIluck_ussd_v2/src/main/java/org/gh/afriluck/afriluckussd/repositories/SessionBackupRepository.java
 /Users/bezomoney/IdeaProjects/afriluck/AfrIluck_ussd_v2/src/main/java/org/gh/afriluck/afriluckussd/config/SecurityConfig.java
 /Users/bezomoney/IdeaProjects/afriluck/AfrIluck_ussd_v2/src/main/java/org/gh/afriluck/afriluckussd/entities/Game.java
@@ -29,6 +32,7 @@
 /Users/bezomoney/IdeaProjects/afriluck/AfrIluck_ussd_v2/src/main/java/org/gh/afriluck/afriluckussd/mapping/SessionBackupMapper.java
 /Users/bezomoney/IdeaProjects/afriluck/AfrIluck_ussd_v2/src/main/java/org/gh/afriluck/afriluckussd/dto/GameDto.java
 /Users/bezomoney/IdeaProjects/afriluck/AfrIluck_ussd_v2/src/main/java/org/gh/afriluck/afriluckussd/dto/Transaction.java
+/Users/bezomoney/IdeaProjects/afriluck/AfrIluck_ussd_v2/src/main/java/org/gh/afriluck/afriluckussd/config/WebConfig.java
 /Users/bezomoney/IdeaProjects/afriluck/AfrIluck_ussd_v2/src/main/java/org/gh/afriluck/afriluckussd/dto/CustomerBalanceDto.java
 /Users/bezomoney/IdeaProjects/afriluck/AfrIluck_ussd_v2/src/main/java/org/gh/afriluck/afriluckussd/entities/SessionRequest.java
 /Users/bezomoney/IdeaProjects/afriluck/AfrIluck_ussd_v2/src/main/java/org/gh/afriluck/afriluckussd/mapping/SessionMapper.java

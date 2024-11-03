@@ -48,8 +48,14 @@ services:
     networks:
       - app-network
     volumes:
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      #- ./init.sql:/docker-entrypoint-initdb.d/init.sql
       - pgdata:/var/lib/postgresql/data
+    deploy:
+      update_config:
+        parallelism: 1
+        delay: 10s
+    restart: unless-stopped
+
 
   adminer:
     image: adminer
@@ -64,3 +70,4 @@ networks:
 
 volumes:
   pgdata:
+    driver: local

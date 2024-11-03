@@ -86,6 +86,7 @@ public class UssdController {
             session.setTimeStamp(timeStamp);
             Session savedSession = sessionRepository.findBySequenceID(session.getSequenceID());
 
+
             if (savedSession == null) {
                 session.setPosition(0);
 
@@ -184,6 +185,7 @@ public class UssdController {
                     };
                 }
             }
+            
         } catch (Exception e) {
             e.printStackTrace();
             return menuResponse(session, 0, "System EC occurred. Please try again");
