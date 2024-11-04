@@ -665,8 +665,10 @@ public class UssdController {
                 } else {
                     int finalAmount = amount;
                     CompletableFuture<Game> matchAsync = CompletableFuture.supplyAsync(()
-                            -> games.stream().filter(game -> game.getAmount() == Double.parseDouble(String.valueOf(finalAmount))).findFirst().get());
+                            -> gameRepository.findAll().stream().distinct().filter(game -> game.getAmount() == Double.parseDouble(String.valueOf(finalAmount))).findFirst().get());
                     gameDraw = matchAsync.get();
+                    //gameDraw = games.stream().filter(game -> game.getAmount() == Double.parseDouble(String.valueOf(finalAmount))).findFirst().get();
+                    //gameDraw = gameRepository.findAll().stream().distinct().filter(game -> game.getAmount() == Double.parseDouble(String.valueOf(finalAmount))).findFirst().get();
                     String ticketInfo = """
                             Tck info:
                             --
