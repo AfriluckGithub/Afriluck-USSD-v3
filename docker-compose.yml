@@ -72,7 +72,7 @@ services:
     build: nginx
     image: nginx-load-balancer:latest
     ports:
-      - "8082:8082"
+      - "8083:8083"
     networks:
       - app-network
     depends_on:
