@@ -10,7 +10,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
-      - "8001:8000"
+      - "8001:8001"
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=root
@@ -32,7 +32,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
-      - "8002:8000"
+      - "8002:8002"
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=root
@@ -55,7 +55,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
-      - "8003:8000"
+      - "8003:8003"
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=root
