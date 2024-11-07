@@ -1640,7 +1640,7 @@ public class UssdController {
             }
             updateSession(s, false);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
             s.setGameType(Integer.valueOf("2"));
         }
         return isEvening;
