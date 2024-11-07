@@ -17,7 +17,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://188.245.201.96:5431/afriluck-v2
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=root
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=create-drop
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
     #depends_on:
     #  - db
     networks:
@@ -39,7 +39,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://188.245.201.96:5431/afriluck-v2
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=root
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=create-drop
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
     #depends_on:
     #  - db
     networks:
@@ -62,7 +62,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://188.245.201.96:5431/afriluck-v2
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=root
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=create-drop
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
     #depends_on:
     #  - db
     networks:
