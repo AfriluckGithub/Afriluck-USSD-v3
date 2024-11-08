@@ -1,0 +1,4 @@
+org/gh/afriluck/afriluckussd/config/IpWhitelistFilter.class
+org/gh/afriluck/afriluckussd/dto/ErrorResponse.class
+org/gh/afriluck/afriluckussd/config/WebConfig.class
+org/gh/afriluck/afriluckussd/config/RequestLoggingFilter.class
