@@ -33,4 +33,4 @@ build/
 
 ### VS Code ###
 .vscode/
-target/afriluck-ussd-0.0.1-SNAPSHOT.jar
+target/

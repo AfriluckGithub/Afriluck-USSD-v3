@@ -2,27 +2,26 @@ version: '3.8'
 
 services:
 
-
-#  db:
-#    image: postgres:13
-#    container_name: db
-#    environment:
-#      - POSTGRES_DB=afriluck-v2
-#      - POSTGRES_USER=postgres
-#      - POSTGRES_PASSWORD=root
-#      - PGDATA=/var/lib/postgresql/data/pgdata
-#    ports:
-#        - "5431:5432"
-#    networks:
-#        - app-network
-#    volumes:
-#        #- ./init.sql:/docker-entrypoint-initdb.d/init.sql
-#        - pgdata:/var/lib/postgresql/data
-#    deploy:
-#        update_config:
-#          parallelism: 1
-#          delay: 10s
-#    restart: unless-stopped
+  db:
+    image: postgres:13
+    container_name: db
+    environment:
+      - POSTGRES_DB=afriluck-v2
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=root
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    ports:
+        - "5431:5432"
+    networks:
+        - app-network
+    volumes:
+        #- ./init.sql:/docker-entrypoint-initdb.d/init.sql
+        - pgdata:/var/lib/postgresql/data
+    deploy:
+        update_config:
+          parallelism: 1
+          delay: 10s
+    restart: unless-stopped
 
   app:
     image: stevesmart1113/afriluck:latest
@@ -37,7 +36,7 @@ services:
     environment:
 #      - POSTGRES_USER=postgres
 #      - POSTGRES_PASSWORD=root
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://188.245.201.96:5431/afriluck-v2
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/afriluck-v2
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=root
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
@@ -64,7 +63,7 @@ services:
     environment:
 #      - POSTGRES_USER=postgres
 #      - POSTGRES_PASSWORD=root
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://188.245.201.96:5431/afriluck-v2
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/afriluck-v2
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=root
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
@@ -92,7 +91,7 @@ services:
     environment:
 #      - POSTGRES_USER=postgres
 #      - POSTGRES_PASSWORD=root
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://188.245.201.96:5431/afriluck-v2
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/afriluck-v2
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=root
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
@@ -106,28 +105,21 @@ services:
     networks:
       - app-network
 
-#  nginx-load-balancer:
-#    build: nginx
-#    image: nginx-load-balancer:latest
-#    ports:
-#      - "8080:8080"
-#    networks:
-#      - app-network
-#    depends_on:
-#      - app
-#      - app1
-#      - app2
-#    links:
-#      - app
-#      - app1
-#      - app2
-
-#  adminer:
-#    image: adminer
-#    ports:
-#      - "8081:8081"
-#    networks:
-#      - app-network
+  nginx-load-balancer:
+    build: nginx
+    image: nginx-load-balancer:latest
+    ports:
+      - "8080:8080"
+    networks:
+      - app-network
+    depends_on:
+      - app
+      - app1
+      - app2
+    links:
+      - app
+      - app1
+      - app2
 
 networks:
   app-network:
