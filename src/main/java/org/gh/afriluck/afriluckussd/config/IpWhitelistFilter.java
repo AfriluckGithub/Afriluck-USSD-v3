@@ -21,7 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-@Component
+//@Component
 public class IpWhitelistFilter implements Filter {
 
     private static final Logger logger = LoggerFactory.getLogger(IpWhitelistFilter.class);

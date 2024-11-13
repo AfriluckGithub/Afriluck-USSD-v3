@@ -34,7 +34,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf().disable().authorizeRequests().requestMatchers(HttpMethod.POST,"/api/v3/**").access(HAS_SONG_SERVICE_IPS);
+        http.csrf(csrf -> csrf.disable()).authorizeRequests().requestMatchers(HttpMethod.POST,"/api/v3/**").access(HAS_SONG_SERVICE_IPS);
         return http.build();
     }
 }
