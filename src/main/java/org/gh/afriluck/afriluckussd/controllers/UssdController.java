@@ -138,10 +138,10 @@ public class UssdController {
 
                     if (isSunday) {
                         gameTimeHour = isAfternoonGameTime ? 3 : (isEveningGameTime ? 5 : 2);
-                        gameTimeMinutes = isAfternoonGameTime ? "15" : (isEveningGameTime ? "30" : "00");
+                        gameTimeMinutes = isAfternoonGameTime ? "30" : (isEveningGameTime ? "30" : "30");
                     } else {
-                        gameTimeHour = isAfternoonGameTime ? 7 : (isEveningGameTime ? 7 : 1);
-                        gameTimeMinutes = isAfternoonGameTime ? "45" : (isEveningGameTime ? "00" : "30");
+                        gameTimeHour = isAfternoonGameTime ? 7 : (isEveningGameTime ? 7 : 7);
+                        gameTimeMinutes = isAfternoonGameTime ? "00" : (isEveningGameTime ? "00" : "30");
                     }
 
                     if (isEveningGameTime) {
