@@ -194,7 +194,7 @@ public class ValidationUtils {
     public static boolean isAfternoonGameTime() {
         // Define the start and end times
         LocalTime startTime = LocalTime.of(19, 45); // 7:45 PM
-        LocalTime endTime = LocalTime.of(15, 0);   // 3:00 PM
+        LocalTime endTime = LocalTime.of(13, 30);   // 1:30 PM
         LocalTime currentTime = LocalTime.now();
         if (currentTime.isAfter(startTime) || currentTime.isBefore(endTime)) {
             return true;
