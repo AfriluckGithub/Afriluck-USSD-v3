@@ -141,7 +141,7 @@ public class UssdController {
                         gameTimeMinutes = isAfternoonGameTime ? "30" : (isEveningGameTime ? "30" : "30");
                     } else {
                         gameTimeHour = isAfternoonGameTime ? 7 : (isEveningGameTime ? 7 : 7);
-                        gameTimeMinutes = isAfternoonGameTime ? "00" : (isEveningGameTime ? "00" : "30");
+                        gameTimeMinutes = isAfternoonGameTime ? "00" : (isEveningGameTime ? "00" : "00");
                     }
 
                     if (isEveningGameTime) {
