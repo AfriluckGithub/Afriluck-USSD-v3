@@ -107,7 +107,7 @@ public class UssdController {
                 if (s.getGameType() == 4 && s.getNextStep() == 1) {
                     s.setPosition(2);
                     updateSession(s, false);
-                }else {
+                } else {
                     System.out.println("--- Updating ---");
                     updateSession(session, true);
                 }
@@ -126,16 +126,56 @@ public class UssdController {
                     s.setNextStep(FIRST);
                     String dayOfWeekInWords = getDayOfWeekInWords();
                     updateSession(s, false);
-                    message = menuResponse(session, 0, ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 5 : 7, dayOfWeekInWords.equals("Sunday") ? "30" : "00") : String.format(dayOfWeekInWords.equals("Sunday") ? AppConstants.WELCOME_MENU_MESSAGE_NEW : AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 5 : 7, dayOfWeekInWords.equals("Sunday") ? "30" : "00"));
+
+
+                    boolean isEveningGameTime = ValidationUtils.isEveningGameTime();
+                    boolean isAfternoonGameTime = ValidationUtils.isAfternoonGameTime();
+                    boolean isSunday = dayOfWeekInWords.equals("Sunday");
+
+                    int gameTimeHour;
+                    String gameTimeMinutes;
+                    String messageTemplate;
+
+                    if (isSunday) {
+                        gameTimeHour = isAfternoonGameTime ? 3 : (isEveningGameTime ? 5 : 2);
+                        gameTimeMinutes = isAfternoonGameTime ? "15" : (isEveningGameTime ? "30" : "00");
+                    } else {
+                        gameTimeHour = isAfternoonGameTime ? 7 : (isEveningGameTime ? 7 : 1);
+                        gameTimeMinutes = isAfternoonGameTime ? "45" : (isEveningGameTime ? "00" : "30");
+                    }
+
+                    if (isEveningGameTime) {
+                        messageTemplate = isSunday ? AppConstants.WELCOME_MENU_MESSAGE_NEW : AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING;
+                    } else if (isAfternoonGameTime) {
+                        messageTemplate = isSunday ? AppConstants.WELCOME_MENU_MESSAGE_NEW : AppConstants.WELCOME_MENU_MESSAGE_NEW_AFTERNOON;
+                    } else {
+                        messageTemplate = AppConstants.WELCOME_MENU_MESSAGE_NEW;
+                    }
+
+                    message = menuResponse(
+                            session,
+                            0,
+                            String.format(messageTemplate, dayOfWeekInWords, gameTimeHour, gameTimeMinutes)
+                    );
+
+//                    message = menuResponse(
+//                            session, 0, ValidationUtils.isEveningGameTime() ?
+//                                    String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ?
+//                                            5 : 7, dayOfWeekInWords.equals("Sunday") ? "30" : "00")
+//                                    : String.format(dayOfWeekInWords.equals("Sunday") ? AppConstants.WELCOME_MENU_MESSAGE_NEW
+//                                    : AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ?
+//                                            5 : 7, dayOfWeekInWords.equals("Sunday") ? "30" : "00")
+//                    );
                 } else if (s.getNextStep() == FIRST) {
                     boolean isEvening = ValidationUtils.isEveningGameTime();
+                    boolean isAfternoon = ValidationUtils.isAfternoonGameTime();
                     try {
 
                         if (s.getNextStep() == FIRST && s.isSecondStep() == false) {
                             isEvening = handleExceptionForSunday(s, isEvening);
                         }
-
-                        message = isEvening ? switch (s.getGameType()) {
+                        //System.out.printf("***** \nGame -> %s ******\n", s.getGameType());
+                        message = !isEvening || !isAfternoon ? switch (s.getGameType()) {
                             case 1 -> eveningGameOptions(s);
                             case 2 -> backOption(session, savedSession);
                             case 4 -> depositToWallet(s, session);
@@ -145,7 +185,8 @@ public class UssdController {
                             case null, default -> silentDelete(s);
                         } : switch (s.getGameType()) {
                             case 1 -> anopaGameOptions(s);
-                            case 2 -> eveningGameOptions(s);
+                            case 2 -> afternoonGameOptions(s);
+                            case 3 -> eveningGameOptions(s);
                             case 4 -> depositToWallet(s, session);
                             case 5 -> account(s);
                             case 6 -> tnCsMessage(s);
@@ -169,23 +210,53 @@ public class UssdController {
                         s.setPosition(SECOND);
                         updateSession(s, false);
                     }
-                    message = !s.isMorning() ? switch (s.getGameType()) {
-                        case 1 -> megaGameOptions(s.getGameType(), s.getPosition(), s);
-                        case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
-                        case 3 -> permGameOptions(s.getGameType(), s.getPosition(), s);
-                        case 4 -> banker(s, "Banker");
-                        case 0 -> backOption(session, s);
-                        case null, default -> silentDelete(s);
-                    } : switch (s.getGameType()) {
-                        case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
-                        case 3 -> permGameOptions(s.getGameType(), s.getPosition(), s);
-                        case 4 -> banker(s, "Banker");
-                        case 0 -> backOption(session, s);
-                        case null, default -> silentDelete(s);
-                    };
+                    boolean morning = s.isMorning(); // false
+                    boolean afternoon = s.isAfternoon(); // true
+                    if (morning) {
+                        message = switch (s.getGameType()) {
+                            case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
+                            case 3 -> permGameOptions(s.getGameType(), s.getPosition(), s);
+                            case 4 -> banker(s, "Banker");
+                            case 0 -> backOption(session, s);
+                            case null, default -> silentDelete(s);
+                        }
+                        ;
+                    } else if (afternoon) {
+                        message = switch (s.getGameType()) {
+                            case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
+                            case 3 -> permGameOptions(s.getGameType(), s.getPosition(), s);
+                            case 4 -> banker(s, "Banker");
+                            case 0 -> backOption(session, s);
+                            case null, default -> silentDelete(s);
+                        };
+                    } else {
+                        message = switch (s.getGameType()) {
+                            case 1 -> megaGameOptions(s.getGameType(), s.getPosition(), s);
+                            case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
+                            case 3 -> permGameOptions(s.getGameType(), s.getPosition(), s);
+                            case 4 -> banker(s, "Banker");
+                            case 0 -> backOption(session, s);
+                            case null, default -> silentDelete(s);
+                        };
+                    }
+
+//                    message = (!morning || !afternoon) ? switch (s.getGameType()) {
+//                        case 1 -> megaGameOptions(s.getGameType(), s.getPosition(), s);
+//                        case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
+//                        case 3 -> permGameOptions(s.getGameType(), s.getPosition(), s);
+//                        case 4 -> banker(s, "Banker");
+//                        case 0 -> backOption(session, s);
+//                        case null, default -> silentDelete(s);
+//                    } : switch (s.getGameType()) {
+//                        case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
+//                        case 3 -> permGameOptions(s.getGameType(), s.getPosition(), s);
+//                        case 4 -> banker(s, "Banker");
+//                        case 0 -> backOption(session, s);
+//                        case null, default -> silentDelete(s);
+//                    };
                 }
             }
-            
+
         } catch (Exception e) {
             e.printStackTrace();
             return menuResponse(session, 0, "System EC occurred. Please try again");
@@ -197,7 +268,7 @@ public class UssdController {
         try {
             String message = null;
             int continueFlag = 0;
-            if(session.isSecondStep() == false) {
+            if (session.isSecondStep() == false) {
                 session.setGameType(4);
                 session.setSecondStep(true);
                 updateSession(session, false);
@@ -247,9 +318,16 @@ public class UssdController {
         return menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE_MORNING);
     }
 
+    private String afternoonGameOptions(Session session) {
+        session.setNextStep(SECOND);
+        session.setAfternoon(true);
+        updateSession(session, false);
+        return menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE_MORNING);
+    }
+
     private String eveningGameOptions(Session session) {
         session.setNextStep(SECOND);
-        session.setMorning(false);
+        session.setEvening(true);
         updateSession(session, false);
         return menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE);
     }
@@ -868,8 +946,10 @@ public class UssdController {
         System.err.printf("\nDIRECT SESSION => %s\n", savedSession);
         System.err.printf("\nSESSION SESSION => %s\n", savedSession);
         List<Game> currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameTypeId() == 15).sorted(Comparator.comparing(Game::getGameName)).toList();
-        Game gameDraw = savedSession.isMorning() ? currentGameDraw.get(0) : currentGameDraw.get(1);
-        //System.out.printf("Game Name ----> %s", gameDraw.getGameName());
+        //Game gameDraw = savedSession.isMorning() ? currentGameDraw.get(0) : currentGameDraw.get(1);
+        Game gameDraw = savedSession.isMorning() ? currentGameDraw.get(0) : savedSession.isAfternoon() ? currentGameDraw.get(2) : currentGameDraw.get(1);
+        System.out.printf("\nGame List ---->",currentGameDraw.iterator().next());
+        System.out.printf("\nGame Name ----> %s", gameDraw.getGameName());
         savedSession.setGameId(gameDraw.getGameId());
         savedSession.setGameTypeId(gameDraw.getGameDraw());
         savedSession.setBetTypeCode(AppConstants.DIRECT);
@@ -882,6 +962,7 @@ public class UssdController {
                 StringBuilder builder = new StringBuilder();
                 directGames.stream().forEachOrdered(game -> {
                     int currentIndex = index.getAndIncrement();
+                    // Remove direct 5
                     if (currentIndex == 5) { // Skip the element at index 4
                         return;
                     }

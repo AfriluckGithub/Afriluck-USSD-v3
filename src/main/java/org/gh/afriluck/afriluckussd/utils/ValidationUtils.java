@@ -152,15 +152,54 @@ public class ValidationUtils {
     }
 
 
+//    public static boolean isEveningGameTime() {
+//        int startHour = 10;
+//        int startMinute = 0;
+//        int endHour = 19;
+//        int endMinute = 3;
+//        int currentTime = LocalTime.now().getHour() * 60 + LocalTime.now().getMinute();
+//        int startTime = startHour * 60 + startMinute;
+//        int endTime = endHour * 60 + endMinute;
+//        return currentTime >= startTime && currentTime <= endTime;
+//    }
+
+//    public static boolean isAfternoonGameTime() {
+//        int startHour = 19;
+//        int startMinute = 45;
+//        int endHour = 15;
+//        int endMinute = 0;
+//
+//        int currentTime = LocalTime.now().getHour() * 60 + LocalTime.now().getMinute();
+//        int startTime = startHour * 60 + startMinute;
+//        int endTime = endHour * 60 + endMinute;
+//
+//        if (startTime > endTime) {
+//            return (currentTime >= startTime) || (currentTime <= endTime);
+//        } else {
+//            return currentTime >= startTime && currentTime <= endTime;
+//        }
+//    }
+
     public static boolean isEveningGameTime() {
-        int startHour = 10;
-        int startMinute = 0;
-        int endHour = 19;
-        int endMinute = 3;
-        int currentTime = LocalTime.now().getHour() * 60 + LocalTime.now().getMinute();
-        int startTime = startHour * 60 + startMinute;
-        int endTime = endHour * 60 + endMinute;
-        return currentTime >= startTime && currentTime <= endTime;
+        // Define the start and end times
+        LocalTime startTime = LocalTime.of(19, 45); // 7:45 PM
+        LocalTime endTime = LocalTime.of(10, 0);   // 3:00 PM
+        LocalTime currentTime = LocalTime.now();
+        if (currentTime.isAfter(startTime) || currentTime.isBefore(endTime)) {
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean isAfternoonGameTime() {
+        // Define the start and end times
+        LocalTime startTime = LocalTime.of(19, 45); // 7:45 PM
+        LocalTime endTime = LocalTime.of(15, 0);   // 3:00 PM
+        LocalTime currentTime = LocalTime.now();
+        if (currentTime.isAfter(startTime) || currentTime.isBefore(endTime)) {
+            return true;
+        }
+        return false;
     }
 
     public static boolean isCurrentGameTime() {

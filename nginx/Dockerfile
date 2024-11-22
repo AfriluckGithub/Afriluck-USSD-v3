@@ -1,3 +1,3 @@
 FROM nginx
-MAINTAINER Ernestas Kardzys <stevesmart113@gmail.com>
+MAINTAINER Steven smart <stevesmart113@gmail.com>
 COPY nginx.conf /etc/nginx/nginx.conf

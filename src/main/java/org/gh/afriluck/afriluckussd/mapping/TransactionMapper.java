@@ -24,7 +24,8 @@ public class TransactionMapper {
     public Transaction mapTransactionFromSession(Session session, Game game, boolean wallet) {
         Transaction t = new Transaction();
         t.setGameId(session.getGameId());
-        t.setGame(session.isMorning()? "anopa": "657");
+        //t.setGame(session.isMorning()? "anopa": "657");
+        t.setGame(session.isMorning() ? "anopa" : session.isAfternoon() ? "mid" : "657");
         String result = session.getGameType() == 1 ? "mega" : (session.getGameType() == 2 ? "direct" : "perm");
         t.setBetType(result);
         t.setSelectedNumbers(session.getSelectedNumbers());
@@ -45,7 +46,8 @@ public class TransactionMapper {
 
     public Transaction mapTransactionFromSessionPerm(Session session) {
         Transaction t = new Transaction();
-        t.setGame(session.isMorning()? "anopa": "657");
+        //t.setGame(session.isMorning()? "anopa": "657");
+        t.setGame(session.isMorning() ? "anopa" : session.isAfternoon() ? "mid" : "657");
         t.setGameId(session.getGameId());
         t.setBetType(AppConstants.PERM);
         t.setSelectedNumbers(session.getSelectedNumbers());
@@ -61,7 +63,8 @@ public class TransactionMapper {
 
     public Transaction mapTransactionFromSessionBanker(Session session, boolean wallet) {
         Transaction t = new Transaction();
-        t.setGame(session.isMorning()? "anopa": "657");
+        //t.setGame(session.isMorning()? "anopa": "657");
+        t.setGame(session.isMorning() ? "anopa" : session.isAfternoon() ? "mid" : "657");
         t.setGameId(session.getGameId());
         t.setBetType(AppConstants.BANKER);
         t.setSelectedNumbers(session.getSelectedNumbers());
