@@ -137,7 +137,7 @@ public class UssdController {
                     String messageTemplate;
 
                     if (isSunday) {
-                        gameTimeHour = isAfternoonGameTime ? 3 : (isEveningGameTime ? 5 : 2);
+                        gameTimeHour = isAfternoonGameTime ? 5 : (isEveningGameTime ? 5 : 5);
                         gameTimeMinutes = isAfternoonGameTime ? "30" : (isEveningGameTime ? "30" : "30");
                     } else {
                         gameTimeHour = isAfternoonGameTime ? 7 : (isEveningGameTime ? 7 : 7);
