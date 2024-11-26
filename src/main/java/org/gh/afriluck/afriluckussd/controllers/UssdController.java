@@ -973,7 +973,7 @@ public class UssdController {
         savedSession.setGameTypeId(gameDraw.getGameDraw());
         savedSession.setBetTypeCode(AppConstants.DIRECT);
         AtomicInteger index = new AtomicInteger(1);
-        List<String> directGames = savedSession.isMorning() ? AppConstants.DIRECT_GAMES_MORNING : AppConstants.DIRECT_GAMES;
+        List<String> directGames = savedSession.isMorning() || savedSession.isAfternoon() ? AppConstants.DIRECT_GAMES_MORNING : AppConstants.DIRECT_GAMES;
         updateSession(savedSession, false);
         boolean containsLetters = savedSession.getPosition() != 7 ? ValidationUtils.containsAnyLetters(s.getData()) : false;
         if (!containsLetters) {
@@ -1271,7 +1271,7 @@ public class UssdController {
         int continueFlag = 0;
         String message = null;
         int codeType = 0;
-        List<String> permGames = s.isMorning() ? AppConstants.PERM_GAMES_MORNING : AppConstants.PERM_GAMES;
+        List<String> permGames = s.isMorning() || s.isAfternoon() ? AppConstants.PERM_GAMES_MORNING : AppConstants.PERM_GAMES;
         AtomicReference<Integer> index = new AtomicReference<>(0);
         List<Game> currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameTypeId() == 15).sorted(Comparator.comparing(Game::getGameName)).toList();
         ;
