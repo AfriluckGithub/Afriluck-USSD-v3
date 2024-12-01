@@ -158,8 +158,10 @@ public class UssdController {
                             String.format(messageTemplate, dayOfWeekInWords, gameTimeHour, gameTimeMinutes)
                     );
                 } else if (s.getNextStep() == FIRST) {
+                    String dayOfWeekInWords = getDayOfWeekInWords();
                     boolean isEvening = ValidationUtils.isEveningGameTime();
                     boolean isAfternoon = ValidationUtils.isAfternoonGameTime();
+                    boolean isSunday = dayOfWeekInWords.equals("Sunday");
                     try {
 
                         if (s.getNextStep() == FIRST && s.isSecondStep() == false) {
@@ -167,6 +169,10 @@ public class UssdController {
                         }
                         //System.out.printf("***** \nGame Handled -> %s ******\n", gameType);
                         System.out.printf("***** \nGame -> %s ******\n", s.getGameType());
+                        if (isSunday) {
+                            message = eveningGameOptions(s);
+                            return menuResponse(session, 0, message);
+                        }
                         if (isEvening && isAfternoon) {
                             message = switch (s.getGameType()) {
                                 case 1 -> anopaGameOptions(s);
