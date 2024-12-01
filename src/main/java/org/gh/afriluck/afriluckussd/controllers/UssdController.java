@@ -169,9 +169,9 @@ public class UssdController {
                         }
                         //System.out.printf("***** \nGame Handled -> %s ******\n", gameType);
                         System.out.printf("***** \nGame -> %s ******\n", s.getGameType());
-                        if (isSunday) {
-                            return eveningGameOptions(s);
-                        }
+//                        if (isSunday) {
+//                            return eveningGameOptions(s);
+//                        }
                         if (isEvening && isAfternoon) {
                             message = switch (s.getGameType()) {
                                 case 1 -> anopaGameOptions(s);
