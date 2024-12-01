@@ -59,8 +59,8 @@ public class Session {
     private Integer nextStep=0;
     @Column(name = "is_morning")
     private boolean isMorning;
-    @Column(name = "is_afternoon", nullable = false)
-    private boolean isAfternoon = false;
+    @Column(name = "is_afternoon")
+    private boolean isAfternoon;
     @Column(name = "is_evening")
     private boolean isEvening;
     @Column(name = "reset")
