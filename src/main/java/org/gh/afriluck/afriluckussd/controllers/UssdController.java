@@ -458,7 +458,8 @@ public class UssdController {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        final Game gameDraw = s.isMorning() ? currentGameDraw.get(0) : currentGameDraw.get(1);
+        //final Game gameDraw = s.isMorning() || s.isAfternoon() ? currentGameDraw.get(0) : currentGameDraw.get(1);
+        final Game gameDraw = savedSession.isMorning() ? currentGameDraw.get(0) : savedSession.isAfternoon() ? currentGameDraw.get(2) : currentGameDraw.get(1);
         savedSession.setGameId(gameDraw.getGameId());
         savedSession.setGameTypeId(gameDraw.getGameDraw());
         boolean containsLetters = s.getPosition() != 6 ? ValidationUtils.containsAnyLetters(s.getData()) : false;
@@ -1279,8 +1280,8 @@ public class UssdController {
         List<String> permGames = s.isMorning() || s.isAfternoon() ? AppConstants.PERM_GAMES_MORNING : AppConstants.PERM_GAMES;
         AtomicReference<Integer> index = new AtomicReference<>(0);
         List<Game> currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameTypeId() == 15).sorted(Comparator.comparing(Game::getGameName)).toList();
-        ;
-        final Game gameDraw = s.isMorning() ? currentGameDraw.get(0) : currentGameDraw.get(1);
+        //final Game gameDraw = s.isMorning() ? currentGameDraw.get(0) : currentGameDraw.get(1);
+        final Game gameDraw = s.isMorning() ? currentGameDraw.get(0) : s.isAfternoon() ? currentGameDraw.get(2) : currentGameDraw.get(1);
         Session savedSession = sessionRepository.findBySequenceID(s.getSequenceID());
         savedSession.setGameId(gameDraw.getGameId());
         savedSession.setGameTypeId(gameDraw.getGameDraw());
