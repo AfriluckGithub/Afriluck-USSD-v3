@@ -59,7 +59,7 @@ public class Session {
     private Integer nextStep=0;
     @Column(name = "is_morning")
     private boolean isMorning;
-    @Column(name = "is_afternoon")
+    @Column(name = "is_afternoon", nullable = true)
     private boolean isAfternoon;
     @Column(name = "is_evening")
     private boolean isEvening;
