@@ -60,7 +60,7 @@ public class Session {
     @Column(name = "is_morning")
     private boolean isMorning;
     @Column(name = "is_afternoon", nullable = false)
-    private boolean isAfternoon;
+    private boolean isAfternoon = false;
     @Column(name = "is_evening")
     private boolean isEvening;
     @Column(name = "reset")
