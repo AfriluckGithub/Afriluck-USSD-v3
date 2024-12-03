@@ -406,6 +406,15 @@ public class UssdController {
                     continueFlag = 0;
                     message = "1) Deposit\n 2) Balance Enquiry\n";
                     break;
+                case "4":
+                    continueFlag = 0;
+                    message = """
+                           TnCs
+                    You can read here:
+                    http://www.afriluck.com/#/
+                    page-details/terms-and-conditions
+                    """;
+                    break;
                 default:
                     message = "Invalid input\n 0) Back";
                     continueFlag = 0;
