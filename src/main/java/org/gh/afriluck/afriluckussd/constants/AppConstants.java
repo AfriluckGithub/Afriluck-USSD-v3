@@ -19,7 +19,7 @@ public class AppConstants {
     public static final String WELCOME_MENU_MESSAGE_NEW = "Welcome to Afriluck-NLA\n1. 6/57 Super %s (%s:%s pm)\n\n4. Deposit to wallet\n5. Account\n99. Contact Us".trim();
     public static final String WELCOME_MENU_MESSAGE_NEW_SUNDAY = "Welcome to Afriluck-NLA\n1. 6/57 Super %s (5:30 pm)\n\n5. Account\n99. Contact Us".trim();
     public static final String WELCOME_MENU_MESSAGE_MORNING = "Welcome to Afriluck-NLA\n2. Direct Game\n3. Perm Game\n4. Banker\n 0. Back".trim();
-    public static final String ACCOUNT_MENU_MESSAGE = "1) Last Draw Results\n2) Recent Transactions\n3) Wallet 4) TnCs \n0. Back";
+    public static final String ACCOUNT_MENU_MESSAGE = "1) Last Draw Results\n2) Recent Transactions\n3) Wallet\n4) TnCs \n0. Back";
     public static final String BANKER_MENU_MESSAGE = "1) Banker";
     public static final String MEGA_VALIDATION_MESSAGE = "Numbers must be a total of 6 starting from 1 to 57.\n 0) Back";
     public static final String DISCOUNT_PROMPT_MESSAGE = "Enter your coupon code:";
