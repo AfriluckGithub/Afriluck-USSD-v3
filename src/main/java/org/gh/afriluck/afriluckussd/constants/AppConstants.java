@@ -74,7 +74,7 @@ public class AppConstants {
             "Perm-2(2 nos. to win)",
             "Perm-3(3 nos. to win)",
             "Perm-4(4 nos. to win)",
-            "Perm-5(5 nos. to win)",
+            //"Perm-5(5 nos. to win)",
             "Perm-6(6 nos. to win)"
     );
 

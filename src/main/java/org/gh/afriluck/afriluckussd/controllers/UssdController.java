@@ -1302,9 +1302,9 @@ public class UssdController {
                 StringBuilder builder = new StringBuilder();
                 permGames.stream().forEachOrdered(game -> {
                     int currentIndex = index.updateAndGet(v -> v + 1);
-                    if (currentIndex == 4) { // Skip the element at index 5
-                        return;
-                    }
+//                    if (currentIndex == 4) { // Skip the element at index 5
+//                        return;
+//                    }
                     builder.append(String.format("%s) %s\n", currentIndex, game.toString()));
                 });
                 message = builder.toString();
