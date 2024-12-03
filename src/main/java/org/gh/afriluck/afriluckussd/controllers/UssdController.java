@@ -249,14 +249,20 @@ public class UssdController {
                             case null, default -> silentDelete(s);
                         };
                     } else {
-                        message = switch (s.getGameType()) {
-                            case 1 -> megaGameOptions(s.getGameType(), s.getPosition(), s);
-                            case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
-                            case 3 -> permGameOptions(s.getGameType(), s.getPosition(), s);
-                            case 4 -> banker(s, "Banker");
-                            case 0 -> backOption(session, s);
-                            case null, default -> silentDelete(s);
-                        };
+                        System.out.println("\nGame Type ----------> "+ s.getGameType());
+                        System.out.println("\nPosition ----------> "+ s.getPosition());
+                        if (s.getPosition().equals("3") || s.getData().equals("5")) {
+                            message = silentDelete(s);
+                        }else{
+                            message = switch (s.getGameType()) {
+                                case 1 -> megaGameOptions(s.getGameType(), s.getPosition(), s);
+                                case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
+                                case 3 -> permGameOptions(s.getGameType(), s.getPosition(), s);
+                                case 4 -> banker(s, "Banker");
+                                case 0 -> backOption(session, s);
+                                case null, default -> silentDelete(s);
+                            };
+                        }
                     }
                 }
             }
@@ -1321,9 +1327,9 @@ public class UssdController {
                     case "1" -> 2;
                     case "2" -> 3;
                     case "3" -> 4;
-                    case "4" -> 5;
-                    case "5" -> 6;
-                    case "6" -> 7;
+                    case "4" -> 6;
+                    // case "5" -> 6;
+                    // case "6" -> 7;
                     default -> throw new IllegalStateException("Unexpected value: " + s.getData());
                 };
                 savedSession.setCurrentGame(currentGame);

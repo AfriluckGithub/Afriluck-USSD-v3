@@ -45,7 +45,8 @@ public class AppConstants {
             new Pair<>(3, 15),
             new Pair<>(4, 10),
             new Pair<>(5, 8),
-            new Pair<>(6, 8),
+            //new Pair<>(6, 8),
+            new Pair<>(7, 8),
             new Pair<>(7, 8)
     );
     public static final String RANGE_CHOICE_TEMPLATE = """
