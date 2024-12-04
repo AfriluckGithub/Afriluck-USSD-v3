@@ -251,7 +251,8 @@ public class UssdController {
                     } else {
                         System.out.println("\nGame Type ----------> "+ s.getGameType());
                         System.out.println("\nPosition ----------> "+ s.getPosition());
-                        if (s.getPosition().equals("3") || s.getData().equals("5")) {
+                        boolean selected = s.getSelectedNumbers() == null;
+                        if (s.getPosition() == 3 && s.getData().equals("5") && selected) {
                             message = silentDelete(s);
                         }else{
                             message = switch (s.getGameType()) {
