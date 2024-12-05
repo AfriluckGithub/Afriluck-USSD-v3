@@ -1689,6 +1689,8 @@ public class UssdController {
                 Contact us:
                 0303957964
                 0303958006
+                0531011932
+                0534192252
                 """);
     }
 
