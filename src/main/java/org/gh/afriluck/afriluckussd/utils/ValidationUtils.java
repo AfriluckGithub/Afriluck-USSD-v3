@@ -181,7 +181,6 @@ public class ValidationUtils {
 //    }
 
     public static boolean isEveningGameTime() {
-        // Define the start and end times
         LocalTime startTime = LocalTime.of(19, 45); // 7:45 PM
         LocalTime endTime = LocalTime.of(10, 0);   // 3:00 PM
         LocalTime currentTime = LocalTime.now();
@@ -192,7 +191,6 @@ public class ValidationUtils {
     }
 
     public static boolean isAfternoonGameTime() {
-        // Define the start and end times
         LocalTime startTime = LocalTime.of(19, 45); // 7:45 PM
         LocalTime endTime = LocalTime.of(13, 30);   // 1:30 PM
         LocalTime currentTime = LocalTime.now();
@@ -211,5 +209,15 @@ public class ValidationUtils {
         int startTime = startHour * 60 + startMinute;
         int endTime = endHour * 60 + endMinute;
         return currentTime >= startTime && currentTime <= endTime;
+    }
+
+    public static boolean isDayTime() {
+        LocalTime startTime = LocalTime.of(23, 59);
+        LocalTime endTime = LocalTime.of(8, 45);
+        LocalTime currentTime = LocalTime.now();
+        if (currentTime.isAfter(startTime) || currentTime.isBefore(endTime)) {
+            return true;
+        }
+        return false;
     }
 }
