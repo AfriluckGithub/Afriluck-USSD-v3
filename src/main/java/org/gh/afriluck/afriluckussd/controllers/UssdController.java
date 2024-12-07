@@ -130,8 +130,8 @@ public class UssdController {
 
                     boolean isEveningGameTime = ValidationUtils.isEveningGameTime();
                     boolean isAfternoonGameTime = ValidationUtils.isAfternoonGameTime();
-                    //boolean isSunday = dayOfWeekInWords.equals("Sunday");
-                    boolean isSunday = true;
+                    boolean isSunday = dayOfWeekInWords.equals("Sunday");
+                    //boolean isSunday = true;
                     boolean isDayTime = ValidationUtils.isDayTime();
 
                     int gameTimeHour;
@@ -147,9 +147,9 @@ public class UssdController {
                     }
 
                     if (isEveningGameTime) {
-                        messageTemplate = isSunday && isDayTime? AppConstants.WELCOME_MENU_MESSAGE_NEW : AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING;
+                        messageTemplate = isSunday? AppConstants.WELCOME_MENU_MESSAGE_NEW : AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING;
                     } else if (isAfternoonGameTime) {
-                        messageTemplate = isSunday && isDayTime? AppConstants.WELCOME_MENU_MESSAGE_NEW : AppConstants.WELCOME_MENU_MESSAGE_NEW_AFTERNOON;
+                        messageTemplate = isSunday? AppConstants.WELCOME_MENU_MESSAGE_NEW : AppConstants.WELCOME_MENU_MESSAGE_NEW_AFTERNOON;
                     } else {
                         messageTemplate = AppConstants.WELCOME_MENU_MESSAGE_NEW;
                     }
@@ -163,8 +163,8 @@ public class UssdController {
                     String dayOfWeekInWords = getDayOfWeekInWords();
                     boolean isEvening = ValidationUtils.isEveningGameTime();
                     boolean isAfternoon = ValidationUtils.isAfternoonGameTime();
-                    //boolean isSunday = dayOfWeekInWords.equals("Sunday");
-                    boolean isSunday = true;
+                    boolean isSunday = dayOfWeekInWords.equals("Sunday");
+                    //boolean isSunday = true;
                     boolean isDayTime = ValidationUtils.isDayTime();
                     try {
 
@@ -173,7 +173,7 @@ public class UssdController {
                         }
                         //System.out.printf("***** \nGame Handled -> %s ******\n", gameType);
                         System.out.printf("***** \nGame -> %s ******\n", s.getGameType());
-                        if (isSunday && isDayTime) {
+                        if (isSunday) {
                             return eveningGameOptions(s);
                         }
                         if (isEvening && isAfternoon) {
