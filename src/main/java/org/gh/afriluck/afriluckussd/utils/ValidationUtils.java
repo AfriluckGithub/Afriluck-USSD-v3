@@ -182,7 +182,7 @@ public class ValidationUtils {
 
     public static boolean isEveningGameTime() {
         LocalTime startTime = LocalTime.of(19, 45); // 7:45 PM
-        LocalTime endTime = LocalTime.of(10, 0);   // 10:00 PM
+        LocalTime endTime = LocalTime.of(10, 0);   // 10:00 AM
         LocalTime currentTime = LocalTime.now();
         if (currentTime.isAfter(startTime) || currentTime.isBefore(endTime)) {
             return true;
