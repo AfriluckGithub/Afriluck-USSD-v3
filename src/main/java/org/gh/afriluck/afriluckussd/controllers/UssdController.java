@@ -150,7 +150,7 @@ public class UssdController {
                     } else if (isAfternoonGameTime) {
                         messageTemplate = isSunday? AppConstants.WELCOME_MENU_MESSAGE_NEW : AppConstants.WELCOME_MENU_MESSAGE_NEW_AFTERNOON;
                     } else {
-                        messageTemplate = AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING;
+                        messageTemplate = AppConstants.WELCOME_MENU_MESSAGE_NEW;
                     }
 
                     message = menuResponse(
