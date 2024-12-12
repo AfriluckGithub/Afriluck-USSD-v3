@@ -1049,7 +1049,7 @@ public class UssdController {
                     }
                     deleteSession(savedSession);
                 } else {
-                    message = "Type amount to Start (1 - 20)";
+                    message = "Type amount to Start (2 - 20)";
                     savedSession.setSelectedNumbers(s.getData());
                     updateSession(savedSession, false);
                 }
@@ -1375,7 +1375,7 @@ public class UssdController {
                     deleteSession(savedSession);
                 } else {
                     message = """
-                            Type amount to Start (1 - 20):
+                            Type amount to Start (2 - 20):
                             """;
                     updateSession(savedSession, false);
                 }
@@ -1385,7 +1385,7 @@ public class UssdController {
                 if (!isDecimal) {
                     if (amount.intValue() > 20 || amount.intValue() < 1) {
                         deleteSession(savedSession);
-                        message = "Amount should be between 1GHS and 20GHS \n 0 Back";
+                        message = "Amount should be between 2GHS and 20GHS \n 0 Back";
                     } else {
                         savedSession.setAmount(Double.parseDouble(s.getData()));
                         String total = calculateAmountPermAPI(savedSession, "perm");
