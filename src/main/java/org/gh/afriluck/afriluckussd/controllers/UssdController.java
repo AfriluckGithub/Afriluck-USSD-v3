@@ -179,7 +179,13 @@ public class UssdController {
 
                         System.out.printf("***** \nGame -> %s ******\n", s.getGameType());
                         if (isSunday || isSaturdayNight) {
-                            return eveningGameOptions(s);
+                            return switch (s.getData()) {
+                                    case "1" -> eveningGameOptions(s);
+                                    case "4" -> depositToWallet(s, session);
+                                    case "5" -> account(s);
+                                    case "99" -> contactUsMessage(s);
+                                case null, default -> silentDelete(s);
+                            };
                         }
                         if (isEvening && isAfternoon) {
                             message = switch (s.getGameType()) {
