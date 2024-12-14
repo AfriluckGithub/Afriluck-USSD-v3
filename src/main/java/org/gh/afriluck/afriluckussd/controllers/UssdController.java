@@ -131,7 +131,9 @@ public class UssdController {
                     boolean isEveningGameTime = ValidationUtils.isEveningGameTime();
                     boolean isAfternoonGameTime = ValidationUtils.isAfternoonGameTime();
                     boolean isCurrentGame = ValidationUtils.currentGamePeriod();
-                    boolean isSunday = dayOfWeekInWords.equals("Sunday") && isCurrentGame;
+                    boolean isCurrentGameTime = ValidationUtils.isCurrentGameTime();
+                    boolean isSunday = dayOfWeekInWords.equals("Sunday") && isCurrentGame
+                            || dayOfWeekInWords.equals("Saturday") && isCurrentGameTime;
 
                     int gameTimeHour;
                     String gameTimeMinutes;
@@ -163,7 +165,9 @@ public class UssdController {
                     boolean isEvening = ValidationUtils.isEveningGameTime();
                     boolean isAfternoon = ValidationUtils.isAfternoonGameTime();
                     boolean isCurrentGame = ValidationUtils.currentGamePeriod();
-                    boolean isSunday = dayOfWeekInWords.equals("Sunday") && isCurrentGame;
+                    boolean isCurrentGameTime = ValidationUtils.isCurrentGameTime();
+                    boolean isSunday = dayOfWeekInWords.equals("Sunday") && isCurrentGame
+                            || dayOfWeekInWords.equals("Saturday") && isCurrentGameTime;;
                     try {
 
                         if (s.getNextStep() == FIRST && s.isSecondStep() == false) {
