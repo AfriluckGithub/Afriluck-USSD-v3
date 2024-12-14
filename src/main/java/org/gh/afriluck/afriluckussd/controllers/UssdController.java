@@ -132,8 +132,8 @@ public class UssdController {
                     boolean isAfternoonGameTime = ValidationUtils.isAfternoonGameTime();
                     boolean isCurrentGame = ValidationUtils.currentGamePeriod();
                     boolean isCurrentGameTime = ValidationUtils.isCurrentGameTime();
-                    boolean isSunday = dayOfWeekInWords.equals("Sunday") && isCurrentGame
-                            || dayOfWeekInWords.equals("Saturday") && isCurrentGameTime;
+                    boolean isSunday = dayOfWeekInWords.equals("Sunday") && isCurrentGame;
+                    boolean isSaturdayNight = dayOfWeekInWords.equals("Sunday") && isCurrentGameTime;
 
                     int gameTimeHour;
                     String gameTimeMinutes;
@@ -142,15 +142,18 @@ public class UssdController {
                     if (isSunday) {
                         gameTimeHour = isAfternoonGameTime ? 5 : (isEveningGameTime ? 5 : 5);
                         gameTimeMinutes = isAfternoonGameTime ? "30" : (isEveningGameTime ? "30" : "30");
+                    }else if(isSaturdayNight) {
+                        gameTimeHour = isAfternoonGameTime ? 5 : (isEveningGameTime ? 5 : 5);
+                        gameTimeMinutes = isAfternoonGameTime ? "30" : (isEveningGameTime ? "30" : "30");
                     } else {
                         gameTimeHour = isAfternoonGameTime ? 7 : (isEveningGameTime ? 7 : 7);
                         gameTimeMinutes = isAfternoonGameTime ? "00" : (isEveningGameTime ? "00" : "00");
                     }
 
                     if (isEveningGameTime) {
-                        messageTemplate = isSunday? AppConstants.WELCOME_MENU_MESSAGE_NEW : AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING;
+                        messageTemplate = isSunday || isSaturdayNight? AppConstants.WELCOME_MENU_MESSAGE_NEW : AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING;
                     } else if (isAfternoonGameTime) {
-                        messageTemplate = isSunday? AppConstants.WELCOME_MENU_MESSAGE_NEW : AppConstants.WELCOME_MENU_MESSAGE_NEW_AFTERNOON;
+                        messageTemplate = isSunday || isSaturdayNight? AppConstants.WELCOME_MENU_MESSAGE_NEW : AppConstants.WELCOME_MENU_MESSAGE_NEW_AFTERNOON;
                     } else {
                         messageTemplate = AppConstants.WELCOME_MENU_MESSAGE_NEW;
                     }
@@ -166,8 +169,8 @@ public class UssdController {
                     boolean isAfternoon = ValidationUtils.isAfternoonGameTime();
                     boolean isCurrentGame = ValidationUtils.currentGamePeriod();
                     boolean isCurrentGameTime = ValidationUtils.isCurrentGameTime();
-                    boolean isSunday = dayOfWeekInWords.equals("Sunday") && isCurrentGame
-                            || dayOfWeekInWords.equals("Saturday") && isCurrentGameTime;;
+                    boolean isSunday = dayOfWeekInWords.equals("Sunday") && isCurrentGame;
+                    boolean isSaturdayNight = dayOfWeekInWords.equals("Sunday") && isCurrentGameTime;;
                     try {
 
                         if (s.getNextStep() == FIRST && s.isSecondStep() == false) {
@@ -175,7 +178,7 @@ public class UssdController {
                         }
 
                         System.out.printf("***** \nGame -> %s ******\n", s.getGameType());
-                        if (isSunday) {
+                        if (isSunday || isSaturdayNight) {
                             return eveningGameOptions(s);
                         }
                         if (isEvening && isAfternoon) {
