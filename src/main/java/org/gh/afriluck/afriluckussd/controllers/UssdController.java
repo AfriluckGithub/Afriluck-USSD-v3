@@ -129,8 +129,12 @@ public class UssdController {
                     updateSession(s, false);
 
 
-                    boolean isEveningGameTime = ValidationUtils.isEveningGameTime();
-                    boolean isAfternoonGameTime = ValidationUtils.isAfternoonGameTime();
+//                    boolean isEveningGameTime = ValidationUtils.isEveningGameTime();
+//                    boolean isAfternoonGameTime = ValidationUtils.isAfternoonGameTime();
+//                    boolean isCurrentGame = ValidationUtils.currentGamePeriod();
+//                    boolean isCurrentGameTime = ValidationUtils.isCurrentGameTime();
+                    boolean isEveningGameTime = true;
+                    boolean isAfternoonGameTime = true;
                     boolean isCurrentGame = ValidationUtils.currentGamePeriod();
                     boolean isCurrentGameTime = ValidationUtils.isCurrentGameTime();
                     boolean isSunday = dayOfWeekInWords.equals("Sunday") && isCurrentGame;
