@@ -170,8 +170,10 @@ public class UssdController {
                     );
                 } else if (s.getNextStep() == FIRST) {
                     String dayOfWeekInWords = getDayOfWeekInWords();
-                    boolean isEvening = ValidationUtils.isEveningGameTime();
-                    boolean isAfternoon = ValidationUtils.isAfternoonGameTime();
+                    //boolean isEvening = ValidationUtils.isEveningGameTime();
+                    //boolean isAfternoon = ValidationUtils.isAfternoonGameTime();
+                    boolean isEvening = true;
+                    boolean isAfternoon = true;
                     boolean isCurrentGame = ValidationUtils.currentGamePeriod();
                     boolean isCurrentGameTime = ValidationUtils.isCurrentGameTime();
                     boolean isSunday = dayOfWeekInWords.equals("Sunday") && isCurrentGame;
