@@ -124,8 +124,8 @@ public class UssdController {
                 }
                 if (s.getNextStep() == ZERO) {
                     s.setNextStep(FIRST);
-                    //String dayOfWeekInWords = getDayOfWeekInWords();
-                    String dayOfWeekInWords = "Thursday";
+                    String dayOfWeekInWords = getDayOfWeekInWords();
+                    //String dayOfWeekInWords = "Thursday";
                     updateSession(s, false);
 
 
