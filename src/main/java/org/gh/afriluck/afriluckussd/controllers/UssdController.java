@@ -129,14 +129,14 @@ public class UssdController {
                     updateSession(s, false);
 
 
-//                    boolean isEveningGameTime = ValidationUtils.isEveningGameTime();
-//                    boolean isAfternoonGameTime = ValidationUtils.isAfternoonGameTime();
-//                    boolean isCurrentGame = ValidationUtils.currentGamePeriod();
-//                    boolean isCurrentGameTime = ValidationUtils.isCurrentGameTime();
-                    boolean isEveningGameTime = true;
-                    boolean isAfternoonGameTime = true;
+                    boolean isEveningGameTime = ValidationUtils.isEveningGameTime();
+                    boolean isAfternoonGameTime = ValidationUtils.isAfternoonGameTime();
                     boolean isCurrentGame = ValidationUtils.currentGamePeriod();
                     boolean isCurrentGameTime = ValidationUtils.isCurrentGameTime();
+                    //boolean isEveningGameTime = true;
+                    //boolean isAfternoonGameTime = true;
+                    //boolean isCurrentGame = ValidationUtils.currentGamePeriod();
+                    //boolean isCurrentGameTime = ValidationUtils.isCurrentGameTime();
                     boolean isSunday = dayOfWeekInWords.equals("Sunday") && isCurrentGame;
                     boolean isSaturdayNight = dayOfWeekInWords.equals("Sunday") && isCurrentGameTime;
 
@@ -170,10 +170,10 @@ public class UssdController {
                     );
                 } else if (s.getNextStep() == FIRST) {
                     String dayOfWeekInWords = getDayOfWeekInWords();
-                    //boolean isEvening = ValidationUtils.isEveningGameTime();
-                    //boolean isAfternoon = ValidationUtils.isAfternoonGameTime();
-                    boolean isEvening = true;
-                    boolean isAfternoon = true;
+                    boolean isEvening = ValidationUtils.isEveningGameTime();
+                    boolean isAfternoon = ValidationUtils.isAfternoonGameTime();
+                    // boolean isEvening = true;
+                    // boolean isAfternoon = true;
                     boolean isCurrentGame = ValidationUtils.currentGamePeriod();
                     boolean isCurrentGameTime = ValidationUtils.isCurrentGameTime();
                     boolean isSunday = dayOfWeekInWords.equals("Sunday") && isCurrentGame;
