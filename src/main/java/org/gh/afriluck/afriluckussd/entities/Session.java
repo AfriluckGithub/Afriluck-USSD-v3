@@ -67,7 +67,7 @@ public class Session {
     private boolean reset;
     @Column(name = "back_pressed")
     private boolean isBackPressed;
-
+    private String extension;
     private String hour;
     private String event;
 
@@ -78,7 +78,7 @@ public class Session {
     }
 
 
-    public Session(UUID id, String message, String sequenceID, String network, String msisdn, String data, Integer position, Integer gameType, String selectedNumbers, Double amount, String gameTypeId, String timeStamp, String gameId, String betTypeCode, Integer gameTypeCode, String currentGame, Integer max, Integer min, String callBackMessage, Boolean couponApplied, Double discountedAmount, Boolean passedWelcomeMessage, Boolean start, Boolean secondStep, Integer menuChoice, Integer nextStep, Boolean isMorning, Boolean isAfternoon, Boolean isEvening, Boolean reset, Boolean isBackPressed) {
+    public Session(UUID id, String message, String sequenceID, String network, String msisdn, String data, Integer position, Integer gameType, String selectedNumbers, Double amount, String gameTypeId, String timeStamp, String gameId, String betTypeCode, Integer gameTypeCode, String currentGame, Integer max, Integer min, String callBackMessage, Boolean couponApplied, Double discountedAmount, Boolean passedWelcomeMessage, Boolean start, Boolean secondStep, Integer menuChoice, Integer nextStep, Boolean isMorning, Boolean isAfternoon, Boolean isEvening, Boolean reset, Boolean isBackPressed, String extension) {
         this.id = id;
         this.sequenceID = sequenceID;
         this.network = network;
@@ -110,6 +110,7 @@ public class Session {
         this.reset = reset;
         this.isBackPressed = isBackPressed;
         this.isEvening = isEvening;
+        this.extension = extension;
     }
 
     @PrePersist
@@ -377,6 +378,14 @@ public class Session {
         return isBackPressed;
     }
 
+    public String getExtension() {
+        return extension;
+    }
+
+    public void setExtension(String extension) {
+        this.extension = extension;
+    }
+
     @Override
     public String toString() {
         return "Session{" +
@@ -402,6 +411,7 @@ public class Session {
                 ", isAfternoon'"+ isAfternoon+'\''+
                 ", reset'"+ reset+'\''+
                 ", isBackPressed'"+ isBackPressed+'\''+
+                ", extension'"+ extension+'\''+
                 '}';
     }
 }

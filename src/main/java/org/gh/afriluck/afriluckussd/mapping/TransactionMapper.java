@@ -40,6 +40,7 @@ public class TransactionMapper {
         t.setMedium("ussd");
         t.setChannel(session.getNetwork());
         t.setUseWallet(wallet);
+        t.setExtension(session.getExtension());
         return t;
     }
 
@@ -58,6 +59,7 @@ public class TransactionMapper {
         t.setBetTypeCode(session.getGameTypeCode());
         // t.setDrawCode(session.getGameTypeId());
         t.setDiscountedAmount(session.getDiscountedAmount());
+        t.setExtension(session.getExtension());
         return t;
     }
 
@@ -78,6 +80,7 @@ public class TransactionMapper {
         t.setMedium("ussd");
         t.setChannel(session.getNetwork());
         t.setUseWallet(wallet);
+        t.setExtension(session.getExtension());
         return t;
     }
 

@@ -35,12 +35,14 @@ public class Transaction {
     private String medium;
     @JsonProperty("use_wallet")
     private boolean useWallet;
+    @JsonProperty("extension")
+    private String extension;
     private String game;
 
     public Transaction() {
     }
 
-    public Transaction(String msisdn, Double totalAmount, String gameId, String drawCode, Double entryAmount, Integer betTypeCode, String betType, String selectedNumbers, String channel, Double discountedAmount, String medium, boolean useWallet, String game) {
+    public Transaction(String msisdn, Double totalAmount, String gameId, String drawCode, Double entryAmount, Integer betTypeCode, String betType, String selectedNumbers, String channel, Double discountedAmount, String medium, boolean useWallet, String game, String extension) {
         this.msisdn = msisdn;
         this.totalAmount = totalAmount;
         this.gameId = gameId;
@@ -54,6 +56,7 @@ public class Transaction {
         this.medium = medium;
         this.useWallet = useWallet;
         this.game = game;
+        this.extension = extension;
     }
 
     public String getGame() {
@@ -160,6 +163,14 @@ public class Transaction {
         return useWallet;
     }
 
+    public String getExtension() {
+        return extension;
+    }
+
+    public void setExtension(String extension) {
+        this.extension = extension;
+    }
+
     @Override
     public String toString() {
         return "Transaction{" +
@@ -176,6 +187,7 @@ public class Transaction {
                 ", medium='" + medium + '\'' +
                 ", useWallet='" + useWallet + '\'' +
                 ", game='" + game + '\'' +
+                ", extension='" + extension + '\'' +
                 '}';
     }
 }
