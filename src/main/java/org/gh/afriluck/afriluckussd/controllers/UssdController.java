@@ -186,13 +186,23 @@ public class UssdController {
 
                         System.out.printf("***** \nGame -> %s ******\n", s.getGameType());
                         if (isSunday || isSaturdayNight) {
-                            return switch (s.getData()) {
+                            if (s.getOption() == null) {
+                                s.setOption(s.getData());
+                                updateSession(s, false);
+                            }
+
+                            if (s.getOption().equals("5")) {
+                                // savedSession.isSecondStep() && savedSession.getPosition() == FIRST
+                                // savedSession.isSecondStep() && savedSession.getPosition() == THIRD
+                                return account(s);
+                            }else {
+                                return switch (s.getData()) {
                                     case "1" -> eveningGameOptions(s);
                                     case "4" -> depositToWallet(s, session);
-                                    case "5" -> account(s);
                                     case "99" -> contactUsMessage(s);
-                                case null, default -> silentDelete(s);
-                            };
+                                    case null, default -> silentDelete(s);
+                                };
+                            }
                         }
                         if (isEvening && isAfternoon) {
                             message = switch (s.getGameType()) {
@@ -406,6 +416,7 @@ public class UssdController {
             String response = null;
             String json = null;
             JSONObject oj = null;
+            System.out.printf("Data ===> %s", savedSession.getData());
             switch (savedSession.getData()) {
                 case "0":
                     deleteSession(savedSession);
