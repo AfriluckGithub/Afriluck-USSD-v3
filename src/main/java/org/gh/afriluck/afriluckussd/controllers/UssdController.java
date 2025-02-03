@@ -100,6 +100,11 @@ public class UssdController {
                                 session.message
                         )
                 );
+
+                if (session.network.equals("vodafone")) {
+                    session.setExtension(session.data);
+                }
+
                 sessionRepository.save(session);
 
             } else {
