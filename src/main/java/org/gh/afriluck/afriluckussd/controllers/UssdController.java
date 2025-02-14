@@ -101,7 +101,7 @@ public class UssdController {
                         )
                 );
 
-                if (session.network.equals("vodafone")) {
+                if (session.network.equals("vodafone") && savedSession.getExtension().equals("")) {
                     session.setExtension(session.data);
                 }
 
@@ -1728,7 +1728,6 @@ public class UssdController {
                 0303957964
                 0303958006
                 0531011932
-                0534192252
                 """);
     }
 
