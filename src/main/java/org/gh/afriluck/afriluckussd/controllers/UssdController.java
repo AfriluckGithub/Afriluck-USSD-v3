@@ -101,9 +101,9 @@ public class UssdController {
                         )
                 );
 
-                if (session.network.equals("vodafone") && savedSession.getExtension().equals("")) {
-                    session.setExtension(session.data);
-                }
+//                if (session.network.equals("vodafone") && savedSession.getExtension().equals("")) {
+//                    session.setExtension(session.data);
+//                }
 
                 sessionRepository.save(session);
 
