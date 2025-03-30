@@ -130,6 +130,10 @@ public class ValidationUtils {
         return false;
     }
 
+    public static boolean alwaysClosed() {
+        return true;
+    }
+
     public static boolean isBetweenGameTime() {
         int startHour = 19;
         int startMinute = 3;
