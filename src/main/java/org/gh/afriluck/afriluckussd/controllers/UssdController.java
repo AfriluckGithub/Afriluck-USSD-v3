@@ -118,7 +118,7 @@ public class UssdController {
                 }
             }
 
-            if (ValidationUtils.alwaysClosed()) {
+            if (ValidationUtils.isBetweenGameTime()) {
                 message = menuResponse(session, 1, AppConstants.GAME_CLOSED_MESSAGE);
             } else {
                 Session s = sessionRepository.findBySequenceID(session.getSequenceID());
