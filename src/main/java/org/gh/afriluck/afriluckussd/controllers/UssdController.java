@@ -11,6 +11,7 @@ import org.gh.afriluck.afriluckussd.entities.Session;
 import org.gh.afriluck.afriluckussd.repositories.GameRepository;
 import org.gh.afriluck.afriluckussd.repositories.SessionRequestRepository;
 import org.gh.afriluck.afriluckussd.utils.AfriluckCallHandler;
+import org.gh.afriluck.afriluckussd.utils.ResponseMenu;
 import org.gh.afriluck.afriluckussd.utils.ValidationUtils;
 import org.json.JSONObject;
 import org.springframework.http.MediaType;
@@ -30,6 +31,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @RestController("/")
 public class UssdController {
@@ -152,7 +155,7 @@ public class UssdController {
                     if (isSunday) {
                         gameTimeHour = isAfternoonGameTime ? 5 : (isEveningGameTime ? 5 : 5);
                         gameTimeMinutes = isAfternoonGameTime ? "30" : (isEveningGameTime ? "30" : "30");
-                    }else if(isSaturdayNight) {
+                    } else if (isSaturdayNight) {
                         gameTimeHour = isAfternoonGameTime ? 5 : (isEveningGameTime ? 5 : 5);
                         gameTimeMinutes = isAfternoonGameTime ? "30" : (isEveningGameTime ? "30" : "30");
                     } else {
@@ -161,9 +164,9 @@ public class UssdController {
                     }
 
                     if (isEveningGameTime) {
-                        messageTemplate = isSunday || isSaturdayNight? AppConstants.WELCOME_MENU_MESSAGE_NEW : AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING;
+                        messageTemplate = isSunday || isSaturdayNight ? AppConstants.WELCOME_MENU_MESSAGE_NEW : AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING;
                     } else if (isAfternoonGameTime) {
-                        messageTemplate = isSunday || isSaturdayNight? AppConstants.WELCOME_MENU_MESSAGE_NEW : AppConstants.WELCOME_MENU_MESSAGE_NEW_AFTERNOON;
+                        messageTemplate = isSunday || isSaturdayNight ? AppConstants.WELCOME_MENU_MESSAGE_NEW : AppConstants.WELCOME_MENU_MESSAGE_NEW_AFTERNOON;
                     } else {
                         messageTemplate = AppConstants.WELCOME_MENU_MESSAGE_NEW;
                     }
@@ -182,7 +185,8 @@ public class UssdController {
                     boolean isCurrentGame = ValidationUtils.currentGamePeriod();
                     boolean isCurrentGameTime = ValidationUtils.isCurrentGameTime();
                     boolean isSunday = dayOfWeekInWords.equals("Sunday") && isCurrentGame;
-                    boolean isSaturdayNight = dayOfWeekInWords.equals("Sunday") && isCurrentGameTime;;
+                    boolean isSaturdayNight = dayOfWeekInWords.equals("Sunday") && isCurrentGameTime;
+                    ;
                     try {
 
                         if (s.getNextStep() == FIRST && s.isSecondStep() == false) {
@@ -200,7 +204,7 @@ public class UssdController {
                                 // savedSession.isSecondStep() && savedSession.getPosition() == FIRST
                                 // savedSession.isSecondStep() && savedSession.getPosition() == THIRD
                                 return account(s);
-                            }else {
+                            } else {
                                 return switch (s.getData()) {
                                     case "1" -> eveningGameOptions(s);
                                     case "4" -> depositToWallet(s, session);
@@ -286,12 +290,12 @@ public class UssdController {
                             case null, default -> silentDelete(s);
                         };
                     } else {
-                        System.out.println("\nGame Type ----------> "+ s.getGameType());
-                        System.out.println("\nPosition ----------> "+ s.getPosition());
+                        System.out.println("\nGame Type ----------> " + s.getGameType());
+                        System.out.println("\nPosition ----------> " + s.getPosition());
                         boolean selected = s.getSelectedNumbers() == null;
                         if (s.getPosition() == 3 && s.getData().equals("5") && selected) {
                             message = silentDelete(s);
-                        }else{
+                        } else {
                             message = switch (s.getGameType()) {
                                 case 1 -> megaGameOptions(s.getGameType(), s.getPosition(), s);
                                 case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
@@ -310,6 +314,78 @@ public class UssdController {
             return menuResponse(session, 0, "System EC occurred. Please try again");
         }
         return message;
+    }
+
+    @PostMapping(path = "/promo")
+    public String promo(@RequestBody Session session) {
+        int menu = 0;
+        String message = "";
+        int continueFlag = 1;
+        SimpleDateFormat formatter = new SimpleDateFormat(AppConstants.GLOBAL_DATE_FORMAT);
+        String timeStamp = formatter.format(new Date());
+
+        session.setTimeStamp(timeStamp);
+        Session savedSession = sessionRepository.findBySequenceID(session.getSequenceID());
+        if (savedSession == null) {
+            session.setPosition(0);
+
+            sessionRequestRepository.save(
+                    new SessionRequest(
+                            session.msisdn,
+                            session.network,
+                            session.data,
+                            session.getSequenceID(),
+                            LocalDateTime.now(),
+                            session.message
+                    )
+            );
+
+            sessionRepository.save(session);
+
+        } else {
+            switch (savedSession.getPosition()) {
+                case 0:
+                    savedSession.setGameType(Integer.valueOf(session.getData()));
+                    savedSession.setPosition(1);
+                    updateSession(session, false);
+
+                    if (savedSession.getGameType().equals(1)) {
+                        message = "Choose 6 numbers between 1 to 57 separated by space";
+                    } else if (savedSession.getGameType().equals(2)) {
+                        message = "Choose 2 numbers between 1 to 57 separated by space";
+                    } else {
+                        message = "Invalid menu option. 0) Back";
+                    }
+                    return ResponseMenu.menuResponse(session, 1, message);
+                case 1:
+                    savedSession.setData(session.getData());
+                    savedSession.setPosition(2);
+                    updateSession(session, false);
+                    if (savedSession.getGameType().equals(1)) {
+                        message = String.format("Tck info:\n---\nLucky 70 million Mega GHS 5\nYour Numbers: %s\n1) Proceed\n0) Cancel", session.getData());
+                    }else {
+                        message = String.format("Tck info:\n---\nDirect 1 GHS 5\nYour Numbers: %s\n1) Proceed\n0) Cancel", session.getData());
+                    }
+                    return ResponseMenu.menuResponse(session, 1, message);
+                case 2:
+                    if (session.getData().equals("0")) {
+                        message = "Ticket cancelled by user";
+                        continueFlag = 0;
+                    } else {
+                        continueFlag = 0;
+                        if (savedSession.getGameType().equals(1)) {
+                            message = "Ticket of 5 GHS purchased with free promo.";
+                        }else{
+                            message = "Ticket of 1 GHS purchased with free promo";
+                        }
+                    }
+                    return ResponseMenu.menuResponse(session, continueFlag, message);
+                default:
+                    return "Service Error";
+            }
+        }
+        // System.out.printf("Position => %s", session.getPosition());
+        return ResponseMenu.menuResponse(session, 1, "Free Ticket Promo\n1. Mega\n2.Direct-2");
     }
 
     private String depositToWallet(Session session, Session savedSession) {
@@ -454,11 +530,11 @@ public class UssdController {
                 case "4":
                     continueFlag = 0;
                     message = """
-                           TnCs
-                    You can read here:
-                    http://www.afriluck.com/#/
-                    page-details/terms-and-conditions
-                    """;
+                                   TnCs
+                            You can read here:
+                            http://www.afriluck.com/#/
+                            page-details/terms-and-conditions
+                            """;
                     break;
                 default:
                     message = "Invalid input\n 0) Back";

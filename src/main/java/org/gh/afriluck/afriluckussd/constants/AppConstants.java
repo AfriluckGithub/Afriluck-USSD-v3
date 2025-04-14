@@ -90,4 +90,19 @@ public class AppConstants {
     public static String PAYMENT_INIT_MESSAGE = "Payment request initiated.\nApprove to complete ticket purchase";
     public static String PAYMENT_INIT_MESSAGE_WALLET = "Payment request initiated.";
     public static String SUNDAY = "Sunday";
+
+
+    public static List<String> allOptions = List.of(
+                        "Direct-1",
+                        "Direct-2",
+                        "Direct-3",
+                        "Direct-4",
+                        //"Direct-5",
+                        //"Direct-6",
+                        "Perm-2",
+                        "Perm-3",
+                        "Perm-4",
+                        //"Perm-5",
+                        "Perm-6"
+    );
 }
