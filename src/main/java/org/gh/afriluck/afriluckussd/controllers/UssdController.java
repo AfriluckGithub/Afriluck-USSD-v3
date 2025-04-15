@@ -363,7 +363,7 @@ public class UssdController {
                     updateSession(session, false);
                     if (savedSession.getGameType().equals(1)) {
                         message = String.format("Tck info:\n---\nLucky 70 million Mega GHS 5\nYour Numbers: %s\n1) Proceed\n0) Cancel", session.getData());
-                    }else {
+                    } else {
                         message = String.format("Tck info:\n---\nDirect 1 GHS 5\nYour Numbers: %s\n1) Proceed\n0) Cancel", session.getData());
                     }
                     return ResponseMenu.menuResponse(session, 1, message);
@@ -375,7 +375,7 @@ public class UssdController {
                         continueFlag = 0;
                         if (savedSession.getGameType().equals(1)) {
                             message = "Ticket of 5 GHS purchased with free promo.";
-                        }else{
+                        } else {
                             message = "Ticket of 1 GHS purchased with free promo";
                         }
                     }
@@ -1161,7 +1161,17 @@ public class UssdController {
                     }
                     deleteSession(savedSession);
                 } else {
-                    message = "Type amount to Start (2 - 20)";
+                    int game = savedSession.getGameTypeCode();
+                    System.out.printf("\n**** Current Game type Code %s **** \n", game);
+                    switch (game) {
+                        case 1, 2, 3:
+                            message = "Type amount to Start (2 - 200)";
+                            break;
+                        default:
+                            message = "Type amount to Start (2 - 20)";
+                    }
+
+                    // message = "Type amount to Start (2 - 20)";
                     savedSession.setSelectedNumbers(s.getData());
                     updateSession(savedSession, false);
                 }
@@ -1169,26 +1179,50 @@ public class UssdController {
                 Number amount = ValidationUtils.parseNumber(s.getData());
                 boolean isDecimal = ValidationUtils.isDecimal(amount.doubleValue());
                 if (!isDecimal) {
-                    if (amount.intValue() > 20 || amount.intValue() < 1) {
-                        deleteSession(savedSession);
-                        message = "Amount should be between 1GHS and 20GHS \n 0 Back";
+                    if (savedSession.getGameTypeCode().equals(1) || savedSession.getGameTypeCode().equals(2) || savedSession.getGameTypeCode().equals(3)) {
+                        if (amount.intValue() > 200 || amount.intValue() < 2) {
+                            deleteSession(savedSession);
+                            message = "Amount should be between 2GHS and 200GHS \n 0 Back";
+                        } else {
+                            String ticketInfo = """
+                                    Tck info:
+                                    --
+                                    %s
+                                    Your No: %s
+                                    \s
+                                    1) to pay %s GHS.
+                                    \s
+                                    2) to apply coupon code.
+                                    \s
+                                    0) to cancel.
+                                    \s""";
+                            s.setAmount(Double.parseDouble(s.getData()));
+                            //s.setCurrentGame(directGameName);
+                            message = String.format(ticketInfo, gameDraw.getGameName(), s.getSelectedNumbers(), s.getAmount());
+                            updateSession(s, false);
+                        }
                     } else {
-                        String ticketInfo = """
-                                Tck info:
-                                --
-                                %s
-                                Your No: %s
-                                \s
-                                1) to pay %s GHS.
-                                \s
-                                2) to apply coupon code.
-                                \s
-                                0) to cancel.
-                                \s""";
-                        s.setAmount(Double.parseDouble(s.getData()));
-                        //s.setCurrentGame(directGameName);
-                        message = String.format(ticketInfo, gameDraw.getGameName(), s.getSelectedNumbers(), s.getAmount());
-                        updateSession(s, false);
+                        if (amount.intValue() > 20 || amount.intValue() < 1) {
+                            deleteSession(savedSession);
+                            message = "Amount should be between 1GHS and 20GHS \n 0 Back";
+                        } else {
+                            String ticketInfo = """
+                                    Tck info:
+                                    --
+                                    %s
+                                    Your No: %s
+                                    \s
+                                    1) to pay %s GHS.
+                                    \s
+                                    2) to apply coupon code.
+                                    \s
+                                    0) to cancel.
+                                    \s""";
+                            s.setAmount(Double.parseDouble(s.getData()));
+                            //s.setCurrentGame(directGameName);
+                            message = String.format(ticketInfo, gameDraw.getGameName(), s.getSelectedNumbers(), s.getAmount());
+                            updateSession(s, false);
+                        }
                     }
                 } else {
                     deleteSession(savedSession);
@@ -1486,36 +1520,69 @@ public class UssdController {
                     }
                     deleteSession(savedSession);
                 } else {
-                    message = """
-                            Type amount to Start (2 - 20):
-                            """;
+                    int game = savedSession.getGameTypeCode();
+                    System.out.printf("\n**** Current Game type Code %s **** \n", game);
+                    switch (game) {
+                        case 2, 3:
+                            message = "Type amount to Start (2 - 200)";
+                            break;
+                        default:
+                            message = "Type amount to Start (2 - 20)";
+                    }
+                    // message = """
+                    //         Type amount to Start (2 - 20):
+                    //         """;
                     updateSession(savedSession, false);
                 }
             } else if (savedSession.getGameType() == THIRD && savedSession.getPosition() == FIFTH) {
                 Number amount = ValidationUtils.parseNumber(s.getData());
                 boolean isDecimal = ValidationUtils.isDecimal(amount.doubleValue());
                 if (!isDecimal) {
-                    if (amount.intValue() > 20 || amount.intValue() < 1) {
-                        deleteSession(savedSession);
-                        message = "Amount should be between 2GHS and 20GHS \n 0 Back";
+                    if (savedSession.getGameTypeCode().equals(2) || savedSession.getGameTypeCode().equals(3)) {
+                        if (amount.intValue() > 200 || amount.intValue() < 2) {
+                            deleteSession(savedSession);
+                            message = "Amount should be between 2GHS and 200GHS \n 0 Back";
+                        } else {
+                            String ticketInfo = """
+                                    Tck info:
+                                    --
+                                    %s
+                                    Your No: %s
+                                    \s
+                                    1) to pay %s GHS.
+                                    \s
+                                    2) to apply coupon code.
+                                    \s
+                                    0) to cancel.
+                                    \s""";
+                            s.setAmount(Double.parseDouble(s.getData()));
+                            //s.setCurrentGame(directGameName);
+                            message = String.format(ticketInfo, gameDraw.getGameName(), s.getSelectedNumbers(), s.getAmount());
+                            updateSession(s, false);
+                        }
                     } else {
-                        savedSession.setAmount(Double.parseDouble(s.getData()));
-                        String total = calculateAmountPermAPI(savedSession, "perm");
-                        String ticketInfo = """
-                                Tck info:
-                                --
-                                %s
-                                Your No: %s
-                                \s
-                                1) to pay %s GHS.
-                                \s
-                                2) to apply coupon code.
-                                \s
-                                0) to cancel.
-                                \s""";
-                        message = String.format(ticketInfo, gameDraw.getGameName(), s.getSelectedNumbers(), total);
-                        savedSession.setAmount(Double.valueOf(total));
-                        updateSession(s, false);
+                        if (amount.intValue() > 20 || amount.intValue() < 1) {
+                            deleteSession(savedSession);
+                            message = "Amount should be between 2GHS and 20GHS \n 0 Back";
+                        } else {
+                            savedSession.setAmount(Double.parseDouble(s.getData()));
+                            String total = calculateAmountPermAPI(savedSession, "perm");
+                            String ticketInfo = """
+                                    Tck info:
+                                    --
+                                    %s
+                                    Your No: %s
+                                    \s
+                                    1) to pay %s GHS.
+                                    \s
+                                    2) to apply coupon code.
+                                    \s
+                                    0) to cancel.
+                                    \s""";
+                            message = String.format(ticketInfo, gameDraw.getGameName(), s.getSelectedNumbers(), total);
+                            savedSession.setAmount(Double.valueOf(total));
+                            updateSession(s, false);
+                        }
                     }
                 } else {
                     deleteSession(savedSession);
