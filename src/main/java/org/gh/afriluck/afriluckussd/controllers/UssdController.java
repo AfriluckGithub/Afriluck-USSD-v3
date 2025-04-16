@@ -350,7 +350,7 @@ public class UssdController {
                     updateSession(session, false);
 
                     if (savedSession.getGameType().equals(1)) {
-                        message = "Choose 6 numbers between 1 to 57 separated by space";
+                        message = AppConstants.MEGA_OPTIONS_CHOICE_MESSAGE;
                     } else if (savedSession.getGameType().equals(2)) {
                         message = "Choose 2 numbers between 1 to 57 separated by space";
                     } else {
@@ -361,10 +361,31 @@ public class UssdController {
                     savedSession.setData(session.getData());
                     savedSession.setPosition(2);
                     updateSession(session, false);
-                    if (savedSession.getGameType().equals(1)) {
-                        message = String.format("Tck info:\n---\nLucky 70 million Mega GHS 5\nYour Numbers: %s\n1) Proceed\n0) Cancel", session.getData());
-                    } else {
-                        message = String.format("Tck info:\n---\nDirect 1 GHS 5\nYour Numbers: %s\n1) Proceed\n0) Cancel", session.getData());
+                    boolean containsLetters = savedSession.getPosition() != 8 ? ValidationUtils.containsAnyLetters(session.getData()) : false;
+                    String input = ValidationUtils.removeSpecialCharacters(session.getData());
+                    List<Integer> numbers = ValidationUtils.extractNumbers(input);
+                    Set<Integer> repeatedNumbers = ValidationUtils.findRepeatedNumbers(numbers);
+                    boolean exceeds = ValidationUtils.anyNumberExceedsLimit(input, ",", 57);
+
+                    System.out.println(repeatedNumbers);
+                    String[] selectedNumbers = ValidationUtils.splitNumbers(input);
+                    int len = selectedNumbers.length;
+                    boolean containsZero = ValidationUtils.containsSingularZero(input);
+
+                    if (!containsLetters) {
+                        if (savedSession.getGameType().equals(1)? len == AppConstants.MAX_MEGA: len == AppConstants.SECOND && !exceeds && !containsZero) {
+                            if (savedSession.getGameType().equals(1)) {
+                                message = String.format("Tck info:\n---\nLucky 70 million Mega GHS 5\nYour Numbers: %s\n1) Proceed\n0) Cancel", session.getData());
+                            } else {
+                                message = String.format("Tck info:\n---\nDirect 1 GHS 1\nYour Numbers: %s\n1) Proceed\n0) Cancel", session.getData());
+                            }
+                        }else{
+                            deleteSession(savedSession);
+                            message = exceeds ? AppConstants.EXCEEDS_NUMBER_LIMIT_MESSAGE : savedSession.getGameType().equals(1)? AppConstants.MEGA_VALIDATION_MESSAGE: "Numbers must be a total of 2 starting from 1 to 57.\\n 0) Back";
+                        }
+                    }else{
+                        deleteSession(savedSession);
+                        message = "Numbers cannot contain letters.\n 0) Back";
                     }
                     return ResponseMenu.menuResponse(session, 1, message);
                 case 2:
