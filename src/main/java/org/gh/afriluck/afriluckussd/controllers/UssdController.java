@@ -121,8 +121,12 @@ public class UssdController {
                 }
             }
 
-            if (ValidationUtils.isBetweenGameTime()) {
-                message = menuResponse(session, 1, AppConstants.GAME_CLOSED_MESSAGE);
+            if (
+                    //ValidationUtils.isBetweenGameTime()
+                    true
+            ) {
+                //message = menuResponse(session, 1, AppConstants.GAME_CLOSED_MESSAGE);
+                message = menuResponse(session, 1, "Game closed for now. Please try again later");
             } else {
                 Session s = sessionRepository.findBySequenceID(session.getSequenceID());
                 if (s.isReset()) {
