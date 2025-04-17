@@ -125,8 +125,8 @@ public class UssdController {
                     //ValidationUtils.isBetweenGameTime()
                     true
             ) {
-                //message = menuResponse(session, 1, AppConstants.GAME_CLOSED_MESSAGE);
-                message = menuResponse(session, 1, "Game closed for now. Please try again later");
+                message = menuResponse(session, 1, AppConstants.GAME_CLOSED_MESSAGE);
+                //message = menuResponse(session, 1, "Game closed for now. Please try again after 7:45 PM");
             } else {
                 Session s = sessionRepository.findBySequenceID(session.getSequenceID());
                 if (s.isReset()) {
