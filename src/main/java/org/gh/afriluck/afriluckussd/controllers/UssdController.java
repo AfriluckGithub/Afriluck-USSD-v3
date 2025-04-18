@@ -1586,6 +1586,7 @@ public class UssdController {
                             //s.setCurrentGame(directGameName);
                             //message = String.format(ticketInfo, gameDraw.getGameName(), s.getSelectedNumbers(), s.getAmount());
                             message = String.format(ticketInfo, gameDraw.getGameName(), s.getSelectedNumbers(), total);
+                            savedSession.setAmount(Double.valueOf(total));
                             updateSession(s, false);
                         }
                     } else {
