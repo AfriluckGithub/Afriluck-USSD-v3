@@ -1568,6 +1568,8 @@ public class UssdController {
                             deleteSession(savedSession);
                             message = "Amount should be between 2GHS and 200GHS \n 0 Back";
                         } else {
+                            savedSession.setAmount(Double.parseDouble(s.getData()));
+                            String total = calculateAmountPermAPI(savedSession, "perm");
                             String ticketInfo = """
                                     Tck info:
                                     --
@@ -1582,7 +1584,8 @@ public class UssdController {
                                     \s""";
                             s.setAmount(Double.parseDouble(s.getData()));
                             //s.setCurrentGame(directGameName);
-                            message = String.format(ticketInfo, gameDraw.getGameName(), s.getSelectedNumbers(), s.getAmount());
+                            //message = String.format(ticketInfo, gameDraw.getGameName(), s.getSelectedNumbers(), s.getAmount());
+                            message = String.format(ticketInfo, gameDraw.getGameName(), s.getSelectedNumbers(), total);
                             updateSession(s, false);
                         }
                     } else {
@@ -1592,6 +1595,7 @@ public class UssdController {
                         } else {
                             savedSession.setAmount(Double.parseDouble(s.getData()));
                             String total = calculateAmountPermAPI(savedSession, "perm");
+                            System.out.printf("Total %s", total);
                             String ticketInfo = """
                                     Tck info:
                                     --
@@ -1850,7 +1854,7 @@ public class UssdController {
     private String calculateAmountPermAPI(Session session, String type) {
         String body = String.format("{\"amount\":\"%s\",\"selected_numbers\":\"%s\",\"bet_type_code\":\"%s\",\"bet_type\":\"%s\"}"
                 , session.getAmount(), session.getSelectedNumbers(), session.getBetTypeCode(), type);
-        System.out.println(body);
+        System.out.printf("\n ***Body***\n", body);
         ResponseEntity<String> response = handler.client()
                 .post()
                 .uri("/api/V1/request-bet-amount")
