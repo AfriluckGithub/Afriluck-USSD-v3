@@ -122,11 +122,11 @@ public class UssdController {
             }
 
             if (
-                    //ValidationUtils.isBetweenGameTime()
-                    true
+                    ValidationUtils.isBetweenGameTime()
+                    //true
             ) {
-                //message = menuResponse(session, 1, AppConstants.GAME_CLOSED_MESSAGE);
-                message = menuResponse(session, 1, "Game closed for now. Please try again on Friday at 7:45 PM");
+                message = menuResponse(session, 1, AppConstants.GAME_CLOSED_MESSAGE);
+                //message = menuResponse(session, 1, "Game closed for now. Please try again on Friday at 7:45 PM");
             } else {
                 Session s = sessionRepository.findBySequenceID(session.getSequenceID());
                 if (s.isReset()) {
