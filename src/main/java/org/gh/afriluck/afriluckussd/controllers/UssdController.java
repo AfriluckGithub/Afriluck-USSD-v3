@@ -1549,10 +1549,10 @@ public class UssdController {
                     System.out.printf("\n**** Current Game type Code %s **** \n", game);
                     switch (game) {
                         case 2, 3:
-                            message = "Type amount to Start (2 - 200)";
+                            message = "Type amount to Start (1 - 200)";
                             break;
                         default:
-                            message = "Type amount to Start (2 - 20)";
+                            message = "Type amount to Start (1 - 20)";
                     }
                     // message = """
                     //         Type amount to Start (2 - 20):
@@ -1564,9 +1564,9 @@ public class UssdController {
                 boolean isDecimal = ValidationUtils.isDecimal(amount.doubleValue());
                 if (!isDecimal) {
                     if (savedSession.getGameTypeCode().equals(2) || savedSession.getGameTypeCode().equals(3)) {
-                        if (amount.intValue() > 200 || amount.intValue() < 2) {
+                        if (amount.intValue() > 200 || amount.intValue() < 1) {
                             deleteSession(savedSession);
-                            message = "Amount should be between 2GHS and 200GHS \n 0 Back";
+                            message = "Amount should be between 1GHS and 200GHS \n 0 Back";
                         } else {
                             savedSession.setAmount(Double.parseDouble(s.getData()));
                             String total = calculateAmountPermAPI(savedSession, "perm");
@@ -1592,7 +1592,7 @@ public class UssdController {
                     } else {
                         if (amount.intValue() > 20 || amount.intValue() < 1) {
                             deleteSession(savedSession);
-                            message = "Amount should be between 2GHS and 20GHS \n 0 Back";
+                            message = "Amount should be between 1GHS and 20GHS \n 0 Back";
                         } else {
                             savedSession.setAmount(Double.parseDouble(s.getData()));
                             String total = calculateAmountPermAPI(savedSession, "perm");
