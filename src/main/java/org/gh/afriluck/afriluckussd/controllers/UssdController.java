@@ -324,7 +324,7 @@ public class UssdController {
     public String promo(@RequestBody Session session) {
         int menu = 0;
         String message = "";
-        int continueFlag = 1;
+        int continueFlag = 0;
         SimpleDateFormat formatter = new SimpleDateFormat(AppConstants.GLOBAL_DATE_FORMAT);
         String timeStamp = formatter.format(new Date());
 
@@ -349,6 +349,7 @@ public class UssdController {
         } else {
             switch (savedSession.getPosition()) {
                 case 0:
+                    continueFlag = 0;
                     savedSession.setGameType(Integer.valueOf(session.getData()));
                     savedSession.setPosition(1);
                     updateSession(session, false);
@@ -362,6 +363,7 @@ public class UssdController {
                     }
                     return ResponseMenu.menuResponse(session, 1, message);
                 case 1:
+                    continueFlag = 0;
                     savedSession.setData(session.getData());
                     savedSession.setPosition(2);
                     updateSession(session, false);
@@ -395,9 +397,9 @@ public class UssdController {
                 case 2:
                     if (session.getData().equals("0")) {
                         message = "Ticket cancelled by user";
-                        continueFlag = 0;
+                        continueFlag = 1;
                     } else {
-                        continueFlag = 0;
+                        continueFlag = 1;
                         if (savedSession.getGameType().equals(1)) {
                             message = "Ticket of 5 GHS purchased with free promo.";
                         } else {
@@ -410,7 +412,7 @@ public class UssdController {
             }
         }
         // System.out.printf("Position => %s", session.getPosition());
-        return ResponseMenu.menuResponse(session, 1, "Free Ticket Promo\n1. Mega\n2.Direct-2");
+        return ResponseMenu.menuResponse(session, continueFlag, "Free Ticket Promo\n1. Mega\n2.Direct-2");
     }
 
     private String depositToWallet(Session session, Session savedSession) {
