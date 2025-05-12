@@ -361,7 +361,7 @@ public class UssdController {
                     } else {
                         message = "Invalid menu option. 0) Back";
                     }
-                    return ResponseMenu.menuResponse(session, 1, message);
+                    return ResponseMenu.menuResponse(session, continueFlag, message);
                 case 1:
                     continueFlag = 0;
                     savedSession.setData(session.getData());
@@ -393,7 +393,7 @@ public class UssdController {
                         deleteSession(savedSession);
                         message = "Numbers cannot contain letters.\n 0) Back";
                     }
-                    return ResponseMenu.menuResponse(session, 1, message);
+                    return ResponseMenu.menuResponse(session, continueFlag, message);
                 case 2:
                     if (session.getData().equals("0")) {
                         message = "Ticket cancelled by user";
