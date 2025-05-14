@@ -1,7 +1,12 @@
 package org.gh.afriluck.afriluckussd.controllers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonObject;
 import org.gh.afriluck.afriluckussd.constants.AppConstants;
+import org.gh.afriluck.afriluckussd.data.Message;
+import org.gh.afriluck.afriluckussd.data.PaymentResultHolder;
 import org.gh.afriluck.afriluckussd.dto.*;
 import org.gh.afriluck.afriluckussd.entities.Game;
 import org.gh.afriluck.afriluckussd.entities.SessionRequest;
@@ -53,6 +58,7 @@ public class UssdController {
     List<Game> games = null;
     Thread.Builder paymentThread = Thread.ofVirtual().name("Payment Thread");
     Thread.Builder sessionThread = Thread.ofVirtual().name("Session Thread");
+    AtomicReference<String> responseBody = new AtomicReference<>();
 
     /**
      * @param sessionRepository
@@ -123,7 +129,7 @@ public class UssdController {
 
             if (
                     ValidationUtils.isBetweenGameTime()
-                    //true
+                //true
             ) {
                 message = menuResponse(session, 1, AppConstants.GAME_CLOSED_MESSAGE);
                 //message = menuResponse(session, 1, "Game closed for now. Please try again on Friday at 7:45 PM");
@@ -321,12 +327,14 @@ public class UssdController {
     }
 
     @PostMapping(path = "/promo")
-    public String promo(@RequestBody Session session) throws InterruptedException {
+    public String promo(@RequestBody Session session) throws InterruptedException, JsonProcessingException {
         int menu = 0;
         String message = "";
         int continueFlag = 0;
+        PaymentResultHolder holder = new PaymentResultHolder();
         SimpleDateFormat formatter = new SimpleDateFormat(AppConstants.GLOBAL_DATE_FORMAT);
         String timeStamp = formatter.format(new Date());
+        AtomicReference<String> responseBody = new AtomicReference<>();
 
         session.setTimeStamp(timeStamp);
         Session savedSession = sessionRepository.findBySequenceID(session.getSequenceID());
@@ -377,57 +385,39 @@ public class UssdController {
                     String[] selectedNumbers = ValidationUtils.splitNumbers(input);
                     int len = selectedNumbers.length;
                     boolean containsZero = ValidationUtils.containsSingularZero(input);
-
+                    boolean repeated = !repeatedNumbers.isEmpty();
                     if (!containsLetters) {
-                        if (savedSession.getGameType().equals(1)? len == AppConstants.MAX_MEGA: len == AppConstants.SECOND && !exceeds && !containsZero) {
-                            if (savedSession.getGameType().equals(1)) {
-                                message = String.format("Tck info:\n---\nLucky 70 million Mega GHS 5\nYour Numbers: %s\n1) Proceed\n0) Cancel", session.getData());
+                        if (!repeated) {
+                            if (savedSession.getGameType().equals(1) ? len == AppConstants.MAX_MEGA : len == AppConstants.SECOND && !exceeds && !containsZero) {
+                                if (savedSession.getGameType().equals(1)) {
+                                    message = String.format("Tck info:\n---\nLucky 70 million Mega GHS 5\nYour Numbers: %s\n1) Proceed\n0) Cancel", session.getData());
+                                } else {
+                                    message = String.format("Tck info:\n---\nDirect 1 GHS 1\nYour Numbers: %s\n1) Proceed\n0) Cancel", session.getData());
+                                }
+                                savedSession.setSelectedNumbers(session.getData());
+                                updateSession(session, false);
                             } else {
-                                message = String.format("Tck info:\n---\nDirect 1 GHS 1\nYour Numbers: %s\n1) Proceed\n0) Cancel", session.getData());
+                                deleteSession(savedSession);
+                                message = exceeds ? AppConstants.EXCEEDS_NUMBER_LIMIT_MESSAGE : savedSession.getGameType().equals(1) ? AppConstants.MEGA_VALIDATION_MESSAGE : "Numbers must be a total of 2 starting from 1 to 57.\\n 0) Back";
                             }
-                        }else{
-                            deleteSession(savedSession);
-                            message = exceeds ? AppConstants.EXCEEDS_NUMBER_LIMIT_MESSAGE : savedSession.getGameType().equals(1)? AppConstants.MEGA_VALIDATION_MESSAGE: "Numbers must be a total of 2 starting from 1 to 57.\\n 0) Back";
+                        } else {
+                            int max = savedSession.getGameType().equals(1) ? 6 : 2;
+                            message = String.format("Numbers must be a total of %s starting from 1 to 57.\\n 0) Back", max);
                         }
-                    }else{
+                    } else {
                         deleteSession(savedSession);
                         message = "Numbers cannot contain letters.\n 0) Back";
                     }
                     return ResponseMenu.menuResponse(session, continueFlag, message);
                 case 2:
                     if (session.getData().equals("0")) {
-                        message = "Ticket cancelled by user";
+                        message = "Ticket cancelled by user\n0) Back";
                         continueFlag = 1;
                     } else {
                         continueFlag = 1;
+                        ObjectMapper objectMapper = new ObjectMapper();
                         if (savedSession.getGameType().equals(1)) {
                             message = "Ticket of 5 GHS purchased with free promo.";
-                            Runnable paymentTask = () -> {
-                                Transaction t = mapper.mapPromo(
-                                        savedSession.msisdn,
-                                        "direct",
-                                        savedSession.getSelectedNumbers(),
-                                        "ussd",
-                                        savedSession.getNetwork());
-                                System.out.println(t.toString());
-                                ResponseEntity<String> response = handler.staging()
-                                        .post()
-                                        .uri("/api/V1/promo")
-                                        .body(t)
-                                        .contentType(MediaType.APPLICATION_JSON)
-                                        .retrieve()
-                                        .toEntity(String.class);
-                                System.out.println(response.getBody());
-                                System.out.println("--- Running Payment ---");
-                            };
-                            Runnable sessionTask = () -> {
-                                sessionRepository.deleteById(savedSession.getId());
-                                System.out.println("--- Deleting Session ---");
-                            };
-                            paymentThread.start(paymentTask).join();
-                            sessionThread.start(sessionTask);
-                        } else {
-                            message = "Ticket of 1 GHS purchased with free promo";
                             Runnable paymentTask = () -> {
                                 Transaction t = mapper.mapPromo(
                                         savedSession.msisdn,
@@ -443,6 +433,7 @@ public class UssdController {
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .retrieve()
                                         .toEntity(String.class);
+                                responseBody.set(response.getBody());
                                 System.out.println(response.getBody());
                                 System.out.println("--- Running Payment ---");
                             };
@@ -452,6 +443,44 @@ public class UssdController {
                             };
                             paymentThread.start(paymentTask).join();
                             sessionThread.start(sessionTask);
+                            String msg = responseBody.get();
+                            System.out.println("Received response: " + msg);
+                            JsonNode node = objectMapper.readTree(msg);
+                            String responseMessage = node.get("message").asText();
+                            return ResponseMenu.menuResponse(session, continueFlag, responseMessage);
+                        } else {
+                            //message = "Ticket of 1 GHS purchased with free promo";
+                            Runnable paymentTask = () -> {
+                                Transaction t = mapper.mapPromo(
+                                        savedSession.msisdn,
+                                        "direct",
+                                        savedSession.getSelectedNumbers(),
+                                        "ussd",
+                                        savedSession.getNetwork());
+                                System.out.println(t.toString());
+                                ResponseEntity<String> response = handler.staging()
+                                        .post()
+                                        .uri("/api/V1/promo")
+                                        .body(t)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .retrieve()
+                                        .toEntity(String.class);
+
+                                responseBody.set(response.getBody());
+                                System.out.println(response.getBody());
+                                System.out.println("--- Running Payment ---");
+                            };
+                            Runnable sessionTask = () -> {
+                                sessionRepository.deleteById(savedSession.getId());
+                                System.out.println("--- Deleting Session ---");
+                            };
+                            paymentThread.start(paymentTask).join();
+                            sessionThread.start(sessionTask);
+                            String msg = responseBody.get();
+                            System.out.println("Received response: " + msg);
+                            JsonNode node = objectMapper.readTree(msg);
+                            String responseMessage = node.get("message").asText();
+                            return ResponseMenu.menuResponse(session, continueFlag, responseMessage);
                         }
                     }
                     return ResponseMenu.menuResponse(session, continueFlag, message);
