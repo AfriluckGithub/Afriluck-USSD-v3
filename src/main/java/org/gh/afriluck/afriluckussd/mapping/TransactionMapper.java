@@ -84,4 +84,15 @@ public class TransactionMapper {
         return t;
     }
 
+    public Transaction mapPromo(String msisdn, String betType, String selectedNumbers, String medium, String channel) {
+        Transaction t = new Transaction();
+        t.setMsisdn(msisdn);
+        t.setBetType(betType);
+        t.setSelectedNumbers(selectedNumbers);
+        t.setMsisdn(msisdn);
+        t.setMedium(medium);
+        t.setChannel(channel);
+        return t;
+    }
+
 }

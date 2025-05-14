@@ -321,7 +321,7 @@ public class UssdController {
     }
 
     @PostMapping(path = "/promo")
-    public String promo(@RequestBody Session session) {
+    public String promo(@RequestBody Session session) throws InterruptedException {
         int menu = 0;
         String message = "";
         int continueFlag = 0;
@@ -402,8 +402,56 @@ public class UssdController {
                         continueFlag = 1;
                         if (savedSession.getGameType().equals(1)) {
                             message = "Ticket of 5 GHS purchased with free promo.";
+                            Runnable paymentTask = () -> {
+                                Transaction t = mapper.mapPromo(
+                                        savedSession.msisdn,
+                                        "direct",
+                                        savedSession.getSelectedNumbers(),
+                                        "ussd",
+                                        savedSession.getNetwork());
+                                System.out.println(t.toString());
+                                ResponseEntity<String> response = handler.staging()
+                                        .post()
+                                        .uri("/api/V1/promo")
+                                        .body(t)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .retrieve()
+                                        .toEntity(String.class);
+                                System.out.println(response.getBody());
+                                System.out.println("--- Running Payment ---");
+                            };
+                            Runnable sessionTask = () -> {
+                                sessionRepository.deleteById(savedSession.getId());
+                                System.out.println("--- Deleting Session ---");
+                            };
+                            paymentThread.start(paymentTask).join();
+                            sessionThread.start(sessionTask);
                         } else {
                             message = "Ticket of 1 GHS purchased with free promo";
+                            Runnable paymentTask = () -> {
+                                Transaction t = mapper.mapPromo(
+                                        savedSession.msisdn,
+                                        "mega",
+                                        savedSession.getSelectedNumbers(),
+                                        "ussd",
+                                        savedSession.getNetwork());
+                                System.out.println(t.toString());
+                                ResponseEntity<String> response = handler.staging()
+                                        .post()
+                                        .uri("/api/V1/promo")
+                                        .body(t)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .retrieve()
+                                        .toEntity(String.class);
+                                System.out.println(response.getBody());
+                                System.out.println("--- Running Payment ---");
+                            };
+                            Runnable sessionTask = () -> {
+                                sessionRepository.deleteById(savedSession.getId());
+                                System.out.println("--- Deleting Session ---");
+                            };
+                            paymentThread.start(paymentTask).join();
+                            sessionThread.start(sessionTask);
                         }
                     }
                     return ResponseMenu.menuResponse(session, continueFlag, message);
