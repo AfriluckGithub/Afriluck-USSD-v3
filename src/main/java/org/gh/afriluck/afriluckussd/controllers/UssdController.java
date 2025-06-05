@@ -331,7 +331,7 @@ public class UssdController {
         int menu = 0;
         String message = "";
         int continueFlag = 0;
-        PaymentResultHolder holder = new PaymentResultHolder();
+        //PaymentResultHolder holder = new PaymentResultHolder();
         SimpleDateFormat formatter = new SimpleDateFormat(AppConstants.GLOBAL_DATE_FORMAT);
         String timeStamp = formatter.format(new Date());
         AtomicReference<String> responseBody = new AtomicReference<>();
@@ -372,6 +372,7 @@ public class UssdController {
                     return ResponseMenu.menuResponse(session, continueFlag, message);
                 case 1:
                     continueFlag = 0;
+                    boolean exceeds  = false;
                     savedSession.setData(session.getData());
                     savedSession.setPosition(2);
                     updateSession(session, false);
@@ -379,7 +380,11 @@ public class UssdController {
                     String input = ValidationUtils.removeSpecialCharacters(session.getData());
                     List<Integer> numbers = ValidationUtils.extractNumbers(input);
                     Set<Integer> repeatedNumbers = ValidationUtils.findRepeatedNumbers(numbers);
-                    boolean exceeds = ValidationUtils.anyNumberExceedsLimit(input, ",", 57);
+                    try {
+                        exceeds = ValidationUtils.anyNumberExceedsLimit(input, ",", 57);
+                    }catch (Exception e) {
+                        e.printStackTrace();
+                    }
 
                     System.out.println(repeatedNumbers);
                     String[] selectedNumbers = ValidationUtils.splitNumbers(input);
@@ -1768,28 +1773,32 @@ public class UssdController {
                     savedSession.setCurrentGame("direct");
                     updateSession(s, true);
                     message = AppConstants.PAYMENT_INIT_MESSAGE_WALLET;
-                    Runnable paymentTask = () -> {
-                        Transaction t = mapper.mapTransactionFromSession(savedSession, gameDraw, true);
-                        System.out.println(t.toString());
-                        ResponseEntity<String> response = handler.client()
-                                .post()
-                                .uri("/api/V1/place-bet")
-                                .body(t)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .retrieve()
-                                .toEntity(String.class);
-                        System.out.println(response.getBody());
+                    try {
+                        Runnable paymentTask = () -> {
+                            Transaction t = mapper.mapTransactionFromSession(savedSession, gameDraw, true);
+                            System.out.println(t.toString());
+                            ResponseEntity<String> response = handler.client()
+                                    .post()
+                                    .uri("/api/V1/place-bet")
+                                    .body(t)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .retrieve()
+                                    .toEntity(String.class);
+                            System.out.println(response.getBody());
 
-                        sessionRepository.deleteById(savedSession.getId());
-                        System.out.println("Payment Thread running...");
-                    };
-                    Runnable sessionTask = () -> {
-                        sessionRepository.deleteById(savedSession.getId());
-                        System.out.println("Session Thread running...");
-                    };
-                    paymentThread.start(paymentTask).join();
-                    sessionThread.start(sessionTask);
-                    continueFlag = 1;
+                            sessionRepository.deleteById(savedSession.getId());
+                            System.out.println("Payment Thread running...");
+                        };
+                        Runnable sessionTask = () -> {
+                            sessionRepository.deleteById(savedSession.getId());
+                            System.out.println("Session Thread running...");
+                        };
+                        paymentThread.start(paymentTask).join();
+                        sessionThread.start(sessionTask);
+                        continueFlag = 1;
+                    }catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 } else {
                     DiscountResponse response = applyCoupon(s.getAmount(), s.getData());
                     System.out.printf("Discount => ", response);
