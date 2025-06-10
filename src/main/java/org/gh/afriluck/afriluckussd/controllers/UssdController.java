@@ -431,7 +431,7 @@ public class UssdController {
                                         "ussd",
                                         savedSession.getNetwork());
                                 System.out.println(t.toString());
-                                ResponseEntity<String> response = handler.staging()
+                                ResponseEntity<String> response = handler.client()
                                         .post()
                                         .uri("/api/V1/promo")
                                         .body(t)
@@ -463,7 +463,7 @@ public class UssdController {
                                         "ussd",
                                         savedSession.getNetwork());
                                 System.out.println(t.toString());
-                                ResponseEntity<String> response = handler.staging()
+                                ResponseEntity<String> response = handler.client()
                                         .post()
                                         .uri("/api/V1/promo")
                                         .body(t)
