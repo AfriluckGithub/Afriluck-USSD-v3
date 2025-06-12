@@ -336,26 +336,8 @@ public class UssdController {
         SimpleDateFormat formatter = new SimpleDateFormat(AppConstants.GLOBAL_DATE_FORMAT);
         String timeStamp = formatter.format(new Date());
         AtomicReference<String> responseBody = new AtomicReference<>();
-        ResponseEntity<String> res = null;
         ResponseEntity<String> resp = null;
 
-        try {
-            resp = handler.client()
-                    .get()
-                    .uri(uriBuilder -> uriBuilder
-                            .path("/api/V1/check-user-eligibility")
-                            .queryParam("msisdn", session.getMsisdn())
-                            .queryParam("channel", session.getNetwork())
-                            .build())
-                    .accept(MediaType.APPLICATION_JSON)
-                    .retrieve()
-                    .toEntity(String.class);
-            System.out.println(res);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        System.out.println(res.getBody());
         session.setTimeStamp(timeStamp);
         Session savedSession = sessionRepository.findBySequenceID(session.getSequenceID());
         if (savedSession == null) {
@@ -373,6 +355,12 @@ public class UssdController {
             );
 
             sessionRepository.save(session);
+
+            EligibilityResponse eligibilityResponse = checkUserEligibility(session);
+
+            if(!eligibilityResponse.isCan_participate()) {
+                return ResponseMenu.menuResponse(session, continueFlag, eligibilityResponse.getMessage());
+            }
 
         } else {
             switch (savedSession.getPosition()) {
@@ -2095,5 +2083,27 @@ public class UssdController {
             s.setGameType(Integer.valueOf("2"));
         }
         //return isEvening;
+    }
+
+    public EligibilityResponse checkUserEligibility(Session session) {
+        try {
+            ResponseEntity<String> resp = handler.client()
+                    .get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/api/V1/check-user-eligibility")
+                            .queryParam("msisdn", session.getMsisdn())
+                            .queryParam("channel", session.getNetwork())
+                            .build())
+                    .accept(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .toEntity(String.class);
+            ObjectMapper mapper = new ObjectMapper();
+            EligibilityResponse response = mapper.readValue(resp.getBody(), EligibilityResponse.class);
+            System.out.printf("\nResponse Message => %s",response.getMessage());
+            return response;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }
