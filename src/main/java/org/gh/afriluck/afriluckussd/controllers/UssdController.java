@@ -25,6 +25,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
 
 import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
@@ -335,7 +336,26 @@ public class UssdController {
         SimpleDateFormat formatter = new SimpleDateFormat(AppConstants.GLOBAL_DATE_FORMAT);
         String timeStamp = formatter.format(new Date());
         AtomicReference<String> responseBody = new AtomicReference<>();
+        ResponseEntity<String> res = null;
+        ResponseEntity<String> resp = null;
 
+        try {
+            resp = handler.client()
+                    .get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/api/V1/check-user-eligibility")
+                            .queryParam("msisdn", session.getMsisdn())
+                            .queryParam("channel", session.getNetwork())
+                            .build())
+                    .accept(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .toEntity(String.class);
+            System.out.println(res);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        System.out.println(res.getBody());
         session.setTimeStamp(timeStamp);
         Session savedSession = sessionRepository.findBySequenceID(session.getSequenceID());
         if (savedSession == null) {
@@ -372,7 +392,7 @@ public class UssdController {
                     return ResponseMenu.menuResponse(session, continueFlag, message);
                 case 1:
                     continueFlag = 0;
-                    boolean exceeds  = false;
+                    boolean exceeds = false;
                     savedSession.setData(session.getData());
                     savedSession.setPosition(2);
                     updateSession(session, false);
@@ -382,7 +402,7 @@ public class UssdController {
                     Set<Integer> repeatedNumbers = ValidationUtils.findRepeatedNumbers(numbers);
                     try {
                         exceeds = ValidationUtils.anyNumberExceedsLimit(input, ",", 57);
-                    }catch (Exception e) {
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
 
@@ -493,7 +513,7 @@ public class UssdController {
                     return "Service Error";
             }
         }
-        // System.out.printf("Position => %s", session.getPosition());
+        //System.out.printf("Position => %s", session);
         return ResponseMenu.menuResponse(session, continueFlag, "Free Ticket Promo\n1. Mega\n2.Direct-2");
     }
 
@@ -1796,7 +1816,7 @@ public class UssdController {
                         paymentThread.start(paymentTask).join();
                         sessionThread.start(sessionTask);
                         continueFlag = 1;
-                    }catch (Exception e) {
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                 } else {
@@ -2001,6 +2021,15 @@ public class UssdController {
         json.addProperty("continueFlag", continueFlag);
         return json.toString();
     }
+
+
+    public String eligibityRequest(Session session) {
+        JsonObject json = new JsonObject();
+        json.addProperty("msisdn", session.getMsisdn());
+        json.addProperty("channel", session.getNetwork());
+        return json.toString();
+    }
+
 
     public String silentDelete(Session savedSession) {
         deleteSession(savedSession);
