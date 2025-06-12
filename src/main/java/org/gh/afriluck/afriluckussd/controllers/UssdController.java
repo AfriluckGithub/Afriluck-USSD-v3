@@ -359,6 +359,7 @@ public class UssdController {
             EligibilityResponse eligibilityResponse = checkUserEligibility(session);
 
             if(!eligibilityResponse.isCan_participate()) {
+                continueFlag = 1;
                 return ResponseMenu.menuResponse(session, continueFlag, eligibilityResponse.getMessage());
             }
 
