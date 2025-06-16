@@ -86,7 +86,7 @@ public class UssdController {
     /**
      * @apiNote A controller that serves the ussd application
      */
-    @PostMapping(path = "/ussd")
+    @PostMapping(path = "/ussd_Response")
     public String index(@RequestBody Session session) {
         String message = null;
         try {
