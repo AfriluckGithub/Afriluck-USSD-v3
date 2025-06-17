@@ -5,8 +5,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonObject;
 import org.gh.afriluck.afriluckussd.constants.AppConstants;
-import org.gh.afriluck.afriluckussd.data.Message;
-import org.gh.afriluck.afriluckussd.data.PaymentResultHolder;
 import org.gh.afriluck.afriluckussd.dto.*;
 import org.gh.afriluck.afriluckussd.entities.Game;
 import org.gh.afriluck.afriluckussd.entities.SessionRequest;
@@ -15,6 +13,7 @@ import org.gh.afriluck.afriluckussd.repositories.CustomerSessionRepository;
 import org.gh.afriluck.afriluckussd.entities.Session;
 import org.gh.afriluck.afriluckussd.repositories.GameRepository;
 import org.gh.afriluck.afriluckussd.repositories.SessionRequestRepository;
+import org.gh.afriluck.afriluckussd.services.SessionLoggerService;
 import org.gh.afriluck.afriluckussd.utils.AfriluckCallHandler;
 import org.gh.afriluck.afriluckussd.utils.ResponseMenu;
 import org.gh.afriluck.afriluckussd.utils.ValidationUtils;
@@ -25,7 +24,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import reactor.core.publisher.Mono;
 
 import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
@@ -37,8 +35,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @RestController("/")
 public class UssdController {
@@ -55,7 +51,6 @@ public class UssdController {
     private final AfriluckCallHandler handler;
     private final TransactionMapper mapper;
     private final GameRepository gameRepository;
-    private final SessionRequestRepository sessionRequestRepository;
     List<Game> games = null;
     Thread.Builder paymentThread = Thread.ofVirtual().name("Payment Thread");
     Thread.Builder sessionThread = Thread.ofVirtual().name("Session Thread");
@@ -75,12 +70,12 @@ public class UssdController {
             TransactionMapper mapper,
             GameRepository gameRepository,
             SessionRequestRepository sessionRequestRepository
+
     ) {
         this.sessionRepository = sessionRepository;
         this.handler = handler;
         this.mapper = mapper;
         this.gameRepository = gameRepository;
-        this.sessionRequestRepository = sessionRequestRepository;
     }
 
     /**
@@ -96,24 +91,21 @@ public class UssdController {
             session.setTimeStamp(timeStamp);
             Session savedSession = sessionRepository.findBySequenceID(session.getSequenceID());
 
-
             if (savedSession == null) {
                 session.setPosition(0);
-
-                sessionRequestRepository.save(
-                        new SessionRequest(
-                                session.msisdn,
-                                session.network,
-                                session.data,
-                                session.getSequenceID(),
-                                LocalDateTime.now(),
-                                session.message
-                        )
-                );
-
-//                if (session.network.equals("vodafone") && savedSession.getExtension().equals("")) {
-//                    session.setExtension(session.data);
-//                }
+                try {
+                    SessionLoggerService loggerService = new SessionLoggerService();
+                    loggerService.logSession(
+                            session.msisdn,
+                            session.network,
+                            session.data,
+                            session.getSequenceID(),
+                            session.message,
+                            LocalDateTime.now()
+                    );
+                }catch (Exception e) {
+                    e.printStackTrace();
+                }
 
                 sessionRepository.save(session);
 
@@ -343,16 +335,19 @@ public class UssdController {
         if (savedSession == null) {
             session.setPosition(0);
 
-            sessionRequestRepository.save(
-                    new SessionRequest(
-                            session.msisdn,
-                            session.network,
-                            session.data,
-                            session.getSequenceID(),
-                            LocalDateTime.now(),
-                            session.message
-                    )
-            );
+            try {
+                SessionLoggerService loggerService = new SessionLoggerService();
+                loggerService.logSession(
+                        session.msisdn,
+                        session.network,
+                        session.data,
+                        session.getSequenceID(),
+                        session.message,
+                        LocalDateTime.now()
+                );
+            }catch (Exception e) {
+                e.printStackTrace();
+            }
 
             sessionRepository.save(session);
 
