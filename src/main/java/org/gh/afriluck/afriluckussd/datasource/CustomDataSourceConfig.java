@@ -14,7 +14,7 @@ public class CustomDataSourceConfig {
     static {
         HikariConfig config = new HikariConfig();
         try {
-            config.setJdbcUrl("jdbc:postgresql://10.180.180:19997/afriluck_sessions");
+            config.setJdbcUrl("jdbc:postgresql://10.180.180.15:19997/afriluck_sessions");
             config.setUsername("root");
             config.setPassword("root");
             config.setDriverClassName("org.postgresql.Driver");
@@ -34,8 +34,8 @@ public class CustomDataSourceConfig {
             Runtime.getRuntime().addShutdownHook(new Thread(dataSource::close));
 
         }catch (Exception e) {
-            e.printStackTrace(); // 🔴 This is critical to see the actual reason
-            dataSource = null;   // Make it explicit
+            System.err.println("Failed to initialize HikariDataSource: " + e.getMessage());
+            e.printStackTrace(); // <== Make sure this is printing in your logs
             throw new RuntimeException("Failed to initialize HikariDataSource", e);
         }
     }
