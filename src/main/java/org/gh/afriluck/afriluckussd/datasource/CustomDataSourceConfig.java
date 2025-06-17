@@ -14,7 +14,7 @@ public class CustomDataSourceConfig {
     static {
         HikariConfig config = new HikariConfig();
         try {
-            config.setJdbcUrl("jdbc:postgresql://10.180.180.15:19997/afriluck_sessions");
+            config.setJdbcUrl("jdbc:postgresql://10.180.180.16:5432/afriluck_sessions");
             config.setUsername("root");
             config.setPassword("root");
             config.setDriverClassName("org.postgresql.Driver");
