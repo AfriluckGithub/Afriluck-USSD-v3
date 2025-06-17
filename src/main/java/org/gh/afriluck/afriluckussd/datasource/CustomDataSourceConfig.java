@@ -34,7 +34,9 @@ public class CustomDataSourceConfig {
             Runtime.getRuntime().addShutdownHook(new Thread(dataSource::close));
 
         }catch (Exception e) {
-            e.printStackTrace();
+            e.printStackTrace(); // 🔴 This is critical to see the actual reason
+            dataSource = null;   // Make it explicit
+            throw new RuntimeException("Failed to initialize HikariDataSource", e);
         }
     }
 
