@@ -53,8 +53,8 @@ services:
     deploy:
       resources:
         limits:
-          memory: 4g
-          cpus: '2'
+          memory: 5g
+          cpus: '3'
         reservations:
           memory: 3G
     networks:
@@ -84,8 +84,8 @@ services:
     deploy:
       resources:
         limits:
-          memory: 4g
-          cpus: '2'
+          memory: 5g
+          cpus: '3'
         reservations:
           memory: 3G
     networks:
@@ -116,8 +116,8 @@ services:
     deploy:
       resources:
         limits:
-          memory: 4g
-          cpus: '2'
+          memory: 5g
+          cpus: '3'
         reservations:
           memory: 3G
     networks:
