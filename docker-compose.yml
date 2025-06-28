@@ -41,6 +41,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=root
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       #- JAVA_OPTS=-Xms2g -Xmx2g
+      - JAVA_OPTS=-Xms512m -Xmx1g
     #depends_on:
     #  - db
     deploy:
@@ -69,6 +70,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=root
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       #- JAVA_OPTS=-Xms2g -Xmx2g
+      - JAVA_OPTS=-Xms512m -Xmx1g
     #depends_on:
     #  - db
     deploy:
@@ -98,6 +100,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=root
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       #- JAVA_OPTS=-Xms2g -Xmx2g
+      - JAVA_OPTS=-Xms512m -Xmx1g
     #depends_on:
     #  - db
     deploy:
