@@ -54,7 +54,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 4g
+          memory: 5g
           #cpus: '1'
     networks:
       - app-network
@@ -83,7 +83,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 4g
+          memory: 5g
           #cpus: '1'
     networks:
       - app-network
@@ -113,7 +113,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 4g
+          memory: 5g
           #cpus: '1'
     networks:
       - app-network
