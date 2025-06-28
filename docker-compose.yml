@@ -24,7 +24,7 @@ services:
       resources:
         limits:
           cpus: '1'
-          memory: 1g
+          memory: 2g
         reservations:
           cpus: '1'
           memory: 1g
@@ -48,7 +48,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=root
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       #- JAVA_OPTS=-Xms2g -Xmx2g
-      - JAVA_OPTS=-Xms1g -Xmx1g
+      - JAVA_OPTS=-Xms2g -Xmx2g
     #depends_on:
     #  - db
     deploy:
@@ -77,7 +77,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=root
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       #- JAVA_OPTS=-Xms2g -Xmx2g
-      - JAVA_OPTS=-Xms1g -Xmx1g
+      - JAVA_OPTS=-Xms2g -Xmx2g
     #depends_on:
     #  - db
     deploy:
@@ -107,7 +107,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=root
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       #- JAVA_OPTS=-Xms2g -Xmx2g
-      - JAVA_OPTS=-Xms1g -Xmx1g
+      - JAVA_OPTS=-Xms2g -Xmx2g
     #depends_on:
     #  - db
     deploy:
