@@ -21,6 +21,13 @@ services:
         update_config:
           parallelism: 1
           delay: 10s
+        resources:
+          limits:
+            cpus: '0.5'
+            memory: 1g
+          reservations:
+            cpus: '0.2'
+            memory: 1g
     restart: unless-stopped
 
   app:
