@@ -40,13 +40,14 @@ services:
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=root
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-      - JAVA_OPTS=-Xms2g -Xmx2g
+      #- JAVA_OPTS=-Xms2g -Xmx2g
     #depends_on:
     #  - db
     deploy:
       resources:
         limits:
           memory: 5g
+          cpus: '0.5'
     networks:
       - app-network
 
@@ -67,13 +68,14 @@ services:
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=root
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-      - JAVA_OPTS=-Xms2g -Xmx2g
+      #- JAVA_OPTS=-Xms2g -Xmx2g
     #depends_on:
     #  - db
     deploy:
       resources:
         limits:
           memory: 5g
+          cpus: '0.5'
     networks:
       - app-network
 
@@ -95,13 +97,14 @@ services:
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=root
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-      - JAVA_OPTS=-Xms2g -Xmx2g
+      #- JAVA_OPTS=-Xms2g -Xmx2g
     #depends_on:
     #  - db
     deploy:
       resources:
         limits:
           memory: 5g
+          cpus: '0.5'
     networks:
       - app-network
 
