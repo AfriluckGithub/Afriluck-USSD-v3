@@ -27,7 +27,7 @@ services:
           memory: 2g
         reservations:
           cpus: '1'
-          memory: 1g
+          memory: 2g
     restart: unless-stopped
 
   app:
