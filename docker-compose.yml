@@ -55,8 +55,8 @@ services:
         limits:
           memory: 5g
           #cpus: '3'
-        reservations:
-          memory: 3G
+        #reservations:
+          #memory: 3G
     networks:
       - app-network
 
@@ -86,8 +86,8 @@ services:
         limits:
           memory: 5g
           #cpus: '3'
-        reservations:
-          memory: 3G
+        #reservations:
+          #memory: 3G
     networks:
       - app-network
 
@@ -118,8 +118,8 @@ services:
         limits:
           memory: 5g
           #cpus: '3'
-        reservations:
-          memory: 3G
+        #reservations:
+          #memory: 3G
     networks:
       - app-network
 
