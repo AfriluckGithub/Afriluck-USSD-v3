@@ -23,7 +23,7 @@ services:
         delay: 10s
       resources:
         limits:
-          cpus: '2'
+          cpus: '3'
           memory: 4g
         reservations:
           memory: 3g
@@ -54,7 +54,7 @@ services:
       resources:
         limits:
           memory: 5g
-          cpus: '3'
+          #cpus: '3'
         reservations:
           memory: 3G
     networks:
@@ -85,7 +85,7 @@ services:
       resources:
         limits:
           memory: 5g
-          cpus: '3'
+          #cpus: '3'
         reservations:
           memory: 3G
     networks:
@@ -117,7 +117,7 @@ services:
       resources:
         limits:
           memory: 5g
-          cpus: '3'
+          #cpus: '3'
         reservations:
           memory: 3G
     networks:
