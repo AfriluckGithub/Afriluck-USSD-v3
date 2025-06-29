@@ -24,7 +24,7 @@ services:
       resources:
         limits:
           cpus: '3'
-          memory: 8g
+          #memory: 10g
         #reservations:
           #memory: 3g
     restart: unless-stopped
