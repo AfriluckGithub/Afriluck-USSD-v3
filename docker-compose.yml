@@ -24,9 +24,9 @@ services:
       resources:
         limits:
           cpus: '3'
-          #memory: 10g
-        #reservations:
-          #memory: 3g
+          memory: 5g
+        reservations:
+          memory: 3g
     restart: unless-stopped
 
   app:
@@ -53,10 +53,11 @@ services:
     deploy:
       replicas: 1
       resources:
-        #limits:
-          #memory: 10g
-          #cpus: '3'
+        limits:
+          cpus: '2.0'
+          memory: 5G
         reservations:
+          cpus: '0.5'
           memory: 2G
     networks:
       - app-network
@@ -86,10 +87,11 @@ services:
       replicas: 1
 
       resources:
-#        limits:
-#          memory: 10g
-          #cpus: '3'
+        limits:
+          cpus: '2.0'
+          memory: 5G
         reservations:
+          cpus: '0.5'
           memory: 2G
     networks:
       - app-network
@@ -119,13 +121,12 @@ services:
     deploy:
       replicas: 1
       resources:
+        limits:
+          cpus: '2.0'
+          memory: 5G
         reservations:
-         memory: 2G
-#        limits:
-#          memory: 10g
-          #cpus: '3'
-        #reservations:
-          #memory: 3G
+          cpus: '0.5'
+          memory: 2G
     networks:
       - app-network
 
