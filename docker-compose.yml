@@ -57,7 +57,7 @@ services:
           #memory: 10g
           #cpus: '3'
         reservations:
-          memory: 3G
+          memory: 2G
     networks:
       - app-network
 
@@ -90,7 +90,7 @@ services:
 #          memory: 10g
           #cpus: '3'
         reservations:
-          memory: 3G
+          memory: 2G
     networks:
       - app-network
 
@@ -120,7 +120,7 @@ services:
       replicas: 1
       resources:
         reservations:
-         memory: 3G
+         memory: 2G
 #        limits:
 #          memory: 10g
           #cpus: '3'
