@@ -23,8 +23,8 @@ services:
         delay: 10s
       resources:
         limits:
-          cpus: '3'
-          memory: 4g
+          cpus: '2'
+          memory: 8g
         reservations:
           memory: 3g
     restart: unless-stopped
