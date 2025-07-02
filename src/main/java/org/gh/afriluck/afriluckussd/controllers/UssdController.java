@@ -358,6 +358,10 @@ public class UssdController {
                 return ResponseMenu.menuResponse(session, continueFlag, eligibilityResponse.getMessage());
             }
 
+            if (ValidationUtils.isBetweenGameTime()) {
+                return  ResponseMenu.menuResponse(session, 1, AppConstants.GAME_CLOSED_MESSAGE);
+            }
+
         } else {
             switch (savedSession.getPosition()) {
                 case 0:
@@ -512,7 +516,7 @@ public class UssdController {
             }
             if (session.isSecondStep() && session.getPosition() == FIRST) {
                 continueFlag = 0;
-                message = "Enter amount to deposit\n";
+                message = "Enter amount to deposit.\n Disclaimer, deposits cannot be withdrawn.";
                 session.setNextStep(FIRST);
                 session.setGameType(4);
                 updateSession(session, false);
