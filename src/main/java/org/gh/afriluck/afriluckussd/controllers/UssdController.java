@@ -516,7 +516,7 @@ public class UssdController {
             }
             if (session.isSecondStep() && session.getPosition() == FIRST) {
                 continueFlag = 0;
-                message = "Enter amount to deposit.\n Disclaimer, deposits cannot be withdrawn.";
+                message = "Enter amount to deposit.\nDisclaimer, deposits cannot be withdrawn.";
                 session.setNextStep(FIRST);
                 session.setGameType(4);
                 updateSession(session, false);
