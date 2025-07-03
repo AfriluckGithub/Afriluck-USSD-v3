@@ -10,7 +10,11 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=root
       - PGDATA=/var/lib/postgresql/data/pgdata
-      - POSTGRES_MAX_CONNECTIONS=200  # Adjust based on RAM (rule: (RAM - 2GB) / 10MB)
+      - POSTGRES_MAX_CONNECTIONS=500  # Increased from default 100
+      - shared_buffers=4GB            # 25% of 16GB RAM
+      - effective_cache_size=12GB     # 75% of RAM
+      - work_mem=16MB                 # For complex sorts
+      - maintenance_work_mem=1GB      # For vacuum operations
     ports:
       - "5431:5432"
     networks:
@@ -21,10 +25,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '4'  # Dedicate more CPU for DB under high load
-          memory: 8G  # Increase if you have heavy queries
-        reservations:
-          memory: 4G
+          cpus: '2.0'
+          memory: 8G
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -32,7 +34,6 @@ services:
       retries: 5
     restart: unless-stopped
 
-  # PgBouncer for connection pooling (critical for high traffic)
   pgbouncer:
     image: edoburu/pgbouncer:latest
     environment:
@@ -46,10 +47,14 @@ services:
         - LISTEN_ADDR=0.0.0.0  # Explicitly listen on all interfaces
         - LISTEN_PORT=6432
         - DATABASES=afriluck-v2=host=db port=5432 dbname=afriluck-v2
+        - MAX_CLIENT_CONN=1000       # (12GB - 2GB)/10MB = 1000
+        - DEFAULT_POOL_SIZE=100      # Increased pool size
+        - RESERVE_POOL_SIZE=50
+        - SERVER_RESET_QUERY="DISCARD ALL"
     depends_on:
       - db
     ports:
-      - "6432:6432"
+      - "6432:6432" # Comment when replicating this
     volumes:
       - ./pgbouncer.ini:/opt/bitnami/pgbouncer/conf/pgbouncer.ini:ro
       - ./userlist.txt:/etc/pgbouncer/userlist.txt:ro
@@ -58,6 +63,7 @@ services:
     deploy:
       resources:
         limits:
+          cpus: "0.5"
           memory: 1G
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -h localhost -p 6432 -U postgres" ]
@@ -74,20 +80,21 @@ services:
     deploy:
       replicas: 3  # Start with 3, scale dynamically in production
       update_config:
-        parallelism: 2
+        parallelism: 3
         delay: 10s
       resources:
         limits:
-          cpus: '2'
-          memory: 4G  # Match Java heap (-Xmx)
-        reservations:
-          memory: 2G
+          cpus: '0.5'
+          memory: 1G
+      restart_policy:
+        condition: on-failure
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://pgbouncer:6432/afriluck-v2  # Use PgBouncer!
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://pgbouncer:6432/afriluck-v2
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=root
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-      - JAVA_OPTS=-Xms2g -Xmx2g -XX:+UseG1GC -XX:MaxGCPauseMillis=200  # GC tuning
+      - SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE=20
+      - JAVA_OPTS=-Xms2g -Xmx2g -XX:+UseG1GC -XX:MaxGCPauseMillis=100
     networks:
       - app-network
     healthcheck:
