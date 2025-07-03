@@ -17,6 +17,7 @@ services:
       - app-network
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d
     deploy:
       resources:
         limits:
@@ -33,27 +34,32 @@ services:
 
   # PgBouncer for connection pooling (critical for high traffic)
   pgbouncer:
-    image: edoburu/pgbouncer
-    environment:
-      - DB_USER=postgres
-      - DB_PASSWORD=root
-      - DB_HOST=db
-      - DB_NAME=afriluck-v2
-      - POOL_MODE=transaction  # Best for most apps
-      - MAX_CLIENT_CONN=1000   # Max client connections
-      - DEFAULT_POOL_SIZE=50   # Connections per backend
+    image: edoburu/pgbouncer:latest
     depends_on:
       - db
+    ports:
+      - "6432:6432"
+    volumes:
+      - ./pgbouncer.ini:/opt/bitnami/pgbouncer/conf/pgbouncer.ini:ro
+      - ./userlist.txt:/etc/pgbouncer/userlist.txt:ro
     networks:
       - app-network
     deploy:
       resources:
         limits:
           memory: 1G
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -h localhost -p 6432 -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   # App service (scalable replicas)
   app:
     image: stevesmart1113/afriluck:latest
+    depends_on:
+      - db
+    restart: no
     deploy:
       replicas: 3  # Start with 3, scale dynamically in production
       update_config:
