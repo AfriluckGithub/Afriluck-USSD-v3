@@ -10,141 +10,90 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=root
       - PGDATA=/var/lib/postgresql/data/pgdata
+      - POSTGRES_MAX_CONNECTIONS=200  # Adjust based on RAM (rule: (RAM - 2GB) / 10MB)
     ports:
       - "5431:5432"
     networks:
       - app-network
     volumes:
-      #- ./init.sql:/docker-entrypoint-initdb.d/init.sql
       - pgdata:/var/lib/postgresql/data
     deploy:
+      resources:
+        limits:
+          cpus: '4'  # Dedicate more CPU for DB under high load
+          memory: 8G  # Increase if you have heavy queries
+        reservations:
+          memory: 4G
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # PgBouncer for connection pooling (critical for high traffic)
+  pgbouncer:
+    image: edoburu/pgbouncer
+    environment:
+      - DB_USER=postgres
+      - DB_PASSWORD=root
+      - DB_HOST=db
+      - DB_NAME=afriluck-v2
+      - POOL_MODE=transaction  # Best for most apps
+      - MAX_CLIENT_CONN=1000   # Max client connections
+      - DEFAULT_POOL_SIZE=50   # Connections per backend
+    depends_on:
+      - db
+    networks:
+      - app-network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  # App service (scalable replicas)
+  app:
+    image: stevesmart1113/afriluck:latest
+    deploy:
+      replicas: 3  # Start with 3, scale dynamically in production
       update_config:
-        parallelism: 1
+        parallelism: 2
         delay: 10s
       resources:
         limits:
-          cpus: '3'
-          memory: 5g
+          cpus: '2'
+          memory: 4G  # Match Java heap (-Xmx)
         reservations:
-          memory: 3g
-    restart: unless-stopped
-
-  app:
-    image: stevesmart1113/afriluck:latest
-    restart: always
-    build:
-      context: .
-      dockerfile: Dockerfile
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    ports:
-      - "8001:8000"
+          memory: 2G
     environment:
-      #      - POSTGRES_USER=postgres
-      #      - POSTGRES_PASSWORD=root
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/afriluck-v2
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://pgbouncer:6432/afriluck-v2  # Use PgBouncer!
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=root
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-      #- JAVA_OPTS=-Xms2g -Xmx2g
-      - JAVA_OPTS=-Xms2g -Xmx2g
-    #depends_on:
-    #  - db
-    deploy:
-      replicas: 1
-      resources:
-        limits:
-          cpus: '2.0'
-          memory: 5G
-        reservations:
-          cpus: '0.5'
-          memory: 2G
+      - JAVA_OPTS=-Xms2g -Xmx2g -XX:+UseG1GC -XX:MaxGCPauseMillis=200  # GC tuning
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  app1:
-    image: stevesmart1113/afriluck:latest
-    restart: always
-    build:
-      context: .
-      dockerfile: Dockerfile
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    ports:
-      - "8002:8000"
-    environment:
-      #      - POSTGRES_USER=postgres
-      #      - POSTGRES_PASSWORD=root
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/afriluck-v2
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=root
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-      #- JAVA_OPTS=-Xms2g -Xmx2g
-      - JAVA_OPTS=-Xms2g -Xmx2g
-    #depends_on:
-    #  - db
-    deploy:
-      replicas: 1
-
-      resources:
-        limits:
-          cpus: '2.0'
-          memory: 5G
-        reservations:
-          cpus: '0.5'
-          memory: 2G
-    networks:
-      - app-network
-
-
-  app2:
-    image: stevesmart1113/afriluck:latest
-    restart: always
-    build:
-      context: .
-      dockerfile: Dockerfile
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    ports:
-      - "8003:8000"
-    environment:
-      #      - POSTGRES_USER=postgres
-      #      - POSTGRES_PASSWORD=root
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/afriluck-v2
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=root
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-      #- JAVA_OPTS=-Xms2g -Xmx2g
-      - JAVA_OPTS=-Xms2g -Xmx2g
-    #depends_on:
-    #  - db
-    deploy:
-      replicas: 1
-      resources:
-        limits:
-          cpus: '2.0'
-          memory: 5G
-        reservations:
-          cpus: '0.5'
-          memory: 2G
-    networks:
-      - app-network
-
-  nginx-load-balancer:
-    build: nginx
-    image: nginx-load-balancer:latest
+  # NGINX Load Balancer (optimized)
+  nginx:
+    build: ./nginx
     ports:
       - "8080:8080"
+      - "443:443"  # Add if using SSL
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
     networks:
       - app-network
     depends_on:
       - app
-      - app1
-      - app2
-    links:
-      - app
-      - app1
-      - app2
 
 networks:
   app-network:
