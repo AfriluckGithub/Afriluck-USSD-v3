@@ -35,6 +35,17 @@ services:
   # PgBouncer for connection pooling (critical for high traffic)
   pgbouncer:
     image: edoburu/pgbouncer:latest
+    environment:
+        - DB_HOST=db
+        - DB_PORT=5432
+        - DB_USER=postgres
+        - DB_PASSWORD=root
+        - DB_NAME=afriluck-v2
+        - POOL_MODE=transaction
+        - AUTH_TYPE=md5
+        - LISTEN_ADDR=0.0.0.0  # Explicitly listen on all interfaces
+        - LISTEN_PORT=6432
+        - DATABASES=afriluck-v2=host=db port=5432 dbname=afriluck-v2
     depends_on:
       - db
     ports:
