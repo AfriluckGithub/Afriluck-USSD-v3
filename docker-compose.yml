@@ -31,7 +31,7 @@ services:
 
   app:
     image: stevesmart1113/afriluck:latest
-    restart: always
+    restart: no
     build:
       context: .
       dockerfile: Dockerfile
