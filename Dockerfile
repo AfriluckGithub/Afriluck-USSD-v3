@@ -8,7 +8,7 @@ FROM openjdk:24-slim-bullseye
 #RUN chmod +r /docker-entrypoint-initdb.d/init.sql
 
 #RUN echo '18.193.168.136 host.docker.internal' >> /etc/hosts
-ENV JAVA_OPTS="-Xms4g -Xmx4g"
+ENV JAVA_OPTS="-Xms2g -Xmx2g"
 
 WORKDIR /app
 

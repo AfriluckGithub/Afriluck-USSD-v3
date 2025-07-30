@@ -76,9 +76,9 @@ services:
     image: stevesmart1113/afriluck:latest
     depends_on:
       - db
-    restart: no
+    restart: on-failure
     deploy:
-      replicas: 3  # Start with 3, scale dynamically in production
+      replicas: 5  # Start with 5, scale dynamically in production
       update_config:
         parallelism: 3
         delay: 10s

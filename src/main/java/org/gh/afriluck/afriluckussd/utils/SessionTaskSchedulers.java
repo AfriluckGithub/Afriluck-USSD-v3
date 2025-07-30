@@ -32,7 +32,7 @@ public class SessionTaskSchedulers implements Runnable {
     @Override
     //@Scheduled(cron = "0 0/70 * * * *", zone = "GMT")
     //@Scheduled(cron = "0 * * * * *")
-    @Scheduled(fixedRate = 4200000)
+    //@Scheduled(fixedRate = 4200000)
     public void run() {
         try {
             System.out.println("Cleaning Session...\n");
