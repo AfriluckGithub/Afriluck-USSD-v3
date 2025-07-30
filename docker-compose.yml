@@ -89,7 +89,7 @@ services:
       restart_policy:
         condition: on-failure
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://pgbouncer:6432/afriluck-v2
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://pgbouncer:5432/afriluck-v2
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=root
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
