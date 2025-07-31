@@ -2,6 +2,32 @@ version: '3.9'
 
 services:
 
+#  db:
+#    image: postgres:13
+#    container_name: db
+#    environment:
+#      - POSTGRES_DB=afriluck-v2
+#      - POSTGRES_USER=postgres
+#      - POSTGRES_PASSWORD=root
+#      - PGDATA=/var/lib/postgresql/data/pgdata
+#    ports:
+#      - "5431:5432"
+#    networks:
+#      - app-network
+#    volumes:
+#      #- ./init.sql:/docker-entrypoint-initdb.d/init.sql
+#      - pgdata:/var/lib/postgresql/data
+#    deploy:
+#      update_config:
+#        parallelism: 1
+#        delay: 10s
+#      resources:
+#        limits:
+#          cpus: '3'
+#          memory: 5g
+#        reservations:
+#          memory: 3g
+#    restart: unless-stopped
   db:
     image: postgres:13
     container_name: db
@@ -10,12 +36,26 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=root
       - PGDATA=/var/lib/postgresql/data/pgdata
+    command: >
+      postgres
+        -c shared_buffers=2GB
+        -c work_mem=64MB
+        -c maintenance_work_mem=256MB
+        -c effective_cache_size=4GB
+        -c wal_buffers=16MB
+        -c min_wal_size=512MB
+        -c max_wal_size=1GB
+        -c random_page_cost=1.0
+        -c checkpoint_timeout=15min
+        -c max_connections=200
+        -c log_min_duration_statement=500
+        -c log_statement=none
+        -c synchronous_commit=off
     ports:
       - "5431:5432"
     networks:
       - app-network
     volumes:
-      #- ./init.sql:/docker-entrypoint-initdb.d/init.sql
       - pgdata:/var/lib/postgresql/data
     deploy:
       update_config:
@@ -25,8 +65,8 @@ services:
         limits:
           cpus: '3'
           memory: 5g
-        reservations:
-          memory: 3g
+#        reservations:
+#          memory: 3g
     restart: unless-stopped
 
   app:
