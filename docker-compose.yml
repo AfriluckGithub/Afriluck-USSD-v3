@@ -1,4 +1,4 @@
-version: '3.9'
+#version: '3.9'
 
 services:
 
@@ -90,6 +90,8 @@ services:
       - JAVA_OPTS=-Xms2g -Xmx2g
     #depends_on:
     #  - db
+    restart_policy:
+      condition: none
     deploy:
       #replicas: 1
       resources:
@@ -109,6 +111,8 @@ services:
       - "host.docker.internal:host-gateway"
     ports:
       - "8002:8000"
+    restart_policy:
+      condition: none
     environment:
       #      - POSTGRES_USER=postgres
       #      - POSTGRES_PASSWORD=root
@@ -141,6 +145,8 @@ services:
       - "host.docker.internal:host-gateway"
     ports:
       - "8003:8000"
+    restart_policy:
+      condition: none
     environment:
       #      - POSTGRES_USER=postgres
       #      - POSTGRES_PASSWORD=root
