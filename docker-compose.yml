@@ -90,9 +90,9 @@ services:
       - JAVA_OPTS=-Xms2g -Xmx2g
     #depends_on:
     #  - db
-    restart_policy:
-      condition: none
     deploy:
+      restart_policy:
+        condition: none
       #replicas: 1
       resources:
         limits:
@@ -111,8 +111,6 @@ services:
       - "host.docker.internal:host-gateway"
     ports:
       - "8002:8000"
-    restart_policy:
-      condition: none
     environment:
       #      - POSTGRES_USER=postgres
       #      - POSTGRES_PASSWORD=root
@@ -125,8 +123,9 @@ services:
     #depends_on:
     #  - db
     deploy:
+      restart_policy:
+        condition: none
 #      replicas: 1
-
       resources:
         limits:
           cpus: '2.0'
@@ -145,8 +144,6 @@ services:
       - "host.docker.internal:host-gateway"
     ports:
       - "8003:8000"
-    restart_policy:
-      condition: none
     environment:
       #      - POSTGRES_USER=postgres
       #      - POSTGRES_PASSWORD=root
@@ -159,6 +156,8 @@ services:
     #depends_on:
     #  - db
     deploy:
+      restart_policy:
+        condition: none
       #replicas: 1
       resources:
         limits:
