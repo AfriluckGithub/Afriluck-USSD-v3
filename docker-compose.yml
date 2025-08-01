@@ -185,6 +185,7 @@ services:
 networks:
   app-network:
     driver: bridge
+    attachable: true
 
 volumes:
   pgdata:
