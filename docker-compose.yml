@@ -71,7 +71,7 @@ services:
 
   app:
     image: stevesmart1113/afriluck:latest
-    restart: no
+    #restart: no
     build:
       context: .
       dockerfile: Dockerfile
@@ -103,7 +103,7 @@ services:
 
   app1:
     image: stevesmart1113/afriluck:latest
-    restart: always
+    #restart: always
     build:
       context: .
       dockerfile: Dockerfile
@@ -136,7 +136,7 @@ services:
 
   app2:
     image: stevesmart1113/afriluck:latest
-    restart: always
+    #restart: always
     build:
       context: .
       dockerfile: Dockerfile
