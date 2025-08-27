@@ -61,10 +61,10 @@ services:
       update_config:
         parallelism: 1
         delay: 10s
-      resources:
-        limits:
-          cpus: '3'
-          memory: 5g
+#      resources:
+#        limits:
+#          cpus: '3'
+#          memory: 5g
 #        reservations:
 #          memory: 3g
     restart: unless-stopped
@@ -94,10 +94,10 @@ services:
       restart_policy:
         condition: none
       #replicas: 1
-      resources:
-        limits:
-          cpus: '2.0'
-          memory: 5G
+#      resources:
+#        limits:
+#          cpus: '2.0'
+#          memory: 5G
     networks:
       - app-network
 
@@ -126,10 +126,10 @@ services:
       restart_policy:
         condition: none
 #      replicas: 1
-      resources:
-        limits:
-          cpus: '2.0'
-          memory: 5G
+#      resources:
+#        limits:
+#          cpus: '2.0'
+#          memory: 5G
     networks:
       - app-network
 
@@ -159,10 +159,10 @@ services:
       restart_policy:
         condition: none
       #replicas: 1
-      resources:
-        limits:
-          cpus: '2.0'
-          memory: 5G
+#      resources:
+#        limits:
+#          cpus: '2.0'
+#          memory: 5G
     networks:
       - app-network
 
