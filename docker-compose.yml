@@ -93,11 +93,6 @@ services:
     deploy:
       restart_policy:
         condition: none
-      #replicas: 1
-#      resources:
-#        limits:
-#          cpus: '2.0'
-#          memory: 5G
     networks:
       - app-network
 
@@ -120,16 +115,9 @@ services:
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       #- JAVA_OPTS=-Xms2g -Xmx2g
       - JAVA_OPTS=-Xms2g -Xmx2g
-    #depends_on:
-    #  - db
     deploy:
       restart_policy:
         condition: none
-#      replicas: 1
-#      resources:
-#        limits:
-#          cpus: '2.0'
-#          memory: 5G
     networks:
       - app-network
 
@@ -158,11 +146,6 @@ services:
     deploy:
       restart_policy:
         condition: none
-      #replicas: 1
-#      resources:
-#        limits:
-#          cpus: '2.0'
-#          memory: 5G
     networks:
       - app-network
 
