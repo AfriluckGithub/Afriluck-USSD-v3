@@ -148,7 +148,7 @@ services:
     depends_on:
       - app
       - app1
-      - app2
+      #- app2
 #    links:
 #      - app
 #      - app1
