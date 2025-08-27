@@ -169,7 +169,7 @@ services:
 networks:
   app-network:
     driver: bridge
-    #attachable: true
+    attachable: true
 
 volumes:
   pgdata:
