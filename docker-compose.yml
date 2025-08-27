@@ -70,7 +70,7 @@ services:
     restart: unless-stopped
 
   app:
-    image: stevesmart1113/afriluck:latest
+    #image: stevesmart1113/afriluck:latest
     #restart: no
     build:
       context: .
@@ -97,7 +97,7 @@ services:
       - app-network
 
   app1:
-    image: stevesmart1113/afriluck:latest
+    #image: stevesmart1113/afriluck:latest
     #restart: always
     build:
       context: .
@@ -123,7 +123,7 @@ services:
 
 
   app2:
-    image: stevesmart1113/afriluck:latest
+    #image: stevesmart1113/afriluck:latest
     #restart: always
     build:
       context: .
@@ -160,10 +160,10 @@ services:
       - app
       - app1
       - app2
-    links:
-      - app
-      - app1
-      - app2
+#    links:
+#      - app
+#      - app1
+#      - app2
 
 networks:
   app-network:
