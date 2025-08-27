@@ -91,6 +91,7 @@ services:
     #depends_on:
     #  - db
     deploy:
+      replicas: 3
       restart_policy:
         condition: none
     networks:
