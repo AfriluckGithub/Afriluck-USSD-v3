@@ -15,17 +15,17 @@ public class AfriluckCallHandler {
     @Value("${env.data.baseUrl}")
     private String baseUrl;
 
-    public RestClient client() {
-        return RestClient.builder()
-                .requestFactory(new HttpComponentsClientHttpRequestFactory())
-                .messageConverters(converters -> converters.add(new StringHttpMessageConverter()))
-                .baseUrl(baseUrl)
-                .defaultHeader("Content-Type", "application/text")
-                .defaultHeader("x-afriluck-key", apiKey)
-                .build();
-    }
+//    public RestClient client() {
+//        return RestClient.builder()
+//                .requestFactory(new HttpComponentsClientHttpRequestFactory())
+//                .messageConverters(converters -> converters.add(new StringHttpMessageConverter()))
+//                .baseUrl(baseUrl)
+//                .defaultHeader("Content-Type", "application/text")
+//                .defaultHeader("x-afriluck-key", apiKey)
+//                .build();
+//    }
 
-    public RestClient staging() {
+    public RestClient client() {
         return RestClient.builder()
                 .requestFactory(new HttpComponentsClientHttpRequestFactory())
                 .messageConverters(converters -> converters.add(new StringHttpMessageConverter()))
