@@ -20,7 +20,7 @@ public class AfriluckCallHandler {
                 .requestFactory(new HttpComponentsClientHttpRequestFactory())
                 .messageConverters(converters -> converters.add(new StringHttpMessageConverter()))
                 //.baseUrl(baseUrl)
-                .baseUrl("http://10.180.180.10:4040")
+                .baseUrl("http://10.180.180.10:5050")
                 .defaultHeader("Content-Type", "application/text")
                 .defaultHeader("x-afriluck-key", apiKey)
                 .build();
