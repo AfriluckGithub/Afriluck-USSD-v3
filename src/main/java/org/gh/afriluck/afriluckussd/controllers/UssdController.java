@@ -774,48 +774,56 @@ public class UssdController {
                     updateSession(savedSession, false);
                     continueFlag = 1;
                     message = AppConstants.PAYMENT_INIT_MESSAGE;
-                    Runnable paymentTask = () -> {
-                        Transaction t = mapper.mapTransactionFromSessionBanker(savedSession, false);
-                        System.out.println(t.toString());
-                        ResponseEntity<String> response = handler.client()
-                                .post()
-                                .uri("/api/V1/place-bet")
-                                .body(t)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .retrieve()
-                                .toEntity(String.class);
-                        System.out.println(response.getBody());
-                        System.out.println("--- Running Payment ---");
-                    };
-                    Runnable sessionTask = () -> {
-                        sessionRepository.deleteById(savedSession.getId());
-                        System.out.println("--- Deleting Session ---");
-                    };
-                    paymentThread.start(paymentTask).join();
-                    sessionThread.start(sessionTask);
+                    try {
+                        Runnable paymentTask = () -> {
+                            Transaction t = mapper.mapTransactionFromSessionBanker(savedSession, false);
+                            System.out.println(t.toString());
+                            ResponseEntity<String> response = handler.client()
+                                    .post()
+                                    .uri("/api/V1/place-bet")
+                                    .body(t)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .retrieve()
+                                    .toEntity(String.class);
+                            System.out.println(response.getBody());
+                            System.out.println("--- Running Payment ---");
+                        };
+                        Runnable sessionTask = () -> {
+                            sessionRepository.deleteById(savedSession.getId());
+                            System.out.println("--- Deleting Session ---");
+                        };
+                        paymentThread.start(paymentTask).join();
+                        sessionThread.start(sessionTask);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
                 } else if (savedSession.getData().equals("2")) {
                     updateSession(savedSession, false);
                     continueFlag = 1;
                     message = AppConstants.PAYMENT_INIT_MESSAGE_WALLET;
-                    Runnable paymentTask = () -> {
-                        Transaction t = mapper.mapTransactionFromSessionBanker(savedSession, true);
-                        System.out.println(t.toString());
-                        ResponseEntity<String> response = handler.client()
-                                .post()
-                                .uri("/api/V1/place-bet")
-                                .body(t)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .retrieve()
-                                .toEntity(String.class);
-                        System.out.println(response.getBody());
-                        System.out.println("--- Running Payment ---");
-                    };
-                    Runnable sessionTask = () -> {
-                        sessionRepository.deleteById(savedSession.getId());
-                        System.out.println("--- Deleting Session ---");
-                    };
-                    paymentThread.start(paymentTask).join();
-                    sessionThread.start(sessionTask);
+                    try {
+                        Runnable paymentTask = () -> {
+                            Transaction t = mapper.mapTransactionFromSessionBanker(savedSession, true);
+                            System.out.println(t.toString());
+                            ResponseEntity<String> response = handler.client()
+                                    .post()
+                                    .uri("/api/V1/place-bet")
+                                    .body(t)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .retrieve()
+                                    .toEntity(String.class);
+                            System.out.println(response.getBody());
+                            System.out.println("--- Running Payment ---");
+                        };
+                        Runnable sessionTask = () -> {
+                            sessionRepository.deleteById(savedSession.getId());
+                            System.out.println("--- Deleting Session ---");
+                        };
+                        paymentThread.start(paymentTask).join();
+                        sessionThread.start(sessionTask);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             } else {
                 String choice = s.getData();
@@ -831,48 +839,56 @@ public class UssdController {
                         updateSession(savedSession, false);
                         continueFlag = 1;
                         message = AppConstants.PAYMENT_INIT_MESSAGE;
-                        Runnable paymentTask = () -> {
-                            Transaction t = mapper.mapTransactionFromSessionBanker(savedSession, false);
-                            System.out.println(t.toString());
-                            ResponseEntity<String> response = handler.client()
-                                    .post()
-                                    .uri("/api/V1/place-bet")
-                                    .body(t)
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .retrieve()
-                                    .toEntity(String.class);
-                            System.out.println(response.getBody());
-                            System.out.println("--- Running Payment ---");
-                        };
-                        Runnable sessionTask = () -> {
-                            sessionRepository.deleteById(savedSession.getId());
-                            System.out.println("--- Deleting Session ---");
-                        };
-                        paymentThread.start(paymentTask).join();
-                        sessionThread.start(sessionTask);
+                        try {
+                            Runnable paymentTask = () -> {
+                                Transaction t = mapper.mapTransactionFromSessionBanker(savedSession, false);
+                                System.out.println(t.toString());
+                                ResponseEntity<String> response = handler.client()
+                                        .post()
+                                        .uri("/api/V1/place-bet")
+                                        .body(t)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .retrieve()
+                                        .toEntity(String.class);
+                                System.out.println(response.getBody());
+                                System.out.println("--- Running Payment ---");
+                            };
+                            Runnable sessionTask = () -> {
+                                sessionRepository.deleteById(savedSession.getId());
+                                System.out.println("--- Deleting Session ---");
+                            };
+                            paymentThread.start(paymentTask).join();
+                            sessionThread.start(sessionTask);
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
                     } else if (savedSession.getData().equals("2") && savedSession.getPosition() == 6) {
                         updateSession(savedSession, false);
                         continueFlag = 1;
                         message = AppConstants.PAYMENT_INIT_MESSAGE_WALLET;
-                        Runnable paymentTask = () -> {
-                            Transaction t = mapper.mapTransactionFromSessionBanker(savedSession, false);
-                            System.out.println(t.toString());
-                            ResponseEntity<String> response = handler.client()
-                                    .post()
-                                    .uri("/api/V1/place-bet")
-                                    .body(t)
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .retrieve()
-                                    .toEntity(String.class);
-                            System.out.println(response.getBody());
-                            System.out.println("--- Running Payment ---");
-                        };
-                        Runnable sessionTask = () -> {
-                            sessionRepository.deleteById(savedSession.getId());
-                            System.out.println("--- Deleting Session ---");
-                        };
-                        paymentThread.start(paymentTask).join();
-                        sessionThread.start(sessionTask);
+                        try {
+                            Runnable paymentTask = () -> {
+                                Transaction t = mapper.mapTransactionFromSessionBanker(savedSession, false);
+                                System.out.println(t.toString());
+                                ResponseEntity<String> response = handler.client()
+                                        .post()
+                                        .uri("/api/V1/place-bet")
+                                        .body(t)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .retrieve()
+                                        .toEntity(String.class);
+                                System.out.println(response.getBody());
+                                System.out.println("--- Running Payment ---");
+                            };
+                            Runnable sessionTask = () -> {
+                                sessionRepository.deleteById(savedSession.getId());
+                                System.out.println("--- Deleting Session ---");
+                            };
+                            paymentThread.start(paymentTask).join();
+                            sessionThread.start(sessionTask);
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
                     } else {
                         DiscountResponse response = applyCoupon(s.getAmount(), s.getData());
                         System.out.printf("Discount %s => ", response);
@@ -886,25 +902,29 @@ public class UssdController {
                     updateSession(savedSession, false);
                     continueFlag = 1;
                     message = AppConstants.PAYMENT_INIT_MESSAGE;
-                    Runnable paymentTask = () -> {
-                        Transaction t = mapper.mapTransactionFromSessionBanker(savedSession, false);
-                        System.out.println(t.toString());
-                        ResponseEntity<String> response = handler.client()
-                                .post()
-                                .uri("/api/V1/place-bet")
-                                .body(t)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .retrieve()
-                                .toEntity(String.class);
-                        System.out.println(response.getBody());
-                        System.out.println("--- Running Payment ---");
-                    };
-                    Runnable sessionTask = () -> {
-                        sessionRepository.deleteById(savedSession.getId());
-                        System.out.println("--- Deleting Session ---");
-                    };
-                    paymentThread.start(paymentTask).join();
-                    sessionThread.start(sessionTask);
+                    try {
+                        Runnable paymentTask = () -> {
+                            Transaction t = mapper.mapTransactionFromSessionBanker(savedSession, false);
+                            System.out.println(t.toString());
+                            ResponseEntity<String> response = handler.client()
+                                    .post()
+                                    .uri("/api/V1/place-bet")
+                                    .body(t)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .retrieve()
+                                    .toEntity(String.class);
+                            System.out.println(response.getBody());
+                            System.out.println("--- Running Payment ---");
+                        };
+                        Runnable sessionTask = () -> {
+                            sessionRepository.deleteById(savedSession.getId());
+                            System.out.println("--- Deleting Session ---");
+                        };
+                        paymentThread.start(paymentTask).join();
+                        sessionThread.start(sessionTask);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             }
         } else {
@@ -1080,32 +1100,36 @@ public class UssdController {
                 } else if (choice.equals("2") && savedSession.getPosition() == 8) {
                     gameDraw = new Game();
                     message = AppConstants.PAYMENT_INIT_MESSAGE_WALLET;
-                    Runnable paymentTask = () -> {
-                        try {
-                            Transaction t = mapper.mapTransactionFromSession(s, gameDraw, true);
-                            System.out.println(t.toString());
-                            ResponseEntity<String> response = handler.client()
-                                    .post()
-                                    .uri("/api/V1/place-bet")
-                                    .body(t)
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .retrieve()
-                                    .toEntity(String.class);
-                            System.out.println(response.getBody());
+                    try {
+                        Runnable paymentTask = () -> {
+                            try {
+                                Transaction t = mapper.mapTransactionFromSession(s, gameDraw, true);
+                                System.out.println(t.toString());
+                                ResponseEntity<String> response = handler.client()
+                                        .post()
+                                        .uri("/api/V1/place-bet")
+                                        .body(t)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .retrieve()
+                                        .toEntity(String.class);
+                                System.out.println(response.getBody());
 
+                                sessionRepository.deleteById(savedSession.getId());
+                                System.out.println("Payment Thread running...");
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        };
+                        Runnable sessionTask = () -> {
                             sessionRepository.deleteById(savedSession.getId());
-                            System.out.println("Payment Thread running...");
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    };
-                    Runnable sessionTask = () -> {
-                        sessionRepository.deleteById(savedSession.getId());
-                        System.out.println("Session Thread running...");
-                    };
-                    paymentThread.start(paymentTask).join();
-                    sessionThread.start(sessionTask);
-                    continueFlag = 1;
+                            System.out.println("Session Thread running...");
+                        };
+                        paymentThread.start(paymentTask).join();
+                        sessionThread.start(sessionTask);
+                        continueFlag = 1;
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
                 } else if (savedSession.getPosition() == 8) {
                     DiscountResponse response = applyCoupon(s.getAmount(), s.getData());
                     System.out.printf("Discount => ", response);
@@ -1122,38 +1146,74 @@ public class UssdController {
                         updateSession(savedSession, false);
                         continueFlag = 1;
                         message = AppConstants.PAYMENT_INIT_MESSAGE;
-                        Runnable paymentTask = () -> {
-                            try {
-                                Transaction t = mapper.mapTransactionFromSession(s, gameDraw, false);
-                                System.out.println(t.toString());
-                                ResponseEntity<String> response = handler.client()
-                                        .post()
-                                        .uri("/api/V1/place-bet")
-                                        .body(t)
-                                        .contentType(MediaType.APPLICATION_JSON)
-                                        .retrieve()
-                                        .toEntity(String.class);
-                                System.out.println(response.getBody());
-                                System.out.println("--- Running Payment ---");
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                        };
-                        Runnable sessionTask = () -> {
-                            sessionRepository.deleteById(savedSession.getId());
-                            System.out.println("--- Deleting Session ---");
-                        };
-                        paymentThread.start(paymentTask).join();
-                        sessionThread.start(sessionTask);
+                        try {
+                            Runnable paymentTask = () -> {
+                                try {
+                                    Transaction t = mapper.mapTransactionFromSession(s, gameDraw, false);
+                                    System.out.println(t.toString());
+                                    ResponseEntity<String> response = handler.client()
+                                            .post()
+                                            .uri("/api/V1/place-bet")
+                                            .body(t)
+                                            .contentType(MediaType.APPLICATION_JSON)
+                                            .retrieve()
+                                            .toEntity(String.class);
+                                    System.out.println(response.getBody());
+                                    System.out.println("--- Running Payment ---");
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            };
+                            Runnable sessionTask = () -> {
+                                sessionRepository.deleteById(savedSession.getId());
+                                System.out.println("--- Deleting Session ---");
+                            };
+                            paymentThread.start(paymentTask).join();
+                            sessionThread.start(sessionTask);
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
                     } else if (savedSession.getData().equals("2")) {
                         gameDraw = new Game();
                         updateSession(savedSession, false);
                         continueFlag = 1;
                         message = AppConstants.PAYMENT_INIT_MESSAGE_WALLET;
+                        try {
+                            Runnable paymentTask = () -> {
+                                try {
+                                    Transaction t = mapper.mapTransactionFromSession(s, gameDraw, true);
+                                    System.out.println(t.toString());
+                                    ResponseEntity<String> response = handler.client()
+                                            .post()
+                                            .uri("/api/V1/place-bet")
+                                            .body(t)
+                                            .contentType(MediaType.APPLICATION_JSON)
+                                            .retrieve()
+                                            .toEntity(String.class);
+                                    System.out.println(response.getBody());
+                                    System.out.println("--- Running Payment ---");
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            };
+                            Runnable sessionTask = () -> {
+                                sessionRepository.deleteById(savedSession.getId());
+                                System.out.println("--- Deleting Session ---");
+                            };
+                            paymentThread.start(paymentTask).join();
+                            sessionThread.start(sessionTask);
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                } else {
+                    gameDraw = new Game();
+                    message = AppConstants.PAYMENT_INIT_MESSAGE;
+                    try {
                         Runnable paymentTask = () -> {
+                            Transaction t = mapper.mapTransactionFromSession(s, gameDraw, false);
+                            System.out.println(t.toString());
                             try {
-                                Transaction t = mapper.mapTransactionFromSession(s, gameDraw, true);
-                                System.out.println(t.toString());
                                 ResponseEntity<String> response = handler.client()
                                         .post()
                                         .uri("/api/V1/place-bet")
@@ -1162,46 +1222,22 @@ public class UssdController {
                                         .retrieve()
                                         .toEntity(String.class);
                                 System.out.println(response.getBody());
-                                System.out.println("--- Running Payment ---");
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
+                            sessionRepository.deleteById(savedSession.getId());
+                            System.out.println("Payment Thread running...");
                         };
                         Runnable sessionTask = () -> {
                             sessionRepository.deleteById(savedSession.getId());
-                            System.out.println("--- Deleting Session ---");
+                            System.out.println("Session Thread running...");
                         };
                         paymentThread.start(paymentTask).join();
                         sessionThread.start(sessionTask);
+                        continueFlag = 1;
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
                     }
-                } else {
-                    gameDraw = new Game();
-                    message = AppConstants.PAYMENT_INIT_MESSAGE;
-                    Runnable paymentTask = () -> {
-                        Transaction t = mapper.mapTransactionFromSession(s, gameDraw, false);
-                        System.out.println(t.toString());
-                        try {
-                            ResponseEntity<String> response = handler.client()
-                                    .post()
-                                    .uri("/api/V1/place-bet")
-                                    .body(t)
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .retrieve()
-                                    .toEntity(String.class);
-                            System.out.println(response.getBody());
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        sessionRepository.deleteById(savedSession.getId());
-                        System.out.println("Payment Thread running...");
-                    };
-                    Runnable sessionTask = () -> {
-                        sessionRepository.deleteById(savedSession.getId());
-                        System.out.println("Session Thread running...");
-                    };
-                    paymentThread.start(paymentTask).join();
-                    sessionThread.start(sessionTask);
-                    continueFlag = 1;
                 }
             }
         } else {
