@@ -63,10 +63,10 @@ services:
         delay: 10s
       resources:
         limits:
-          cpus: '0.5'
-          memory: 1g
+          cpus: '1'
+          memory: 2g
         reservations:
-          memory: 1g
+          memory: 2g
     restart: unless-stopped
 
   app:
