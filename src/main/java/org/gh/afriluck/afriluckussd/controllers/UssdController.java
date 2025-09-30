@@ -103,7 +103,7 @@ public class UssdController {
                             session.message,
                             LocalDateTime.now()
                     );
-                }catch (Exception e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
 
@@ -1537,21 +1537,17 @@ public class UssdController {
                 updateSession(s, true);
                 message = AppConstants.PAYMENT_INIT_MESSAGE;
                 Runnable paymentTask = () -> {
-                    try {
-                        Transaction t = mapper.mapTransactionFromSession(savedSession, gameDraw, false);
-                        System.out.println(t.toString());
-                        ResponseEntity<String> response = handler.client()
-                                .post()
-                                .uri("/api/V1/place-bet")
-                                .body(t)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .retrieve()
-                                .toEntity(String.class);
-                        System.out.println(response.getBody());
-                        System.out.println("Payment Thread running...");
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    Transaction t = mapper.mapTransactionFromSession(savedSession, gameDraw, false);
+                    System.out.println(t.toString());
+                    ResponseEntity<String> response = handler.client()
+                            .post()
+                            .uri("/api/V1/place-bet")
+                            .body(t)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .retrieve()
+                            .toEntity(String.class);
+                    System.out.println(response.getBody());
+                    System.out.println("Payment Thread running...");
                 };
 
                 Runnable sessionTask = () -> {
@@ -1797,8 +1793,8 @@ public class UssdController {
                     savedSession.setCurrentGame("direct");
                     updateSession(s, true);
                     message = AppConstants.PAYMENT_INIT_MESSAGE_WALLET;
-                    try {
-                        Runnable paymentTask = () -> {
+                    Runnable paymentTask = () -> {
+                        try {
                             Transaction t = mapper.mapTransactionFromSession(savedSession, gameDraw, true);
                             System.out.println(t.toString());
                             ResponseEntity<String> response = handler.client()
@@ -1812,17 +1808,17 @@ public class UssdController {
 
                             sessionRepository.deleteById(savedSession.getId());
                             System.out.println("Payment Thread running...");
-                        };
-                        Runnable sessionTask = () -> {
-                            sessionRepository.deleteById(savedSession.getId());
-                            System.out.println("Session Thread running...");
-                        };
-                        paymentThread.start(paymentTask).join();
-                        sessionThread.start(sessionTask);
-                        continueFlag = 1;
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    };
+                    Runnable sessionTask = () -> {
+                        sessionRepository.deleteById(savedSession.getId());
+                        System.out.println("Session Thread running...");
+                    };
+                    paymentThread.start(paymentTask).join();
+                    sessionThread.start(sessionTask);
+                    continueFlag = 1;
                 } else {
                     DiscountResponse response = applyCoupon(s.getAmount(), s.getData());
                     System.out.printf("Discount => ", response);
