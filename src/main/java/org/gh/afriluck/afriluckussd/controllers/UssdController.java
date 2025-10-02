@@ -93,19 +93,19 @@ public class UssdController {
 
             if (savedSession == null) {
                 session.setPosition(0);
-//                try {
-//                    SessionLoggerService loggerService = new SessionLoggerService();
-//                    loggerService.logSession(
-//                            session.msisdn,
-//                            session.network,
-//                            session.data,
-//                            session.getSequenceID(),
-//                            session.message,
-//                            LocalDateTime.now()
-//                    );
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                }
+                try {
+                    SessionLoggerService loggerService = new SessionLoggerService();
+                    loggerService.logSession(
+                            session.msisdn,
+                            session.network,
+                            session.data,
+                            session.getSequenceID(),
+                            session.message,
+                            LocalDateTime.now()
+                    );
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
 
                 sessionRepository.save(session);
 
