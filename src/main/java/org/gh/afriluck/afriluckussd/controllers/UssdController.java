@@ -1758,7 +1758,7 @@ public class UssdController {
                         paymentThread.start(paymentTask).join();
                         sessionThread.start(sessionTask);
                     } catch (Exception e) {
-                        System.out.println(e.getMessage());
+                        e.printStackTrace();
                     }
                 }
             } else if (savedSession.getPosition() == SEVEN) {
@@ -1791,7 +1791,7 @@ public class UssdController {
                         sessionThread.start(sessionTask);
                         continueFlag = 1;
                     } catch (Exception e) {
-                        System.out.println(e.getMessage());
+                        e.printStackTrace();
                     }
                 } else if (savedSession.getData().equals("2")) {
                     // Payment from Wallet
@@ -1814,7 +1814,7 @@ public class UssdController {
                             sessionRepository.deleteById(savedSession.getId());
                             System.out.println("Payment Thread running...");
                         } catch (Exception e) {
-                            System.out.println(e.getMessage());
+                            e.printStackTrace();
                         }
                     };
                     try {
@@ -1826,7 +1826,7 @@ public class UssdController {
                         sessionThread.start(sessionTask);
                         continueFlag = 1;
                     } catch (Exception e) {
-                        System.out.println(e.getMessage());
+                        e.printStackTrace();
                     }
                 } else {
                     DiscountResponse response = applyCoupon(s.getAmount(), s.getData());
@@ -1868,7 +1868,7 @@ public class UssdController {
                         sessionThread.start(sessionTask);
                         continueFlag = 1;
                     } catch (Exception e) {
-                        System.out.println(e.getMessage());
+                        e.printStackTrace();
                     }
                 } else if (savedSession.getData().equals("2")) {
                     message = AppConstants.PAYMENT_INIT_MESSAGE_WALLET;
@@ -1896,7 +1896,7 @@ public class UssdController {
                         sessionThread.start(sessionTask);
                         continueFlag = 1;
                     } catch (Exception e) {
-                        System.out.println(e.getMessage());
+                        e.printStackTrace();
                     }
                 }
             } else {
@@ -1927,7 +1927,7 @@ public class UssdController {
                     sessionThread.start(sessionTask);
                     continueFlag = 1;
                 } catch (Exception e) {
-                    System.out.println(e.getMessage());
+                    e.printStackTrace();
                 }
             }
         } else {
