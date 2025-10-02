@@ -1734,8 +1734,8 @@ public class UssdController {
                     continueFlag = 1;
                     message = AppConstants.PAYMENT_INIT_MESSAGE;
                     System.out.printf("Perm session => ", savedSession.toString());
-                    try {
-                        Runnable paymentTask = () -> {
+                    Runnable paymentTask = () -> {
+                        try {
                             Transaction t = mapper.mapTransactionFromSessionPerm(s);
                             System.out.println(t.toString());
                             ResponseEntity<String> response = handler.client()
@@ -1749,17 +1749,22 @@ public class UssdController {
 
                             sessionRepository.deleteById(savedSession.getId());
                             System.out.println("Payment Thread running...");
-                        };
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    };
 
-                        Runnable sessionTask = () -> {
+                    Runnable sessionTask = () -> {
+                        try {
                             sessionRepository.deleteById(savedSession.getId());
                             System.out.println("Session Thread running...");
-                        };
-                        paymentThread.start(paymentTask).join();
-                        sessionThread.start(sessionTask);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    };
+                    paymentThread.start(paymentTask).join();
+                    sessionThread.start(sessionTask);
+
                 }
             } else if (savedSession.getPosition() == SEVEN) {
                 if (savedSession.getData().equals("1")) {
@@ -1844,8 +1849,8 @@ public class UssdController {
             } else if (savedSession.getPosition() == 9) {
                 if (savedSession.getData().equals("1")) {
                     message = AppConstants.PAYMENT_INIT_MESSAGE;
-                    try {
-                        Runnable paymentTask = () -> {
+                    Runnable paymentTask = () -> {
+                        try {
                             Transaction t = mapper.mapTransactionFromSession(s, gameDraw, false);
                             System.out.println(t.toString());
                             ResponseEntity<String> response = handler.client()
@@ -1859,21 +1864,22 @@ public class UssdController {
 
                             sessionRepository.deleteById(savedSession.getId());
                             System.out.println("Payment Thread running...");
-                        };
-                        Runnable sessionTask = () -> {
-                            sessionRepository.deleteById(savedSession.getId());
-                            System.out.println("Session Thread running...");
-                        };
-                        paymentThread.start(paymentTask).join();
-                        sessionThread.start(sessionTask);
-                        continueFlag = 1;
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    };
+                    Runnable sessionTask = () -> {
+                        sessionRepository.deleteById(savedSession.getId());
+                        System.out.println("Session Thread running...");
+                    };
+                    paymentThread.start(paymentTask).join();
+                    sessionThread.start(sessionTask);
+                    continueFlag = 1;
                 } else if (savedSession.getData().equals("2")) {
                     message = AppConstants.PAYMENT_INIT_MESSAGE_WALLET;
-                    try {
-                        Runnable paymentTask = () -> {
+
+                    Runnable paymentTask = () -> {
+                        try {
                             Transaction t = mapper.mapTransactionFromSession(s, gameDraw, true);
                             System.out.println(t.toString());
                             ResponseEntity<String> response = handler.client()
@@ -1887,17 +1893,22 @@ public class UssdController {
 
                             sessionRepository.deleteById(savedSession.getId());
                             System.out.println("Payment Thread running...");
-                        };
-                        Runnable sessionTask = () -> {
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    };
+                    Runnable sessionTask = () -> {
+                        try {
                             sessionRepository.deleteById(savedSession.getId());
                             System.out.println("Session Thread running...");
-                        };
-                        paymentThread.start(paymentTask).join();
-                        sessionThread.start(sessionTask);
-                        continueFlag = 1;
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    };
+                    paymentThread.start(paymentTask).join();
+                    sessionThread.start(sessionTask);
+                    continueFlag = 1;
+
                 }
             } else {
                 try {
@@ -1905,23 +1916,31 @@ public class UssdController {
                     updateSession(s, true);
                     message = AppConstants.PAYMENT_INIT_MESSAGE;
                     Runnable paymentTask = () -> {
-                        Transaction t = mapper.mapTransactionFromSession(savedSession, gameDraw, false);
-                        System.out.println(t.toString());
-                        ResponseEntity<String> response = handler.client()
-                                .post()
-                                .uri("/api/V1/place-bet")
-                                .body(t)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .retrieve()
-                                .toEntity(String.class);
-                        System.out.println(response.getBody());
+                        try {
+                            Transaction t = mapper.mapTransactionFromSession(savedSession, gameDraw, false);
+                            System.out.println(t.toString());
+                            ResponseEntity<String> response = handler.client()
+                                    .post()
+                                    .uri("/api/V1/place-bet")
+                                    .body(t)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .retrieve()
+                                    .toEntity(String.class);
+                            System.out.println(response.getBody());
 
-                        sessionRepository.deleteById(savedSession.getId());
-                        System.out.println("Payment Thread running...");
+                            sessionRepository.deleteById(savedSession.getId());
+                            System.out.println("Payment Thread running...");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     };
                     Runnable sessionTask = () -> {
-                        sessionRepository.deleteById(savedSession.getId());
-                        System.out.println("Session Thread running...");
+                        try {
+                            sessionRepository.deleteById(savedSession.getId());
+                            System.out.println("Session Thread running...");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     };
                     paymentThread.start(paymentTask).join();
                     sessionThread.start(sessionTask);
