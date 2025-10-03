@@ -774,8 +774,9 @@ public class UssdController {
                     updateSession(savedSession, false);
                     continueFlag = 1;
                     message = AppConstants.PAYMENT_INIT_MESSAGE;
-                    try {
-                        Runnable paymentTask = () -> {
+
+                    Runnable paymentTask = () -> {
+                        try {
                             Transaction t = mapper.mapTransactionFromSessionBanker(savedSession, false);
                             System.out.println(t.toString());
                             ResponseEntity<String> response = handler.client()
@@ -787,22 +788,27 @@ public class UssdController {
                                     .toEntity(String.class);
                             System.out.println(response.getBody());
                             System.out.println("--- Running Payment ---");
-                        };
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    };
+                    try {
                         Runnable sessionTask = () -> {
                             sessionRepository.deleteById(savedSession.getId());
                             System.out.println("--- Deleting Session ---");
                         };
                         paymentThread.start(paymentTask).join();
                         sessionThread.start(sessionTask);
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
                     }
+
                 } else if (savedSession.getData().equals("2")) {
                     updateSession(savedSession, false);
                     continueFlag = 1;
                     message = AppConstants.PAYMENT_INIT_MESSAGE_WALLET;
-                    try {
-                        Runnable paymentTask = () -> {
+                    Runnable paymentTask = () -> {
+                        try {
                             Transaction t = mapper.mapTransactionFromSessionBanker(savedSession, true);
                             System.out.println(t.toString());
                             ResponseEntity<String> response = handler.client()
@@ -814,16 +820,21 @@ public class UssdController {
                                     .toEntity(String.class);
                             System.out.println(response.getBody());
                             System.out.println("--- Running Payment ---");
-                        };
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    };
+                    try {
                         Runnable sessionTask = () -> {
                             sessionRepository.deleteById(savedSession.getId());
                             System.out.println("--- Deleting Session ---");
                         };
                         paymentThread.start(paymentTask).join();
                         sessionThread.start(sessionTask);
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
                     }
+
                 }
             } else {
                 String choice = s.getData();
@@ -840,30 +851,7 @@ public class UssdController {
                         continueFlag = 1;
                         message = AppConstants.PAYMENT_INIT_MESSAGE;
                         Runnable paymentTask = () -> {
-                            Transaction t = mapper.mapTransactionFromSessionBanker(savedSession, false);
-                            System.out.println(t.toString());
-                            ResponseEntity<String> response = handler.client()
-                                    .post()
-                                    .uri("/api/V1/place-bet")
-                                    .body(t)
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .retrieve()
-                                    .toEntity(String.class);
-                            System.out.println(response.getBody());
-                            System.out.println("--- Running Payment ---");
-                        };
-                        Runnable sessionTask = () -> {
-                            sessionRepository.deleteById(savedSession.getId());
-                            System.out.println("--- Deleting Session ---");
-                        };
-                        paymentThread.start(paymentTask).join();
-                        sessionThread.start(sessionTask);
-                    } else if (savedSession.getData().equals("2") && savedSession.getPosition() == 6) {
-                        updateSession(savedSession, false);
-                        continueFlag = 1;
-                        message = AppConstants.PAYMENT_INIT_MESSAGE_WALLET;
-                        try {
-                            Runnable paymentTask = () -> {
+                            try {
                                 Transaction t = mapper.mapTransactionFromSessionBanker(savedSession, false);
                                 System.out.println(t.toString());
                                 ResponseEntity<String> response = handler.client()
@@ -875,7 +863,42 @@ public class UssdController {
                                         .toEntity(String.class);
                                 System.out.println(response.getBody());
                                 System.out.println("--- Running Payment ---");
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        };
+                        try {
+                            Runnable sessionTask = () -> {
+                                sessionRepository.deleteById(savedSession.getId());
+                                System.out.println("--- Deleting Session ---");
                             };
+                            paymentThread.start(paymentTask).join();
+                            sessionThread.start(sessionTask);
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                    } else if (savedSession.getData().equals("2") && savedSession.getPosition() == 6) {
+                        updateSession(savedSession, false);
+                        continueFlag = 1;
+                        message = AppConstants.PAYMENT_INIT_MESSAGE_WALLET;
+                        Runnable paymentTask = () -> {
+                            try {
+                                Transaction t = mapper.mapTransactionFromSessionBanker(savedSession, false);
+                                System.out.println(t.toString());
+                                ResponseEntity<String> response = handler.client()
+                                        .post()
+                                        .uri("/api/V1/place-bet")
+                                        .body(t)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .retrieve()
+                                        .toEntity(String.class);
+                                System.out.println(response.getBody());
+                                System.out.println("--- Running Payment ---");
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        };
+                        try {
                             Runnable sessionTask = () -> {
                                 sessionRepository.deleteById(savedSession.getId());
                                 System.out.println("--- Deleting Session ---");
@@ -898,8 +921,9 @@ public class UssdController {
                     updateSession(savedSession, false);
                     continueFlag = 1;
                     message = AppConstants.PAYMENT_INIT_MESSAGE;
-                    try {
-                        Runnable paymentTask = () -> {
+
+                    Runnable paymentTask = () -> {
+                        try {
                             Transaction t = mapper.mapTransactionFromSessionBanker(savedSession, false);
                             System.out.println(t.toString());
                             ResponseEntity<String> response = handler.client()
@@ -911,7 +935,11 @@ public class UssdController {
                                     .toEntity(String.class);
                             System.out.println(response.getBody());
                             System.out.println("--- Running Payment ---");
-                        };
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    };
+                    try {
                         Runnable sessionTask = () -> {
                             sessionRepository.deleteById(savedSession.getId());
                             System.out.println("--- Deleting Session ---");
