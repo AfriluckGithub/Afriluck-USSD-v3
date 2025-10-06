@@ -432,23 +432,27 @@ public class UssdController {
                         if (savedSession.getGameType().equals(1)) {
                             message = "Ticket of 5 GHS purchased with free promo.";
                             Runnable paymentTask = () -> {
-                                Transaction t = mapper.mapPromo(
-                                        savedSession.msisdn,
-                                        "mega",
-                                        savedSession.getSelectedNumbers(),
-                                        "ussd",
-                                        savedSession.getNetwork());
-                                System.out.println(t.toString());
-                                ResponseEntity<String> response = handler.client()
-                                        .post()
-                                        .uri("/api/V1/promo")
-                                        .body(t)
-                                        .contentType(MediaType.APPLICATION_JSON)
-                                        .retrieve()
-                                        .toEntity(String.class);
-                                responseBody.set(response.getBody());
-                                System.out.println(response.getBody());
-                                System.out.println("--- Running Payment ---");
+                                try {
+                                    Transaction t = mapper.mapPromo(
+                                            savedSession.msisdn,
+                                            "mega",
+                                            savedSession.getSelectedNumbers(),
+                                            "ussd",
+                                            savedSession.getNetwork());
+                                    System.out.println(t.toString());
+                                    ResponseEntity<String> response = handler.client()
+                                            .post()
+                                            .uri("/api/V1/promo")
+                                            .body(t)
+                                            .contentType(MediaType.APPLICATION_JSON)
+                                            .retrieve()
+                                            .toEntity(String.class);
+                                    responseBody.set(response.getBody());
+                                    System.out.println(response.getBody());
+                                    System.out.println("--- Running Payment ---");
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
                             };
                             Runnable sessionTask = () -> {
                                 sessionRepository.deleteById(savedSession.getId());
@@ -464,24 +468,28 @@ public class UssdController {
                         } else {
                             //message = "Ticket of 1 GHS purchased with free promo";
                             Runnable paymentTask = () -> {
-                                Transaction t = mapper.mapPromo(
-                                        savedSession.msisdn,
-                                        "direct",
-                                        savedSession.getSelectedNumbers(),
-                                        "ussd",
-                                        savedSession.getNetwork());
-                                System.out.println(t.toString());
-                                ResponseEntity<String> response = handler.client()
-                                        .post()
-                                        .uri("/api/V1/promo")
-                                        .body(t)
-                                        .contentType(MediaType.APPLICATION_JSON)
-                                        .retrieve()
-                                        .toEntity(String.class);
+                                try {
+                                    Transaction t = mapper.mapPromo(
+                                            savedSession.msisdn,
+                                            "direct",
+                                            savedSession.getSelectedNumbers(),
+                                            "ussd",
+                                            savedSession.getNetwork());
+                                    System.out.println(t.toString());
+                                    ResponseEntity<String> response = handler.client()
+                                            .post()
+                                            .uri("/api/V1/promo")
+                                            .body(t)
+                                            .contentType(MediaType.APPLICATION_JSON)
+                                            .retrieve()
+                                            .toEntity(String.class);
 
-                                responseBody.set(response.getBody());
-                                System.out.println(response.getBody());
-                                System.out.println("--- Running Payment ---");
+                                    responseBody.set(response.getBody());
+                                    System.out.println(response.getBody());
+                                    System.out.println("--- Running Payment ---");
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
                             };
                             Runnable sessionTask = () -> {
                                 sessionRepository.deleteById(savedSession.getId());
@@ -1565,17 +1573,21 @@ public class UssdController {
                 updateSession(s, true);
                 message = AppConstants.PAYMENT_INIT_MESSAGE;
                 Runnable paymentTask = () -> {
-                    Transaction t = mapper.mapTransactionFromSession(savedSession, gameDraw, false);
-                    System.out.println(t.toString());
-                    ResponseEntity<String> response = handler.client()
-                            .post()
-                            .uri("/api/V1/place-bet")
-                            .body(t)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .retrieve()
-                            .toEntity(String.class);
-                    System.out.println(response.getBody());
-                    System.out.println("Payment Thread running...");
+                    try {
+                        Transaction t = mapper.mapTransactionFromSession(savedSession, gameDraw, false);
+                        System.out.println(t.toString());
+                        ResponseEntity<String> response = handler.client()
+                                .post()
+                                .uri("/api/V1/place-bet")
+                                .body(t)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .retrieve()
+                                .toEntity(String.class);
+                        System.out.println(response.getBody());
+                        System.out.println("Payment Thread running...");
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 };
 
                 Runnable sessionTask = () -> {
