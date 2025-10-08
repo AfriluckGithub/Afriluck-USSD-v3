@@ -97,7 +97,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
-      - "8002:8000"
+      - "8002"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/afriluck-v2
       - SPRING_DATASOURCE_USERNAME=postgres
