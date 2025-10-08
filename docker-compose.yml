@@ -1,33 +1,6 @@
 #version: '3.9'
 
 services:
-
-#  db:
-#    image: postgres:13
-#    container_name: db
-#    environment:
-#      - POSTGRES_DB=afriluck-v2
-#      - POSTGRES_USER=postgres
-#      - POSTGRES_PASSWORD=root
-#      - PGDATA=/var/lib/postgresql/data/pgdata
-#    ports:
-#      - "5431:5432"
-#    networks:
-#      - app-network
-#    volumes:
-#      #- ./init.sql:/docker-entrypoint-initdb.d/init.sql
-#      - pgdata:/var/lib/postgresql/data
-#    deploy:
-#      update_config:
-#        parallelism: 1
-#        delay: 10s
-#      resources:
-#        limits:
-#          cpus: '3'
-#          memory: 5g
-#        reservations:
-#          memory: 3g
-#    restart: unless-stopped
   db:
     image: postgres:13
     container_name: db
@@ -76,7 +49,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
-      - "8000"
+      - "8000:8000"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/afriluck-v2
       - SPRING_DATASOURCE_USERNAME=postgres
@@ -97,7 +70,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
-      - "8002"
+      - "8002:8000"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/afriluck-v2
       - SPRING_DATASOURCE_USERNAME=postgres
@@ -109,34 +82,6 @@ services:
         condition: none
     networks:
       - app-network
-#
-#
-#  app2:
-#    #image: stevesmart1113/afriluck:latest
-#    #restart: always
-#    build:
-#      context: .
-#      dockerfile: Dockerfile
-#    extra_hosts:
-#      - "host.docker.internal:host-gateway"
-#    ports:
-#      - "8003:8000"
-#    environment:
-#      #      - POSTGRES_USER=postgres
-#      #      - POSTGRES_PASSWORD=root
-#      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/afriluck-v2
-#      - SPRING_DATASOURCE_USERNAME=postgres
-#      - SPRING_DATASOURCE_PASSWORD=root
-#      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-#      #- JAVA_OPTS=-Xms2g -Xmx2g
-#      - JAVA_OPTS=-Xms2g -Xmx2g
-#    #depends_on:
-#    #  - db
-#    deploy:
-#      restart_policy:
-#        condition: none
-#    networks:
-#      - app-network
 
   nginx-load-balancer:
     build: nginx
@@ -148,11 +93,6 @@ services:
     depends_on:
       - app
       - app1
-      #- app2
-#    links:
-#      - app
-#      - app1
-#      - app2
 
 networks:
   app-network:
