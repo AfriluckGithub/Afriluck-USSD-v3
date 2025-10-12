@@ -1812,8 +1812,8 @@ public class UssdController {
                     savedSession.setCurrentGame("direct");
                     updateSession(s, true);
                     message = AppConstants.PAYMENT_INIT_MESSAGE;
-                    try {
-                        Runnable paymentTask = () -> {
+                    Runnable paymentTask = () -> {
+                        try {
                             Transaction t = mapper.mapTransactionFromSession(savedSession, gameDraw, false);
                             System.out.println(t.toString());
                             ResponseEntity<String> response = handler.client()
@@ -1827,17 +1827,17 @@ public class UssdController {
 
                             sessionRepository.deleteById(savedSession.getId());
                             System.out.println("Payment Thread running...");
-                        };
-                        Runnable sessionTask = () -> {
-                            sessionRepository.deleteById(savedSession.getId());
-                            System.out.println("Session Thread running...");
-                        };
-                        paymentThread.start(paymentTask).join();
-                        sessionThread.start(sessionTask);
-                        continueFlag = 1;
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    };
+                    Runnable sessionTask = () -> {
+                        sessionRepository.deleteById(savedSession.getId());
+                        System.out.println("Session Thread running...");
+                    };
+                    paymentThread.start(paymentTask).join();
+                    sessionThread.start(sessionTask);
+                    continueFlag = 1;
                 } else if (savedSession.getData().equals("2")) {
                     // Payment from Wallet
                     savedSession.setCurrentGame("direct");
