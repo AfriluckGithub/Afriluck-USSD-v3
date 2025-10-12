@@ -1951,43 +1951,39 @@ public class UssdController {
 
                 }
             } else {
-                try {
-                    savedSession.setCurrentGame("direct");
-                    updateSession(s, true);
-                    message = AppConstants.PAYMENT_INIT_MESSAGE;
-                    Runnable paymentTask = () -> {
-                        try {
-                            Transaction t = mapper.mapTransactionFromSession(savedSession, gameDraw, false);
-                            System.out.println(t.toString());
-                            ResponseEntity<String> response = handler.client()
-                                    .post()
-                                    .uri("/api/V1/place-bet")
-                                    .body(t)
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .retrieve()
-                                    .toEntity(String.class);
-                            System.out.println(response.getBody());
+                savedSession.setCurrentGame("direct");
+                updateSession(s, true);
+                message = AppConstants.PAYMENT_INIT_MESSAGE;
+                Runnable paymentTask = () -> {
+                    try {
+                        Transaction t = mapper.mapTransactionFromSession(savedSession, gameDraw, false);
+                        System.out.println(t.toString());
+                        ResponseEntity<String> response = handler.client()
+                                .post()
+                                .uri("/api/V1/place-bet")
+                                .body(t)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .retrieve()
+                                .toEntity(String.class);
+                        System.out.println(response.getBody());
 
-                            sessionRepository.deleteById(savedSession.getId());
-                            System.out.println("Payment Thread running...");
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    };
-                    Runnable sessionTask = () -> {
-                        try {
-                            sessionRepository.deleteById(savedSession.getId());
-                            System.out.println("Session Thread running...");
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    };
-                    paymentThread.start(paymentTask).join();
-                    sessionThread.start(sessionTask);
-                    continueFlag = 1;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                        sessionRepository.deleteById(savedSession.getId());
+                        System.out.println("Payment Thread running...");
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                };
+                Runnable sessionTask = () -> {
+                    try {
+                        sessionRepository.deleteById(savedSession.getId());
+                        System.out.println("Session Thread running...");
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                };
+                paymentThread.start(paymentTask).join();
+                sessionThread.start(sessionTask);
+                continueFlag = 1;
             }
         } else {
             deleteSession(savedSession);
