@@ -5,9 +5,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonObject;
 import org.gh.afriluck.afriluckussd.constants.AppConstants;
+import org.gh.afriluck.afriluckussd.data.PaymentResultHolder;
 import org.gh.afriluck.afriluckussd.dto.*;
 import org.gh.afriluck.afriluckussd.entities.Game;
-import org.gh.afriluck.afriluckussd.entities.SessionRequest;
 import org.gh.afriluck.afriluckussd.mapping.TransactionMapper;
 import org.gh.afriluck.afriluckussd.repositories.CustomerSessionRepository;
 import org.gh.afriluck.afriluckussd.entities.Session;
@@ -18,6 +18,8 @@ import org.gh.afriluck.afriluckussd.utils.AfriluckCallHandler;
 import org.gh.afriluck.afriluckussd.utils.ResponseMenu;
 import org.gh.afriluck.afriluckussd.utils.ValidationUtils;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
@@ -55,6 +57,7 @@ public class UssdController {
     Thread.Builder paymentThread = Thread.ofVirtual().name("Payment Thread");
     Thread.Builder sessionThread = Thread.ofVirtual().name("Session Thread");
     AtomicReference<String> responseBody = new AtomicReference<>();
+    private static final Logger logger = LoggerFactory.getLogger(UssdController.class);
 
     /**
      * @param sessionRepository
@@ -101,8 +104,7 @@ public class UssdController {
                             session.data,
                             session.getSequenceID(),
                             session.message,
-                            LocalDateTime.now()
-                    );
+                            LocalDateTime.now());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -120,12 +122,12 @@ public class UssdController {
                 }
             }
 
-            if (
-                    ValidationUtils.isBetweenGameTime()
-                //true
+            if (ValidationUtils.isBetweenGameTime()
+            // true
             ) {
                 message = menuResponse(session, 1, AppConstants.GAME_CLOSED_MESSAGE);
-                //message = menuResponse(session, 1, "Game closed for now. Please try again on Friday at 7:45 PM");
+                // message = menuResponse(session, 1, "Game closed for now. Please try again on
+                // Friday at 7:45 PM");
             } else {
                 Session s = sessionRepository.findBySequenceID(session.getSequenceID());
                 if (s.isReset()) {
@@ -136,18 +138,17 @@ public class UssdController {
                 if (s.getNextStep() == ZERO) {
                     s.setNextStep(FIRST);
                     String dayOfWeekInWords = getDayOfWeekInWords();
-                    //String dayOfWeekInWords = "Thursday";
+                    // String dayOfWeekInWords = "Thursday";
                     updateSession(s, false);
-
 
                     boolean isEveningGameTime = ValidationUtils.isEveningGameTime();
                     boolean isAfternoonGameTime = ValidationUtils.isAfternoonGameTime();
                     boolean isCurrentGame = ValidationUtils.currentGamePeriod();
                     boolean isCurrentGameTime = ValidationUtils.isCurrentGameTime();
-                    //boolean isEveningGameTime = true;
-                    //boolean isAfternoonGameTime = true;
-                    //boolean isCurrentGame = ValidationUtils.currentGamePeriod();
-                    //boolean isCurrentGameTime = ValidationUtils.isCurrentGameTime();
+                    // boolean isEveningGameTime = true;
+                    // boolean isAfternoonGameTime = true;
+                    // boolean isCurrentGame = ValidationUtils.currentGamePeriod();
+                    // boolean isCurrentGameTime = ValidationUtils.isCurrentGameTime();
                     boolean isSunday = dayOfWeekInWords.equals("Sunday") && isCurrentGame;
                     boolean isSaturdayNight = dayOfWeekInWords.equals("Sunday") && isCurrentGameTime;
 
@@ -167,9 +168,11 @@ public class UssdController {
                     }
 
                     if (isEveningGameTime) {
-                        messageTemplate = isSunday || isSaturdayNight ? AppConstants.WELCOME_MENU_MESSAGE_NEW : AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING;
+                        messageTemplate = isSunday || isSaturdayNight ? AppConstants.WELCOME_MENU_MESSAGE_NEW
+                                : AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING;
                     } else if (isAfternoonGameTime) {
-                        messageTemplate = isSunday || isSaturdayNight ? AppConstants.WELCOME_MENU_MESSAGE_NEW : AppConstants.WELCOME_MENU_MESSAGE_NEW_AFTERNOON;
+                        messageTemplate = isSunday || isSaturdayNight ? AppConstants.WELCOME_MENU_MESSAGE_NEW
+                                : AppConstants.WELCOME_MENU_MESSAGE_NEW_AFTERNOON;
                     } else {
                         messageTemplate = AppConstants.WELCOME_MENU_MESSAGE_NEW;
                     }
@@ -177,8 +180,7 @@ public class UssdController {
                     message = menuResponse(
                             session,
                             0,
-                            String.format(messageTemplate, dayOfWeekInWords, gameTimeHour, gameTimeMinutes)
-                    );
+                            String.format(messageTemplate, dayOfWeekInWords, gameTimeHour, gameTimeMinutes));
                 } else if (s.getNextStep() == FIRST) {
                     String dayOfWeekInWords = getDayOfWeekInWords();
                     boolean isEvening = ValidationUtils.isEveningGameTime();
@@ -324,11 +326,10 @@ public class UssdController {
         int menu = 0;
         String message = "";
         int continueFlag = 0;
-        //PaymentResultHolder holder = new PaymentResultHolder();
+        PaymentResultHolder holder = new PaymentResultHolder();
         SimpleDateFormat formatter = new SimpleDateFormat(AppConstants.GLOBAL_DATE_FORMAT);
         String timeStamp = formatter.format(new Date());
         AtomicReference<String> responseBody = new AtomicReference<>();
-        ResponseEntity<String> resp = null;
 
         session.setTimeStamp(timeStamp);
         Session savedSession = sessionRepository.findBySequenceID(session.getSequenceID());
@@ -336,17 +337,17 @@ public class UssdController {
             session.setPosition(0);
 
             try {
-                SessionLoggerService loggerService = new SessionLoggerService();
-                loggerService.logSession(
-                        session.msisdn,
-                        session.network,
-                        session.data,
-                        session.getSequenceID(),
-                        session.message,
-                        LocalDateTime.now()
-                );
+            SessionLoggerService loggerService = new SessionLoggerService();
+            loggerService.logSession(
+            session.msisdn,
+            session.network,
+            session.data,
+            session.getSequenceID(),
+            session.message,
+            LocalDateTime.now()
+            );
             } catch (Exception e) {
-                e.printStackTrace();
+            e.printStackTrace();
             }
 
             sessionRepository.save(session);
@@ -354,8 +355,9 @@ public class UssdController {
             EligibilityResponse eligibilityResponse = checkUserEligibility(session);
 
             if (!eligibilityResponse.isCan_participate()) {
-                continueFlag = 1;
-                return ResponseMenu.menuResponse(session, continueFlag, eligibilityResponse.getMessage());
+            continueFlag = 1;
+            return ResponseMenu.menuResponse(session, continueFlag,
+            eligibilityResponse.getMessage());
             }
 
             if (ValidationUtils.isBetweenGameTime()) {
@@ -384,7 +386,9 @@ public class UssdController {
                     savedSession.setData(session.getData());
                     savedSession.setPosition(2);
                     updateSession(session, false);
-                    boolean containsLetters = savedSession.getPosition() != 8 ? ValidationUtils.containsAnyLetters(session.getData()) : false;
+                    boolean containsLetters = savedSession.getPosition() != 8
+                            ? ValidationUtils.containsAnyLetters(session.getData())
+                            : false;
                     String input = ValidationUtils.removeSpecialCharacters(session.getData());
                     List<Integer> numbers = ValidationUtils.extractNumbers(input);
                     Set<Integer> repeatedNumbers = ValidationUtils.findRepeatedNumbers(numbers);
@@ -394,28 +398,36 @@ public class UssdController {
                         e.printStackTrace();
                     }
 
-                    System.out.println(repeatedNumbers);
+                    logger.debug("Repeated numbers => {} ", repeatedNumbers);
                     String[] selectedNumbers = ValidationUtils.splitNumbers(input);
                     int len = selectedNumbers.length;
                     boolean containsZero = ValidationUtils.containsSingularZero(input);
                     boolean repeated = !repeatedNumbers.isEmpty();
                     if (!containsLetters) {
                         if (!repeated) {
-                            if (savedSession.getGameType().equals(1) ? len == AppConstants.MAX_MEGA : len == AppConstants.SECOND && !exceeds && !containsZero) {
+                            if (savedSession.getGameType().equals(1) ? len == AppConstants.MAX_MEGA
+                                    : len == AppConstants.SECOND && !exceeds && !containsZero) {
                                 if (savedSession.getGameType().equals(1)) {
-                                    message = String.format("Tck info:\n---\nLucky 70 million Mega GHS 5\nYour Numbers: %s\n1) Proceed\n0) Cancel", session.getData());
+                                    message = String.format(
+                                            "Tck info:\n---\nLucky 70 million Mega GHS 5\nYour Numbers: %s\n1) Proceed\n0) Cancel",
+                                            session.getData());
                                 } else {
-                                    message = String.format("Tck info:\n---\nDirect 1 GHS 1\nYour Numbers: %s\n1) Proceed\n0) Cancel", session.getData());
+                                    message = String.format(
+                                            "Tck info:\n---\nDirect 1 GHS 1\nYour Numbers: %s\n1) Proceed\n0) Cancel",
+                                            session.getData());
                                 }
                                 savedSession.setSelectedNumbers(session.getData());
                                 updateSession(session, false);
                             } else {
                                 deleteSession(savedSession);
-                                message = exceeds ? AppConstants.EXCEEDS_NUMBER_LIMIT_MESSAGE : savedSession.getGameType().equals(1) ? AppConstants.MEGA_VALIDATION_MESSAGE : "Numbers must be a total of 2 starting from 1 to 57.\\n 0) Back";
+                                message = exceeds ? AppConstants.EXCEEDS_NUMBER_LIMIT_MESSAGE
+                                        : savedSession.getGameType().equals(1) ? AppConstants.MEGA_VALIDATION_MESSAGE
+                                                : "Numbers must be a total of 2 starting from 1 to 57.\\n 0) Back";
                             }
                         } else {
                             int max = savedSession.getGameType().equals(1) ? 6 : 2;
-                            message = String.format("Numbers must be a total of %s starting from 1 to 57.\\n 0) Back", max);
+                            message = String.format("Numbers must be a total of %s starting from 1 to 57.\\n 0) Back",
+                                    max);
                         }
                     } else {
                         deleteSession(savedSession);
@@ -423,23 +435,22 @@ public class UssdController {
                     }
                     return ResponseMenu.menuResponse(session, continueFlag, message);
                 case 2:
+                    logger.debug("\n---  Gets here => {}---\n", savedSession.getGameType());
                     if (session.getData().equals("0")) {
                         message = "Ticket cancelled by user\n0) Back";
                         continueFlag = 1;
                     } else {
                         continueFlag = 1;
-                        ObjectMapper objectMapper = new ObjectMapper();
-                        if (savedSession.getGameType().equals(1)) {
-                            message = "Ticket of 5 GHS purchased with free promo.";
+                        if (savedSession.getGameType() == 1 || savedSession.getGameType() == 2) {
+                            Transaction t = mapper.mapPromo(
+                                    savedSession.getMsisdn(),
+                                    savedSession.getGameType() == 1 ? "mega" : "direct",
+                                    savedSession.getSelectedNumbers(),
+                                    "ussd",
+                                    savedSession.getNetwork());
+                            logger.debug("\nTransaction Params => {}\n", t.toString());
                             Runnable paymentTask = () -> {
                                 try {
-                                    Transaction t = mapper.mapPromo(
-                                            savedSession.msisdn,
-                                            "mega",
-                                            savedSession.getSelectedNumbers(),
-                                            "ussd",
-                                            savedSession.getNetwork());
-                                    System.out.println(t.toString());
                                     ResponseEntity<String> response = handler.client()
                                             .post()
                                             .uri("/api/V1/promo")
@@ -447,61 +458,22 @@ public class UssdController {
                                             .contentType(MediaType.APPLICATION_JSON)
                                             .retrieve()
                                             .toEntity(String.class);
-                                    responseBody.set(response.getBody());
-                                    System.out.println(response.getBody());
-                                    System.out.println("--- Running Payment ---");
+                                    logger.debug("Response => {}", response.getBody());
+                                    logger.debug("--- Running Payment ---");
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
                             };
                             Runnable sessionTask = () -> {
                                 sessionRepository.deleteById(savedSession.getId());
-                                System.out.println("--- Deleting Session ---");
+                                logger.debug("--- Deleting Session ---");
                             };
                             paymentThread.start(paymentTask).join();
                             sessionThread.start(sessionTask);
-                            String msg = responseBody.get();
-                            System.out.println("Received response: " + msg);
-                            JsonNode node = objectMapper.readTree(msg);
-                            String responseMessage = node.get("message").asText();
-                            return ResponseMenu.menuResponse(session, continueFlag, responseMessage);
-                        } else {
-                            //message = "Ticket of 1 GHS purchased with free promo";
-                            Runnable paymentTask = () -> {
-                                try {
-                                    Transaction t = mapper.mapPromo(
-                                            savedSession.msisdn,
-                                            "direct",
-                                            savedSession.getSelectedNumbers(),
-                                            "ussd",
-                                            savedSession.getNetwork());
-                                    System.out.println(t.toString());
-                                    ResponseEntity<String> response = handler.client()
-                                            .post()
-                                            .uri("/api/V1/promo")
-                                            .body(t)
-                                            .contentType(MediaType.APPLICATION_JSON)
-                                            .retrieve()
-                                            .toEntity(String.class);
+                            message = savedSession.getGameType() == 1 ? "Ticket of 5 GHS purchased with free promo."
+                                    : "Ticket of 1 GHS purchased with free promo";
+                            return ResponseMenu.menuResponse(session, continueFlag, message);
 
-                                    responseBody.set(response.getBody());
-                                    System.out.println(response.getBody());
-                                    System.out.println("--- Running Payment ---");
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-                            };
-                            Runnable sessionTask = () -> {
-                                sessionRepository.deleteById(savedSession.getId());
-                                System.out.println("--- Deleting Session ---");
-                            };
-                            paymentThread.start(paymentTask).join();
-                            sessionThread.start(sessionTask);
-                            String msg = responseBody.get();
-                            System.out.println("Received response: " + msg);
-                            JsonNode node = objectMapper.readTree(msg);
-                            String responseMessage = node.get("message").asText();
-                            return ResponseMenu.menuResponse(session, continueFlag, responseMessage);
                         }
                     }
                     return ResponseMenu.menuResponse(session, continueFlag, message);
@@ -509,7 +481,6 @@ public class UssdController {
                     return "Service Error";
             }
         }
-        //System.out.printf("Position => %s", session);
         return ResponseMenu.menuResponse(session, continueFlag, "Free Ticket Promo\n1. Mega\n2.Direct-2");
     }
 
@@ -532,8 +503,9 @@ public class UssdController {
                 updateSession(session, false);
                 System.out.printf("SESSION => %s", savedSession);
                 System.out.println("Making deposit call....");
-                CustomerDepositResponseDto depositResponse = customerDeposit(session.getMsisdn(), savedSession.getData(), session.getNetwork());
-                message = depositResponse.success;
+                CustomerDepositResponseDto depositResponse = customerDeposit(session.getMsisdn(),
+                        savedSession.getData(), session.getNetwork());
+                message = depositResponse.getSuccess();
                 System.out.println(message);
                 System.out.println("Deposit call done....");
                 continueFlag = 1;
@@ -563,9 +535,11 @@ public class UssdController {
         }
 
         if (isEveningGameTime) {
-            messageTemplate = isSunday ? AppConstants.WELCOME_MENU_MESSAGE_NEW : AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING;
+            messageTemplate = isSunday ? AppConstants.WELCOME_MENU_MESSAGE_NEW
+                    : AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING;
         } else if (isAfternoonGameTime) {
-            messageTemplate = isSunday ? AppConstants.WELCOME_MENU_MESSAGE_NEW : AppConstants.WELCOME_MENU_MESSAGE_NEW_AFTERNOON;
+            messageTemplate = isSunday ? AppConstants.WELCOME_MENU_MESSAGE_NEW
+                    : AppConstants.WELCOME_MENU_MESSAGE_NEW_AFTERNOON;
         } else {
             messageTemplate = AppConstants.WELCOME_MENU_MESSAGE_NEW;
         }
@@ -575,9 +549,10 @@ public class UssdController {
         savedSession.setMsisdn(session.getMsisdn());
         savedSession.setReset(false);
         savedSession.setBackPressed(true);
-        //savedSession.setMorning(session.isMorning());
+        // savedSession.setMorning(session.isMorning());
         updateSession(savedSession, false);
-        return menuResponse(session, 0, String.format(messageTemplate, dayOfWeekInWords, gameTimeHour, gameTimeMinutes));
+        return menuResponse(session, 0,
+                String.format(messageTemplate, dayOfWeekInWords, gameTimeHour, gameTimeMinutes));
     }
 
     private String anopaGameOptions(Session session) {
@@ -627,7 +602,14 @@ public class UssdController {
                 case "0":
                     deleteSession(savedSession);
                     continueFlag = 0;
-                    return menuResponse(savedSession, continueFlag, ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, getDayOfWeekInWords(), getDayOfWeekInWords().equals("Sunday") ? 5 : 7, getDayOfWeekInWords().equals("Sunday") ? "30" : "00") : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, getDayOfWeekInWords(), getDayOfWeekInWords().equals("Sunday") ? 5 : 7, getDayOfWeekInWords().equals("Sunday") ? "30" : "00"));
+                    return menuResponse(savedSession, continueFlag,
+                            ValidationUtils.isEveningGameTime()
+                                    ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING,
+                                            getDayOfWeekInWords(), getDayOfWeekInWords().equals("Sunday") ? 5 : 7,
+                                            getDayOfWeekInWords().equals("Sunday") ? "30" : "00")
+                                    : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, getDayOfWeekInWords(),
+                                            getDayOfWeekInWords().equals("Sunday") ? 5 : 7,
+                                            getDayOfWeekInWords().equals("Sunday") ? "30" : "00"));
                 case "1":
                     continueFlag = 1;
                     response = getDrawResults(savedSession);
@@ -675,7 +657,8 @@ public class UssdController {
             } else {
                 try {
                     CustomerBalanceDto balance = getCustomerBalance(savedSession.msisdn);
-                    message = String.format("Your current balance is %s GHS and your bonus amount is %s GHS", balance.balance, balance.bonus);
+                    message = String.format("Your current balance is %s GHS and your bonus amount is %s GHS",
+                            balance.balance, balance.bonus);
                     continueFlag = 1;
                 } catch (Exception e) {
                     String response = e.getMessage();
@@ -688,14 +671,15 @@ public class UssdController {
                             .replace("\":\"", "")
                             .replace(":", "")
                             .replace("\"\"", "");
-                    //JSONObject oj = new JSONObject(messageAfterColon);
+                    // JSONObject oj = new JSONObject(messageAfterColon);
                     message = messageAfterColon;
                     System.out.println(messageAfterColon);
 
                 }
             }
         } else if (savedSession.isSecondStep() && savedSession.getPosition() == FIFTH) {
-            CustomerDepositResponseDto depositResponse = customerDeposit(savedSession.getMsisdn(), savedSession.getData(), savedSession.getNetwork());
+            CustomerDepositResponseDto depositResponse = customerDeposit(savedSession.getMsisdn(),
+                    savedSession.getData(), savedSession.getNetwork());
             message = depositResponse.success;
             continueFlag = 1;
         }
@@ -707,14 +691,18 @@ public class UssdController {
         int continueFlag = 0;
         List<Game> currentGameDraw = null;
         Session savedSession = sessionRepository.findBySequenceID(s.getSequenceID());
-        //List<Game> currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameDraw().endsWith("A")).sorted(Comparator.comparing(Game::getGameName)).toList();
+        // List<Game> currentGameDraw = gameRepository.findAll().stream().filter(game ->
+        // game.getGameDraw().endsWith("A")).sorted(Comparator.comparing(Game::getGameName)).toList();
         try {
-            currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameTypeId() == 15).sorted(Comparator.comparing(Game::getGameName)).toList();
+            currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameTypeId() == 15)
+                    .sorted(Comparator.comparing(Game::getGameName)).toList();
         } catch (Exception e) {
             e.printStackTrace();
         }
-        //final Game gameDraw = s.isMorning() || s.isAfternoon() ? currentGameDraw.get(0) : currentGameDraw.get(1);
-        final Game gameDraw = savedSession.isMorning() ? currentGameDraw.get(0) : savedSession.isAfternoon() ? currentGameDraw.get(2) : currentGameDraw.get(1);
+        // final Game gameDraw = s.isMorning() || s.isAfternoon() ?
+        // currentGameDraw.get(0) : currentGameDraw.get(1);
+        final Game gameDraw = savedSession.isMorning() ? currentGameDraw.get(0)
+                : savedSession.isAfternoon() ? currentGameDraw.get(2) : currentGameDraw.get(1);
         savedSession.setGameId(gameDraw.getGameId());
         savedSession.setGameTypeId(gameDraw.getGameDraw());
         boolean containsLetters = s.getPosition() != 6 ? ValidationUtils.containsAnyLetters(s.getData()) : false;
@@ -947,16 +935,17 @@ public class UssdController {
                             e.printStackTrace();
                         }
                     };
-                    try {
-                        Runnable sessionTask = () -> {
+
+                    Runnable sessionTask = () -> {
+                        try {
                             sessionRepository.deleteById(savedSession.getId());
                             System.out.println("--- Deleting Session ---");
-                        };
-                        paymentThread.start(paymentTask).join();
-                        sessionThread.start(sessionTask);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    };
+                    paymentThread.start(paymentTask).join();
+                    sessionThread.start(sessionTask);
                 }
             }
         } else {
@@ -971,10 +960,10 @@ public class UssdController {
         try {
             savedSession.setData(session.getData());
 
-//            if (savedSession.getGameType() == 4 && savedSession.getPosition() == 2) {
-//                System.out.println("HAPPENING.........");
-//                session.setAmount(Double.valueOf(session.getData()));
-//            }
+            // if (savedSession.getGameType() == 4 && savedSession.getPosition() == 2) {
+            // System.out.println("HAPPENING.........");
+            // session.setAmount(Double.valueOf(session.getData()));
+            // }
 
             if (increment) {
                 savedSession.setPosition(savedSession.getPosition() + 1);
@@ -1003,7 +992,8 @@ public class UssdController {
         sessionRepository.delete(session);
     }
 
-    private String megaGameOptions(int gameType, int position, Session s) throws ExecutionException, InterruptedException {
+    private String megaGameOptions(int gameType, int position, Session s)
+            throws ExecutionException, InterruptedException {
         String message = null;
         Game gameDraw;
         int continueFlag = 0;
@@ -1013,7 +1003,8 @@ public class UssdController {
         savedSession.setCurrentGame(AppConstants.MEGA);
         updateSession(savedSession, false);
         System.out.println(savedSession.toString());
-        boolean containsLetters = savedSession.getPosition() != 8 ? ValidationUtils.containsAnyLetters(s.getData()) : false;
+        boolean containsLetters = savedSession.getPosition() != 8 ? ValidationUtils.containsAnyLetters(s.getData())
+                : false;
         if (!containsLetters) {
             if (savedSession.getGameType() == FIRST && savedSession.getPosition() == SECOND) {
                 message = AppConstants.MEGA_OPTIONS_CHOICE_MESSAGE;
@@ -1045,12 +1036,14 @@ public class UssdController {
                     s.setGameTypeCode(Integer.parseInt("1"));
                     updateSession(savedSession, true);
                 } else {
-                    message = exceeds ? AppConstants.EXCEEDS_NUMBER_LIMIT_MESSAGE : AppConstants.MEGA_VALIDATION_MESSAGE;
+                    message = exceeds ? AppConstants.EXCEEDS_NUMBER_LIMIT_MESSAGE
+                            : AppConstants.MEGA_VALIDATION_MESSAGE;
                     deleteSession(savedSession);
                 }
 
                 if (!repeatedNumbers.isEmpty()) {
-                    message = exceeds ? AppConstants.EXCEEDS_NUMBER_LIMIT_MESSAGE : AppConstants.MEGA_VALIDATION_MESSAGE;
+                    message = exceeds ? AppConstants.EXCEEDS_NUMBER_LIMIT_MESSAGE
+                            : AppConstants.MEGA_VALIDATION_MESSAGE;
                     deleteSession(savedSession);
                 }
             } else if (savedSession.getGameType() == FIRST && savedSession.getPosition() == FIFTH) {
@@ -1066,11 +1059,16 @@ public class UssdController {
                     message = "Amount should be between 1GHS and 20GHS \n 0 Back";
                 } else {
                     int finalAmount = amount;
-                    CompletableFuture<Game> matchAsync = CompletableFuture.supplyAsync(()
-                            -> gameRepository.findAll().stream().distinct().filter(game -> game.getAmount() == Double.parseDouble(String.valueOf(finalAmount))).findFirst().get());
+                    CompletableFuture<Game> matchAsync = CompletableFuture
+                            .supplyAsync(() -> gameRepository.findAll().stream().distinct()
+                                    .filter(game -> game.getAmount() == Double.parseDouble(String.valueOf(finalAmount)))
+                                    .findFirst().get());
                     gameDraw = matchAsync.get();
-                    //gameDraw = games.stream().filter(game -> game.getAmount() == Double.parseDouble(String.valueOf(finalAmount))).findFirst().get();
-                    //gameDraw = gameRepository.findAll().stream().distinct().filter(game -> game.getAmount() == Double.parseDouble(String.valueOf(finalAmount))).findFirst().get();
+                    // gameDraw = games.stream().filter(game -> game.getAmount() ==
+                    // Double.parseDouble(String.valueOf(finalAmount))).findFirst().get();
+                    // gameDraw = gameRepository.findAll().stream().distinct().filter(game ->
+                    // game.getAmount() ==
+                    // Double.parseDouble(String.valueOf(finalAmount))).findFirst().get();
                     String ticketInfo = """
                             Tck info:
                             --
@@ -1263,24 +1261,31 @@ public class UssdController {
         return menuResponse(savedSession, continueFlag, message);
     }
 
-    private String directGameOptions(int gameType, int position, Session s) throws ExecutionException, InterruptedException {
+    private String directGameOptions(int gameType, int position, Session s)
+            throws ExecutionException, InterruptedException {
         String message = null;
         int continueFlag = 0;
         Session savedSession = sessionRepository.findBySequenceID(s.getSequenceID());
         System.err.printf("\nDIRECT SESSION => %s\n", savedSession);
         System.err.printf("\nSESSION SESSION => %s\n", savedSession);
-        List<Game> currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameTypeId() == 15).sorted(Comparator.comparing(Game::getGameName)).toList();
-        //Game gameDraw = savedSession.isMorning() ? currentGameDraw.get(0) : currentGameDraw.get(1);
-        Game gameDraw = savedSession.isMorning() ? currentGameDraw.get(0) : savedSession.isAfternoon() ? currentGameDraw.get(2) : currentGameDraw.get(1);
+        List<Game> currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameTypeId() == 15)
+                .sorted(Comparator.comparing(Game::getGameName)).toList();
+        // Game gameDraw = savedSession.isMorning() ? currentGameDraw.get(0) :
+        // currentGameDraw.get(1);
+        Game gameDraw = savedSession.isMorning() ? currentGameDraw.get(0)
+                : savedSession.isAfternoon() ? currentGameDraw.get(2) : currentGameDraw.get(1);
         System.out.printf("\nGame List ---->", currentGameDraw.iterator().next());
         System.out.printf("\nGame Name ----> %s", gameDraw.getGameName());
         savedSession.setGameId(gameDraw.getGameId());
         savedSession.setGameTypeId(gameDraw.getGameDraw());
         savedSession.setBetTypeCode(AppConstants.DIRECT);
         AtomicInteger index = new AtomicInteger(1);
-        List<String> directGames = savedSession.isMorning() || savedSession.isAfternoon() ? AppConstants.DIRECT_GAMES_MORNING : AppConstants.DIRECT_GAMES;
+        List<String> directGames = savedSession.isMorning() || savedSession.isAfternoon()
+                ? AppConstants.DIRECT_GAMES_MORNING
+                : AppConstants.DIRECT_GAMES;
         updateSession(savedSession, false);
-        boolean containsLetters = savedSession.getPosition() != 7 ? ValidationUtils.containsAnyLetters(s.getData()) : false;
+        boolean containsLetters = savedSession.getPosition() != 7 ? ValidationUtils.containsAnyLetters(s.getData())
+                : false;
         if (!containsLetters) {
             if (savedSession.getGameType() == SECOND && savedSession.getPosition() == SECOND) {
                 StringBuilder builder = new StringBuilder();
@@ -1295,7 +1300,8 @@ public class UssdController {
                 message = builder.toString();
             } else if (savedSession.getGameType() == SECOND && savedSession.getPosition() == THIRD) {
                 try {
-                    String currentGame = directGames.get(ValidationUtils.parseNumber(s.getData()).intValue() - 1).toString();
+                    String currentGame = directGames.get(ValidationUtils.parseNumber(s.getData()).intValue() - 1)
+                            .toString();
                     int currentMax = ValidationUtils.parseNumber(s.getData()).intValue();
                     savedSession.setMax(currentMax);
                     message = """
@@ -1304,7 +1310,7 @@ public class UssdController {
                             99. More info
                             """;
                     message = String.format(message, currentGame);
-                    //s.setGameType(Integer.parseInt(s.getData()));
+                    // s.setGameType(Integer.parseInt(s.getData()));
                     s.setGameTypeCode(Integer.parseInt(s.getData()));
                     s.setCurrentGame(currentGame);
                     updateSession(s, false);
@@ -1322,8 +1328,8 @@ public class UssdController {
                 List<Integer> numbers = ValidationUtils.extractNumbers(input);
                 Set<Integer> repeatedNumbers = ValidationUtils.findRepeatedNumbers(numbers);
 
-
-                if (savedSession.getMax() < len || savedSession.getMax() > len || exceeds || containsZero || !repeatedNumbers.isEmpty()) {
+                if (savedSession.getMax() < len || savedSession.getMax() > len || exceeds || containsZero
+                        || !repeatedNumbers.isEmpty()) {
                     message = exceeds ? AppConstants.EXCEEDS_NUMBER_LIMIT_MESSAGE : AppConstants.INVALID_TRAN_MESSAGE;
                     if (!repeatedNumbers.isEmpty()) {
                         message = "Duplicate numbers entered\n 0) Back";
@@ -1348,7 +1354,8 @@ public class UssdController {
                 Number amount = ValidationUtils.parseNumber(s.getData());
                 boolean isDecimal = ValidationUtils.isDecimal(amount.doubleValue());
                 if (!isDecimal) {
-                    if (savedSession.getGameTypeCode().equals(1) || savedSession.getGameTypeCode().equals(2) || savedSession.getGameTypeCode().equals(3)) {
+                    if (savedSession.getGameTypeCode().equals(1) || savedSession.getGameTypeCode().equals(2)
+                            || savedSession.getGameTypeCode().equals(3)) {
                         if (amount.intValue() > 100 || amount.intValue() < 2) {
                             deleteSession(savedSession);
                             message = "Amount should be between 2GHS and 100GHS \n 0 Back";
@@ -1366,8 +1373,9 @@ public class UssdController {
                                     0) to cancel.
                                     \s""";
                             s.setAmount(Double.parseDouble(s.getData()));
-                            //s.setCurrentGame(directGameName);
-                            message = String.format(ticketInfo, gameDraw.getGameName(), s.getSelectedNumbers(), s.getAmount());
+                            // s.setCurrentGame(directGameName);
+                            message = String.format(ticketInfo, gameDraw.getGameName(), s.getSelectedNumbers(),
+                                    s.getAmount());
                             updateSession(s, false);
                         }
                     } else {
@@ -1388,8 +1396,9 @@ public class UssdController {
                                     0) to cancel.
                                     \s""";
                             s.setAmount(Double.parseDouble(s.getData()));
-                            //s.setCurrentGame(directGameName);
-                            message = String.format(ticketInfo, gameDraw.getGameName(), s.getSelectedNumbers(), s.getAmount());
+                            // s.setCurrentGame(directGameName);
+                            message = String.format(ticketInfo, gameDraw.getGameName(), s.getSelectedNumbers(),
+                                    s.getAmount());
                             updateSession(s, false);
                         }
                     }
@@ -1491,8 +1500,12 @@ public class UssdController {
                         }
                     };
                     Runnable sessionTask = () -> {
-                        sessionRepository.deleteById(savedSession.getId());
-                        System.out.println("Session Thread running...");
+                        try {
+                            sessionRepository.deleteById(savedSession.getId());
+                            System.out.println("Session Thread running...");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     };
                     paymentThread.start(paymentTask).join();
                     sessionThread.start(sessionTask);
@@ -1610,25 +1623,30 @@ public class UssdController {
         int continueFlag = 0;
         String message = null;
         int codeType = 0;
-        List<String> permGames = s.isMorning() || s.isAfternoon() ? AppConstants.PERM_GAMES_MORNING : AppConstants.PERM_GAMES;
+        List<String> permGames = s.isMorning() || s.isAfternoon() ? AppConstants.PERM_GAMES_MORNING
+                : AppConstants.PERM_GAMES;
         AtomicReference<Integer> index = new AtomicReference<>(0);
-        List<Game> currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameTypeId() == 15).sorted(Comparator.comparing(Game::getGameName)).toList();
-        //final Game gameDraw = s.isMorning() ? currentGameDraw.get(0) : currentGameDraw.get(1);
-        final Game gameDraw = s.isMorning() ? currentGameDraw.get(0) : s.isAfternoon() ? currentGameDraw.get(2) : currentGameDraw.get(1);
+        List<Game> currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameTypeId() == 15)
+                .sorted(Comparator.comparing(Game::getGameName)).toList();
+        // final Game gameDraw = s.isMorning() ? currentGameDraw.get(0) :
+        // currentGameDraw.get(1);
+        final Game gameDraw = s.isMorning() ? currentGameDraw.get(0)
+                : s.isAfternoon() ? currentGameDraw.get(2) : currentGameDraw.get(1);
         Session savedSession = sessionRepository.findBySequenceID(s.getSequenceID());
         savedSession.setGameId(gameDraw.getGameId());
         savedSession.setGameTypeId(gameDraw.getGameDraw());
-        //savedSession.setBetTypeCode(AppConstants.PERM);
+        // savedSession.setBetTypeCode(AppConstants.PERM);
         updateSession(savedSession, false);
-        boolean containsLetters = savedSession.getPosition() != 7 ? ValidationUtils.containsAnyLetters(s.getData()) : false;
+        boolean containsLetters = savedSession.getPosition() != 7 ? ValidationUtils.containsAnyLetters(s.getData())
+                : false;
         if (!containsLetters) {
             if (savedSession.getGameType() == THIRD && savedSession.getPosition() == SECOND) {
                 StringBuilder builder = new StringBuilder();
                 permGames.stream().forEachOrdered(game -> {
                     int currentIndex = index.updateAndGet(v -> v + 1);
-//                    if (currentIndex == 4) { // Skip the element at index 5
-//                        return;
-//                    }
+                    // if (currentIndex == 4) { // Skip the element at index 5
+                    // return;
+                    // }
                     builder.append(String.format("%s) %s\n", currentIndex, game.toString()));
                 });
                 message = builder.toString();
@@ -1680,9 +1698,11 @@ public class UssdController {
                 List<Integer> numbers = ValidationUtils.extractNumbers(input);
                 Set<Integer> repeatedNumbers = ValidationUtils.findRepeatedNumbers(numbers);
 
-                // System.out.printf("Len => %s Min => %s Max => %s Exceeds => %s\n", len, savedSession.getMin(), savedSession.getMax(), exceeds);
+                // System.out.printf("Len => %s Min => %s Max => %s Exceeds => %s\n", len,
+                // savedSession.getMin(), savedSession.getMax(), exceeds);
 
-                if (!ValidationUtils.isBetween(len, savedSession.getMin(), savedSession.getMax()) || exceeds || containsZero || !repeatedNumbers.isEmpty()) {
+                if (!ValidationUtils.isBetween(len, savedSession.getMin(), savedSession.getMax()) || exceeds
+                        || containsZero || !repeatedNumbers.isEmpty()) {
                     message = exceeds ? AppConstants.EXCEEDS_NUMBER_LIMIT_MESSAGE : AppConstants.INVALID_TRAN_MESSAGE;
                     if (!repeatedNumbers.isEmpty()) {
                         message = "Duplicate numbers entered\n 0) Back";
@@ -1724,8 +1744,9 @@ public class UssdController {
                                     0) to cancel.
                                     \s""";
                             s.setAmount(Double.parseDouble(s.getData()));
-                            //s.setCurrentGame(directGameName);
-                            //message = String.format(ticketInfo, gameDraw.getGameName(), s.getSelectedNumbers(), s.getAmount());
+                            // s.setCurrentGame(directGameName);
+                            // message = String.format(ticketInfo, gameDraw.getGameName(),
+                            // s.getSelectedNumbers(), s.getAmount());
                             message = String.format(ticketInfo, gameDraw.getGameName(), s.getSelectedNumbers(), total);
                             savedSession.setAmount(Double.valueOf(total));
                             updateSession(s, false);
@@ -2007,8 +2028,8 @@ public class UssdController {
         ResponseEntity<String> response = handler.client()
                 .get()
                 .uri("/api/V1/recent-tickets?msisdn=" + msisdn)
-                //.body(String.format("{\"msisdn\":\"%s\"}", msisdn))
-                //.contentType(MediaType.APPLICATION_JSON)
+                // .body(String.format("{\"msisdn\":\"%s\"}", msisdn))
+                // .contentType(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .toEntity(String.class);
         return response.getBody();
@@ -2024,7 +2045,8 @@ public class UssdController {
     }
 
     private CustomerDepositResponseDto customerDeposit(String msisdn, String amount, String channel) {
-        String body = String.format("{\"msisdn\":\"%s\",\"amount\":\"%s\",\"channel\":\"%s\"}", msisdn, amount, channel);
+        String body = String.format("{\"msisdn\":\"%s\",\"amount\":\"%s\",\"channel\":\"%s\"}", msisdn, amount,
+                channel);
         ResponseEntity<CustomerDepositResponseDto> response = handler.client()
                 .post()
                 .uri("/api/V1/account/deposit")
@@ -2037,8 +2059,9 @@ public class UssdController {
 
     @Async
     private String calculateAmountPermAPI(Session session, String type) {
-        String body = String.format("{\"amount\":\"%s\",\"selected_numbers\":\"%s\",\"bet_type_code\":\"%s\",\"bet_type\":\"%s\"}"
-                , session.getAmount(), session.getSelectedNumbers(), session.getBetTypeCode(), type);
+        String body = String.format(
+                "{\"amount\":\"%s\",\"selected_numbers\":\"%s\",\"bet_type_code\":\"%s\",\"bet_type\":\"%s\"}",
+                session.getAmount(), session.getSelectedNumbers(), session.getBetTypeCode(), type);
         System.out.printf("\n ***Body***\n", body);
         ResponseEntity<String> response = handler.client()
                 .post()
@@ -2055,8 +2078,9 @@ public class UssdController {
 
     @Async
     private String calculateAmountBankerAPI(Session session, String type) {
-        String body = String.format("{\"amount\":\"%s\",\"selected_numbers\":\"%s\",\"bet_type_code\":\"%s\",\"bet_type\":\"%s\"}"
-                , session.getAmount(), session.getSelectedNumbers(), 2, type);
+        String body = String.format(
+                "{\"amount\":\"%s\",\"selected_numbers\":\"%s\",\"bet_type_code\":\"%s\",\"bet_type\":\"%s\"}",
+                session.getAmount(), session.getSelectedNumbers(), 2, type);
         System.out.println(body);
         ResponseEntity<String> response = handler.client()
                 .post()
@@ -2098,14 +2122,12 @@ public class UssdController {
         return json.toString();
     }
 
-
     public String eligibityRequest(Session session) {
         JsonObject json = new JsonObject();
         json.addProperty("msisdn", session.getMsisdn());
         json.addProperty("channel", session.getNetwork());
         return json.toString();
     }
-
 
     public String silentDelete(Session savedSession) {
         deleteSession(savedSession);
@@ -2170,7 +2192,7 @@ public class UssdController {
             System.out.println(e.getMessage());
             s.setGameType(Integer.valueOf("2"));
         }
-        //return isEvening;
+        // return isEvening;
     }
 
     public EligibilityResponse checkUserEligibility(Session session) {

@@ -16,8 +16,13 @@ public class AfriluckCallHandler {
     private String baseUrl;
 
     public RestClient client() {
+        HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
+        // Set connection timeout to 30 seconds
+        requestFactory.setConnectTimeout(30000);
+        // Set read timeout to 60 seconds
+        requestFactory.setConnectionRequestTimeout(30000);
         return RestClient.builder()
-                .requestFactory(new HttpComponentsClientHttpRequestFactory())
+                .requestFactory(requestFactory)
                 .messageConverters(converters -> converters.add(new StringHttpMessageConverter()))
                 .baseUrl("http://10.180.180.22:5050")
                 .defaultHeader("Content-Type", "application/text")
@@ -26,8 +31,13 @@ public class AfriluckCallHandler {
     }
 
     public RestClient staging() {
+        HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
+        // Set connection timeout to 30 seconds
+        requestFactory.setConnectTimeout(30000);
+        // Set read timeout to 60 seconds
+        requestFactory.setConnectionRequestTimeout(30000);
         return RestClient.builder()
-                .requestFactory(new HttpComponentsClientHttpRequestFactory())
+                .requestFactory(requestFactory)
                 .messageConverters(converters -> converters.add(new StringHttpMessageConverter()))
                 .baseUrl("http://10.180.180.22:5050")
                 .defaultHeader("Content-Type", "application/text")
