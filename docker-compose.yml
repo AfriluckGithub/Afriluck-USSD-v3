@@ -1,7 +1,6 @@
-version: '3.8'
+#version: '3.9'
 
 services:
-
   db:
     image: postgres:13
     container_name: db
@@ -10,49 +9,60 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=root
       - PGDATA=/var/lib/postgresql/data/pgdata
+    command: >
+      postgres
+        -c shared_buffers=2GB
+        -c work_mem=64MB
+        -c maintenance_work_mem=256MB
+        -c effective_cache_size=4GB
+        -c wal_buffers=16MB
+        -c min_wal_size=512MB
+        -c max_wal_size=1GB
+        -c random_page_cost=1.0
+        -c checkpoint_timeout=15min
+        -c max_connections=200
+        -c log_min_duration_statement=500
+        -c log_statement=none
+        -c synchronous_commit=off
     ports:
-        - "5431:5432"
+      - "5431:5432"
     networks:
-        - app-network
+      - app-network
     volumes:
-        #- ./init.sql:/docker-entrypoint-initdb.d/init.sql
-        - pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
     deploy:
-        update_config:
-          parallelism: 1
-          delay: 10s
+      update_config:
+        parallelism: 1
+        delay: 10s
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2g
+        reservations:
+          memory: 2g
     restart: unless-stopped
 
   app:
-    image: stevesmart1113/afriluck:latest
-    restart: always
     build:
       context: .
       dockerfile: Dockerfile
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
-      - "8001:8000"
+      - "8000:8000"
     environment:
-#      - POSTGRES_USER=postgres
-#      - POSTGRES_PASSWORD=root
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/afriluck-v2
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=root
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - JAVA_OPTS=-Xms2g -Xmx2g
-    #depends_on:
-    #  - db
     deploy:
-      resources:
-        limits:
-          memory: 5g
+      restart_policy:
+        condition: none
     networks:
       - app-network
 
   app1:
-    image: stevesmart1113/afriluck:latest
-    restart: always
     build:
       context: .
       dockerfile: Dockerfile
@@ -61,47 +71,14 @@ services:
     ports:
       - "8002:8000"
     environment:
-#      - POSTGRES_USER=postgres
-#      - POSTGRES_PASSWORD=root
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/afriluck-v2
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=root
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - JAVA_OPTS=-Xms2g -Xmx2g
-    #depends_on:
-    #  - db
     deploy:
-      resources:
-        limits:
-          memory: 5g
-    networks:
-      - app-network
-
-
-  app2:
-    image: stevesmart1113/afriluck:latest
-    restart: always
-    build:
-      context: .
-      dockerfile: Dockerfile
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    ports:
-      - "8003:8000"
-    environment:
-#      - POSTGRES_USER=postgres
-#      - POSTGRES_PASSWORD=root
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/afriluck-v2
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=root
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-      - JAVA_OPTS=-Xms2g -Xmx2g
-    #depends_on:
-    #  - db
-    deploy:
-      resources:
-        limits:
-          memory: 5g
+      restart_policy:
+        condition: none
     networks:
       - app-network
 
@@ -115,15 +92,11 @@ services:
     depends_on:
       - app
       - app1
-      - app2
-    links:
-      - app
-      - app1
-      - app2
 
 networks:
   app-network:
     driver: bridge
+    attachable: true
 
 volumes:
   pgdata:

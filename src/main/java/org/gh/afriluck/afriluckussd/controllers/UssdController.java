@@ -1,18 +1,25 @@
 package org.gh.afriluck.afriluckussd.controllers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonObject;
 import org.gh.afriluck.afriluckussd.constants.AppConstants;
+import org.gh.afriluck.afriluckussd.data.PaymentResultHolder;
 import org.gh.afriluck.afriluckussd.dto.*;
 import org.gh.afriluck.afriluckussd.entities.Game;
-import org.gh.afriluck.afriluckussd.entities.SessionRequest;
 import org.gh.afriluck.afriluckussd.mapping.TransactionMapper;
 import org.gh.afriluck.afriluckussd.repositories.CustomerSessionRepository;
 import org.gh.afriluck.afriluckussd.entities.Session;
 import org.gh.afriluck.afriluckussd.repositories.GameRepository;
 import org.gh.afriluck.afriluckussd.repositories.SessionRequestRepository;
+import org.gh.afriluck.afriluckussd.services.SessionLoggerService;
 import org.gh.afriluck.afriluckussd.utils.AfriluckCallHandler;
+import org.gh.afriluck.afriluckussd.utils.ResponseMenu;
 import org.gh.afriluck.afriluckussd.utils.ValidationUtils;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
@@ -46,10 +53,11 @@ public class UssdController {
     private final AfriluckCallHandler handler;
     private final TransactionMapper mapper;
     private final GameRepository gameRepository;
-    private final SessionRequestRepository sessionRequestRepository;
     List<Game> games = null;
     Thread.Builder paymentThread = Thread.ofVirtual().name("Payment Thread");
     Thread.Builder sessionThread = Thread.ofVirtual().name("Session Thread");
+    AtomicReference<String> responseBody = new AtomicReference<>();
+    private static final Logger logger = LoggerFactory.getLogger(UssdController.class);
 
     /**
      * @param sessionRepository
@@ -65,18 +73,18 @@ public class UssdController {
             TransactionMapper mapper,
             GameRepository gameRepository,
             SessionRequestRepository sessionRequestRepository
+
     ) {
         this.sessionRepository = sessionRepository;
         this.handler = handler;
         this.mapper = mapper;
         this.gameRepository = gameRepository;
-        this.sessionRequestRepository = sessionRequestRepository;
     }
 
     /**
      * @apiNote A controller that serves the ussd application
      */
-    @PostMapping(path = "/ussd")
+    @PostMapping(path = "/ussd_Response")
     public String index(@RequestBody Session session) {
         String message = null;
         try {
@@ -86,20 +94,21 @@ public class UssdController {
             session.setTimeStamp(timeStamp);
             Session savedSession = sessionRepository.findBySequenceID(session.getSequenceID());
 
-
             if (savedSession == null) {
                 session.setPosition(0);
+                try {
+                    SessionLoggerService loggerService = new SessionLoggerService();
+                    loggerService.logSession(
+                            session.msisdn,
+                            session.network,
+                            session.data,
+                            session.getSequenceID(),
+                            session.message,
+                            LocalDateTime.now());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
 
-                sessionRequestRepository.save(
-                        new SessionRequest(
-                                session.msisdn,
-                                session.network,
-                                session.data,
-                                session.getSequenceID(),
-                                LocalDateTime.now(),
-                                session.message
-                        )
-                );
                 sessionRepository.save(session);
 
             } else {
@@ -107,14 +116,18 @@ public class UssdController {
                 if (s.getGameType() == 4 && s.getNextStep() == 1) {
                     s.setPosition(2);
                     updateSession(s, false);
-                }else {
+                } else {
                     System.out.println("--- Updating ---");
                     updateSession(session, true);
                 }
             }
 
-            if (ValidationUtils.isBetweenGameTime()) {
+            if (ValidationUtils.isBetweenGameTime()
+            // true
+            ) {
                 message = menuResponse(session, 1, AppConstants.GAME_CLOSED_MESSAGE);
+                // message = menuResponse(session, 1, "Game closed for now. Please try again on
+                // Friday at 7:45 PM");
             } else {
                 Session s = sessionRepository.findBySequenceID(session.getSequenceID());
                 if (s.isReset()) {
@@ -125,33 +138,127 @@ public class UssdController {
                 if (s.getNextStep() == ZERO) {
                     s.setNextStep(FIRST);
                     String dayOfWeekInWords = getDayOfWeekInWords();
+                    // String dayOfWeekInWords = "Thursday";
                     updateSession(s, false);
-                    message = menuResponse(session, 0, ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 5 : 7, dayOfWeekInWords.equals("Sunday") ? "30" : "00") : String.format(dayOfWeekInWords.equals("Sunday") ? AppConstants.WELCOME_MENU_MESSAGE_NEW : AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 5 : 7, dayOfWeekInWords.equals("Sunday") ? "30" : "00"));
+
+                    boolean isEveningGameTime = ValidationUtils.isEveningGameTime();
+                    boolean isAfternoonGameTime = ValidationUtils.isAfternoonGameTime();
+                    boolean isCurrentGame = ValidationUtils.currentGamePeriod();
+                    boolean isCurrentGameTime = ValidationUtils.isCurrentGameTime();
+                    // boolean isEveningGameTime = true;
+                    // boolean isAfternoonGameTime = true;
+                    // boolean isCurrentGame = ValidationUtils.currentGamePeriod();
+                    // boolean isCurrentGameTime = ValidationUtils.isCurrentGameTime();
+                    boolean isSunday = dayOfWeekInWords.equals("Sunday") && isCurrentGame;
+                    boolean isSaturdayNight = dayOfWeekInWords.equals("Sunday") && isCurrentGameTime;
+
+                    int gameTimeHour;
+                    String gameTimeMinutes;
+                    String messageTemplate;
+
+                    if (isSunday) {
+                        gameTimeHour = isAfternoonGameTime ? 5 : (isEveningGameTime ? 5 : 5);
+                        gameTimeMinutes = isAfternoonGameTime ? "30" : (isEveningGameTime ? "30" : "30");
+                    } else if (isSaturdayNight) {
+                        gameTimeHour = isAfternoonGameTime ? 5 : (isEveningGameTime ? 5 : 5);
+                        gameTimeMinutes = isAfternoonGameTime ? "30" : (isEveningGameTime ? "30" : "30");
+                    } else {
+                        gameTimeHour = isAfternoonGameTime ? 7 : (isEveningGameTime ? 7 : 7);
+                        gameTimeMinutes = isAfternoonGameTime ? "00" : (isEveningGameTime ? "00" : "00");
+                    }
+
+                    if (isEveningGameTime) {
+                        messageTemplate = isSunday || isSaturdayNight ? AppConstants.WELCOME_MENU_MESSAGE_NEW
+                                : AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING;
+                    } else if (isAfternoonGameTime) {
+                        messageTemplate = isSunday || isSaturdayNight ? AppConstants.WELCOME_MENU_MESSAGE_NEW
+                                : AppConstants.WELCOME_MENU_MESSAGE_NEW_AFTERNOON;
+                    } else {
+                        messageTemplate = AppConstants.WELCOME_MENU_MESSAGE_NEW;
+                    }
+
+                    message = menuResponse(
+                            session,
+                            0,
+                            String.format(messageTemplate, dayOfWeekInWords, gameTimeHour, gameTimeMinutes));
                 } else if (s.getNextStep() == FIRST) {
+                    String dayOfWeekInWords = getDayOfWeekInWords();
                     boolean isEvening = ValidationUtils.isEveningGameTime();
+                    boolean isAfternoon = ValidationUtils.isAfternoonGameTime();
+                    // boolean isEvening = true;
+                    // boolean isAfternoon = true;
+                    boolean isCurrentGame = ValidationUtils.currentGamePeriod();
+                    boolean isCurrentGameTime = ValidationUtils.isCurrentGameTime();
+                    boolean isSunday = dayOfWeekInWords.equals("Sunday") && isCurrentGame;
+                    boolean isSaturdayNight = dayOfWeekInWords.equals("Sunday") && isCurrentGameTime;
+                    ;
                     try {
 
                         if (s.getNextStep() == FIRST && s.isSecondStep() == false) {
-                            isEvening = handleExceptionForSunday(s, isEvening);
+                            handleExceptionForSunday(s, isEvening);
                         }
 
-                        message = isEvening ? switch (s.getGameType()) {
-                            case 1 -> eveningGameOptions(s);
-                            case 2 -> backOption(session, savedSession);
-                            case 4 -> depositToWallet(s, session);
-                            case 5 -> account(s);
-                            case 6 -> tnCsMessage(s);
-                            case 99 -> contactUsMessage(s);
-                            case null, default -> silentDelete(s);
-                        } : switch (s.getGameType()) {
-                            case 1 -> anopaGameOptions(s);
-                            case 2 -> eveningGameOptions(s);
-                            case 4 -> depositToWallet(s, session);
-                            case 5 -> account(s);
-                            case 6 -> tnCsMessage(s);
-                            case 99 -> contactUsMessage(s);
-                            case null, default -> silentDelete(s);
-                        };
+                        System.out.printf("***** \nGame -> %s ******\n", s.getGameType());
+                        if (isSunday || isSaturdayNight) {
+                            if (s.getOption() == null) {
+                                s.setOption(s.getData());
+                                updateSession(s, false);
+                            }
+
+                            if (s.getOption().equals("5")) {
+                                // savedSession.isSecondStep() && savedSession.getPosition() == FIRST
+                                // savedSession.isSecondStep() && savedSession.getPosition() == THIRD
+                                return account(s);
+                            } else {
+                                return switch (s.getData()) {
+                                    case "1" -> eveningGameOptions(s);
+                                    case "4" -> depositToWallet(s, session);
+                                    case "99" -> contactUsMessage(s);
+                                    case null, default -> silentDelete(s);
+                                };
+                            }
+                        }
+                        if (isEvening && isAfternoon) {
+                            message = switch (s.getGameType()) {
+                                case 1 -> anopaGameOptions(s);
+                                case 2 -> afternoonGameOptions(s);
+                                case 3 -> eveningGameOptions(s);
+                                case 4 -> depositToWallet(s, session);
+                                case 5 -> account(s);
+                                case 6 -> tnCsMessage(s);
+                                case 99 -> contactUsMessage(s);
+                                case null, default -> silentDelete(s);
+                            };
+                        } else if (isAfternoon) {
+                            message = switch (s.getGameType()) {
+                                case 1 -> afternoonGameOptions(s);
+                                case 2 -> eveningGameOptions(s);
+                                case 4 -> depositToWallet(s, session);
+                                case 5 -> account(s);
+                                case 6 -> tnCsMessage(s);
+                                case 99 -> contactUsMessage(s);
+                                case null, default -> silentDelete(s);
+                            };
+                        } else if (!isEvening || !isAfternoon) {
+                            message = switch (s.getGameType()) {
+                                case 1 -> eveningGameOptions(s);
+                                case 4 -> depositToWallet(s, session);
+                                case 5 -> account(s);
+                                case 6 -> tnCsMessage(s);
+                                case 99 -> contactUsMessage(s);
+                                case null, default -> silentDelete(s);
+                            };
+                        } else {
+                            message = switch (s.getGameType()) {
+                                case 1 -> eveningGameOptions(s);
+                                case 2 -> backOption(session, savedSession);
+                                case 4 -> depositToWallet(s, session);
+                                case 5 -> account(s);
+                                case 6 -> tnCsMessage(s);
+                                case 99 -> contactUsMessage(s);
+                                case null, default -> silentDelete(s);
+                            };
+                        }
                     } catch (Exception e) {
                         message = menuResponse(session, 1, "Invalid value entered");
                         e.printStackTrace();
@@ -169,23 +276,44 @@ public class UssdController {
                         s.setPosition(SECOND);
                         updateSession(s, false);
                     }
-                    message = !s.isMorning() ? switch (s.getGameType()) {
-                        case 1 -> megaGameOptions(s.getGameType(), s.getPosition(), s);
-                        case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
-                        case 3 -> permGameOptions(s.getGameType(), s.getPosition(), s);
-                        case 4 -> banker(s, "Banker");
-                        case 0 -> backOption(session, s);
-                        case null, default -> silentDelete(s);
-                    } : switch (s.getGameType()) {
-                        case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
-                        case 3 -> permGameOptions(s.getGameType(), s.getPosition(), s);
-                        case 4 -> banker(s, "Banker");
-                        case 0 -> backOption(session, s);
-                        case null, default -> silentDelete(s);
-                    };
+                    boolean morning = s.isMorning(); // false
+                    boolean afternoon = s.isAfternoon(); // true
+                    if (morning) {
+                        message = switch (s.getGameType()) {
+                            case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
+                            case 3 -> permGameOptions(s.getGameType(), s.getPosition(), s);
+                            case 4 -> banker(s, "Banker");
+                            case 0 -> backOption(session, s);
+                            case null, default -> silentDelete(s);
+                        };
+                    } else if (afternoon) {
+                        message = switch (s.getGameType()) {
+                            case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
+                            case 3 -> permGameOptions(s.getGameType(), s.getPosition(), s);
+                            case 4 -> banker(s, "Banker");
+                            case 0 -> backOption(session, s);
+                            case null, default -> silentDelete(s);
+                        };
+                    } else {
+                        System.out.println("\nGame Type ----------> " + s.getGameType());
+                        System.out.println("\nPosition ----------> " + s.getPosition());
+                        boolean selected = s.getSelectedNumbers() == null;
+                        if (s.getPosition() == 3 && s.getData().equals("5") && selected) {
+                            message = silentDelete(s);
+                        } else {
+                            message = switch (s.getGameType()) {
+                                case 1 -> megaGameOptions(s.getGameType(), s.getPosition(), s);
+                                case 2 -> directGameOptions(s.getGameType(), s.getPosition(), s);
+                                case 3 -> permGameOptions(s.getGameType(), s.getPosition(), s);
+                                case 4 -> banker(s, "Banker");
+                                case 0 -> backOption(session, s);
+                                case null, default -> silentDelete(s);
+                            };
+                        }
+                    }
                 }
             }
-            
+
         } catch (Exception e) {
             e.printStackTrace();
             return menuResponse(session, 0, "System EC occurred. Please try again");
@@ -193,18 +321,181 @@ public class UssdController {
         return message;
     }
 
+    @PostMapping(path = "/promo")
+    public String promo(@RequestBody Session session) throws InterruptedException, JsonProcessingException {
+        int menu = 0;
+        String message = "";
+        int continueFlag = 0;
+        PaymentResultHolder holder = new PaymentResultHolder();
+        SimpleDateFormat formatter = new SimpleDateFormat(AppConstants.GLOBAL_DATE_FORMAT);
+        String timeStamp = formatter.format(new Date());
+        AtomicReference<String> responseBody = new AtomicReference<>();
+
+        session.setTimeStamp(timeStamp);
+        Session savedSession = sessionRepository.findBySequenceID(session.getSequenceID());
+        if (savedSession == null) {
+            session.setPosition(0);
+
+            try {
+            SessionLoggerService loggerService = new SessionLoggerService();
+            loggerService.logSession(
+            session.msisdn,
+            session.network,
+            session.data,
+            session.getSequenceID(),
+            session.message,
+            LocalDateTime.now()
+            );
+            } catch (Exception e) {
+            e.printStackTrace();
+            }
+
+            sessionRepository.save(session);
+
+            EligibilityResponse eligibilityResponse = checkUserEligibility(session);
+
+            if (!eligibilityResponse.isCan_participate()) {
+            continueFlag = 1;
+            return ResponseMenu.menuResponse(session, continueFlag,
+            eligibilityResponse.getMessage());
+            }
+
+            if (ValidationUtils.isBetweenGameTime()) {
+                return ResponseMenu.menuResponse(session, 1, AppConstants.GAME_CLOSED_MESSAGE);
+            }
+
+        } else {
+            switch (savedSession.getPosition()) {
+                case 0:
+                    continueFlag = 0;
+                    savedSession.setGameType(Integer.valueOf(session.getData()));
+                    savedSession.setPosition(1);
+                    updateSession(session, false);
+
+                    if (savedSession.getGameType().equals(1)) {
+                        message = AppConstants.MEGA_OPTIONS_CHOICE_MESSAGE;
+                    } else if (savedSession.getGameType().equals(2)) {
+                        message = "Choose 2 numbers between 1 to 57 separated by space";
+                    } else {
+                        message = "Invalid menu option. 0) Back";
+                    }
+                    return ResponseMenu.menuResponse(session, continueFlag, message);
+                case 1:
+                    continueFlag = 0;
+                    boolean exceeds = false;
+                    savedSession.setData(session.getData());
+                    savedSession.setPosition(2);
+                    updateSession(session, false);
+                    boolean containsLetters = savedSession.getPosition() != 8
+                            ? ValidationUtils.containsAnyLetters(session.getData())
+                            : false;
+                    String input = ValidationUtils.removeSpecialCharacters(session.getData());
+                    List<Integer> numbers = ValidationUtils.extractNumbers(input);
+                    Set<Integer> repeatedNumbers = ValidationUtils.findRepeatedNumbers(numbers);
+                    try {
+                        exceeds = ValidationUtils.anyNumberExceedsLimit(input, ",", 57);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    logger.debug("Repeated numbers => {} ", repeatedNumbers);
+                    String[] selectedNumbers = ValidationUtils.splitNumbers(input);
+                    int len = selectedNumbers.length;
+                    boolean containsZero = ValidationUtils.containsSingularZero(input);
+                    boolean repeated = !repeatedNumbers.isEmpty();
+                    if (!containsLetters) {
+                        if (!repeated) {
+                            if (savedSession.getGameType().equals(1) ? len == AppConstants.MAX_MEGA
+                                    : len == AppConstants.SECOND && !exceeds && !containsZero) {
+                                if (savedSession.getGameType().equals(1)) {
+                                    message = String.format(
+                                            "Tck info:\n---\nLucky 70 million Mega GHS 5\nYour Numbers: %s\n1) Proceed\n0) Cancel",
+                                            session.getData());
+                                } else {
+                                    message = String.format(
+                                            "Tck info:\n---\nDirect 1 GHS 1\nYour Numbers: %s\n1) Proceed\n0) Cancel",
+                                            session.getData());
+                                }
+                                savedSession.setSelectedNumbers(session.getData());
+                                updateSession(session, false);
+                            } else {
+                                deleteSession(savedSession);
+                                message = exceeds ? AppConstants.EXCEEDS_NUMBER_LIMIT_MESSAGE
+                                        : savedSession.getGameType().equals(1) ? AppConstants.MEGA_VALIDATION_MESSAGE
+                                                : "Numbers must be a total of 2 starting from 1 to 57.\\n 0) Back";
+                            }
+                        } else {
+                            int max = savedSession.getGameType().equals(1) ? 6 : 2;
+                            message = String.format("Numbers must be a total of %s starting from 1 to 57.\\n 0) Back",
+                                    max);
+                        }
+                    } else {
+                        deleteSession(savedSession);
+                        message = "Numbers cannot contain letters.\n 0) Back";
+                    }
+                    return ResponseMenu.menuResponse(session, continueFlag, message);
+                case 2:
+                    logger.debug("\n---  Gets here => {}---\n", savedSession.getGameType());
+                    if (session.getData().equals("0")) {
+                        message = "Ticket cancelled by user\n0) Back";
+                        continueFlag = 1;
+                    } else {
+                        continueFlag = 1;
+                        if (savedSession.getGameType() == 1 || savedSession.getGameType() == 2) {
+                            Transaction t = mapper.mapPromo(
+                                    savedSession.getMsisdn(),
+                                    savedSession.getGameType() == 1 ? "mega" : "direct",
+                                    savedSession.getSelectedNumbers(),
+                                    "ussd",
+                                    savedSession.getNetwork());
+                            logger.debug("\nTransaction Params => {}\n", t.toString());
+                            Runnable paymentTask = () -> {
+                                try {
+                                    ResponseEntity<String> response = handler.client()
+                                            .post()
+                                            .uri("/api/V1/promo")
+                                            .body(t)
+                                            .contentType(MediaType.APPLICATION_JSON)
+                                            .retrieve()
+                                            .toEntity(String.class);
+                                    logger.debug("Response => {}", response.getBody());
+                                    logger.debug("--- Running Payment ---");
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            };
+                            Runnable sessionTask = () -> {
+                                sessionRepository.deleteById(savedSession.getId());
+                                logger.debug("--- Deleting Session ---");
+                            };
+                            paymentThread.start(paymentTask).join();
+                            sessionThread.start(sessionTask);
+                            message = savedSession.getGameType() == 1 ? "Ticket of 5 GHS purchased with free promo."
+                                    : "Ticket of 1 GHS purchased with free promo";
+                            return ResponseMenu.menuResponse(session, continueFlag, message);
+
+                        }
+                    }
+                    return ResponseMenu.menuResponse(session, continueFlag, message);
+                default:
+                    return "Service Error";
+            }
+        }
+        return ResponseMenu.menuResponse(session, continueFlag, "Free Ticket Promo\n1. Mega\n2.Direct-2");
+    }
+
     private String depositToWallet(Session session, Session savedSession) {
         try {
             String message = null;
             int continueFlag = 0;
-            if(session.isSecondStep() == false) {
+            if (session.isSecondStep() == false) {
                 session.setGameType(4);
                 session.setSecondStep(true);
                 updateSession(session, false);
             }
             if (session.isSecondStep() && session.getPosition() == FIRST) {
                 continueFlag = 0;
-                message = "Enter amount to deposit\n";
+                message = "Enter amount to deposit.\nDisclaimer, deposits cannot be withdrawn.";
                 session.setNextStep(FIRST);
                 session.setGameType(4);
                 updateSession(session, false);
@@ -212,8 +503,9 @@ public class UssdController {
                 updateSession(session, false);
                 System.out.printf("SESSION => %s", savedSession);
                 System.out.println("Making deposit call....");
-                CustomerDepositResponseDto depositResponse = customerDeposit(session.getMsisdn(), savedSession.getData(), session.getNetwork());
-                message = depositResponse.success;
+                CustomerDepositResponseDto depositResponse = customerDeposit(session.getMsisdn(),
+                        savedSession.getData(), session.getNetwork());
+                message = depositResponse.getSuccess();
                 System.out.println(message);
                 System.out.println("Deposit call done....");
                 continueFlag = 1;
@@ -225,19 +517,42 @@ public class UssdController {
     }
 
     private String backOption(Session session, Session savedSession) {
+        boolean isEveningGameTime = ValidationUtils.isEveningGameTime();
+        boolean isAfternoonGameTime = ValidationUtils.isAfternoonGameTime();
         String dayOfWeekInWords = getDayOfWeekInWords();
-        //deleteSession(savedSession);
+        boolean isSunday = dayOfWeekInWords.equals("Sunday");
+
+        int gameTimeHour;
+        String gameTimeMinutes;
+        String messageTemplate;
+
+        if (isSunday) {
+            gameTimeHour = isAfternoonGameTime ? 3 : (isEveningGameTime ? 5 : 2);
+            gameTimeMinutes = isAfternoonGameTime ? "30" : (isEveningGameTime ? "30" : "30");
+        } else {
+            gameTimeHour = isAfternoonGameTime ? 7 : (isEveningGameTime ? 7 : 7);
+            gameTimeMinutes = isAfternoonGameTime ? "00" : (isEveningGameTime ? "00" : "00");
+        }
+
+        if (isEveningGameTime) {
+            messageTemplate = isSunday ? AppConstants.WELCOME_MENU_MESSAGE_NEW
+                    : AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING;
+        } else if (isAfternoonGameTime) {
+            messageTemplate = isSunday ? AppConstants.WELCOME_MENU_MESSAGE_NEW
+                    : AppConstants.WELCOME_MENU_MESSAGE_NEW_AFTERNOON;
+        } else {
+            messageTemplate = AppConstants.WELCOME_MENU_MESSAGE_NEW;
+        }
         savedSession.setNextStep(FIRST);
         savedSession.setPosition(ZERO);
         savedSession.setSequenceId(session.getSequenceID());
         savedSession.setMsisdn(session.getMsisdn());
         savedSession.setReset(false);
         savedSession.setBackPressed(true);
-        //savedSession.setMorning(session.isMorning());
+        // savedSession.setMorning(session.isMorning());
         updateSession(savedSession, false);
-        return menuResponse(session, 0, ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 5 : 7, dayOfWeekInWords.equals("Sunday") ? "30" : "00") : String.format(dayOfWeekInWords.equals("Sunday") ? AppConstants.WELCOME_MENU_MESSAGE_NEW : AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 5 : 7, dayOfWeekInWords.equals("Sunday") ? "30" : "00"));
-        // return menuResponse(session, 0, ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 5 : 7, dayOfWeekInWords.equals("Sunday") ? "30" : "00")
-        //        : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, dayOfWeekInWords, dayOfWeekInWords.equals("Sunday") ? 5 : 7, dayOfWeekInWords.equals("Sunday") ? "30" : "00"));
+        return menuResponse(session, 0,
+                String.format(messageTemplate, dayOfWeekInWords, gameTimeHour, gameTimeMinutes));
     }
 
     private String anopaGameOptions(Session session) {
@@ -247,9 +562,16 @@ public class UssdController {
         return menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE_MORNING);
     }
 
+    private String afternoonGameOptions(Session session) {
+        session.setNextStep(SECOND);
+        session.setAfternoon(true);
+        updateSession(session, false);
+        return menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE_MORNING);
+    }
+
     private String eveningGameOptions(Session session) {
         session.setNextStep(SECOND);
-        session.setMorning(false);
+        session.setEvening(true);
         updateSession(session, false);
         return menuResponse(session, 0, AppConstants.WELCOME_MENU_MESSAGE);
     }
@@ -275,11 +597,19 @@ public class UssdController {
             String response = null;
             String json = null;
             JSONObject oj = null;
+            System.out.printf("Data ===> %s", savedSession.getData());
             switch (savedSession.getData()) {
                 case "0":
                     deleteSession(savedSession);
                     continueFlag = 0;
-                    return menuResponse(savedSession, continueFlag, ValidationUtils.isEveningGameTime() ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING, getDayOfWeekInWords(), getDayOfWeekInWords().equals("Sunday") ? 5 : 7, getDayOfWeekInWords().equals("Sunday") ? "30" : "00") : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, getDayOfWeekInWords(), getDayOfWeekInWords().equals("Sunday") ? 5 : 7, getDayOfWeekInWords().equals("Sunday") ? "30" : "00"));
+                    return menuResponse(savedSession, continueFlag,
+                            ValidationUtils.isEveningGameTime()
+                                    ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING,
+                                            getDayOfWeekInWords(), getDayOfWeekInWords().equals("Sunday") ? 5 : 7,
+                                            getDayOfWeekInWords().equals("Sunday") ? "30" : "00")
+                                    : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, getDayOfWeekInWords(),
+                                            getDayOfWeekInWords().equals("Sunday") ? 5 : 7,
+                                            getDayOfWeekInWords().equals("Sunday") ? "30" : "00"));
                 case "1":
                     continueFlag = 1;
                     response = getDrawResults(savedSession);
@@ -304,6 +634,15 @@ public class UssdController {
                     continueFlag = 0;
                     message = "1) Deposit\n 2) Balance Enquiry\n";
                     break;
+                case "4":
+                    continueFlag = 0;
+                    message = """
+                                   TnCs
+                            You can read here:
+                            http://www.afriluck.com/#/
+                            page-details/terms-and-conditions
+                            """;
+                    break;
                 default:
                     message = "Invalid input\n 0) Back";
                     continueFlag = 0;
@@ -318,7 +657,8 @@ public class UssdController {
             } else {
                 try {
                     CustomerBalanceDto balance = getCustomerBalance(savedSession.msisdn);
-                    message = String.format("Your current balance is %s GHS and your bonus amount is %s GHS", balance.balance, balance.bonus);
+                    message = String.format("Your current balance is %s GHS and your bonus amount is %s GHS",
+                            balance.balance, balance.bonus);
                     continueFlag = 1;
                 } catch (Exception e) {
                     String response = e.getMessage();
@@ -331,14 +671,15 @@ public class UssdController {
                             .replace("\":\"", "")
                             .replace(":", "")
                             .replace("\"\"", "");
-                    //JSONObject oj = new JSONObject(messageAfterColon);
+                    // JSONObject oj = new JSONObject(messageAfterColon);
                     message = messageAfterColon;
                     System.out.println(messageAfterColon);
 
                 }
             }
         } else if (savedSession.isSecondStep() && savedSession.getPosition() == FIFTH) {
-            CustomerDepositResponseDto depositResponse = customerDeposit(savedSession.getMsisdn(), savedSession.getData(), savedSession.getNetwork());
+            CustomerDepositResponseDto depositResponse = customerDeposit(savedSession.getMsisdn(),
+                    savedSession.getData(), savedSession.getNetwork());
             message = depositResponse.success;
             continueFlag = 1;
         }
@@ -350,13 +691,18 @@ public class UssdController {
         int continueFlag = 0;
         List<Game> currentGameDraw = null;
         Session savedSession = sessionRepository.findBySequenceID(s.getSequenceID());
-        //List<Game> currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameDraw().endsWith("A")).sorted(Comparator.comparing(Game::getGameName)).toList();
+        // List<Game> currentGameDraw = gameRepository.findAll().stream().filter(game ->
+        // game.getGameDraw().endsWith("A")).sorted(Comparator.comparing(Game::getGameName)).toList();
         try {
-            currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameTypeId() == 15).sorted(Comparator.comparing(Game::getGameName)).toList();
+            currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameTypeId() == 15)
+                    .sorted(Comparator.comparing(Game::getGameName)).toList();
         } catch (Exception e) {
             e.printStackTrace();
         }
-        final Game gameDraw = s.isMorning() ? currentGameDraw.get(0) : currentGameDraw.get(1);
+        // final Game gameDraw = s.isMorning() || s.isAfternoon() ?
+        // currentGameDraw.get(0) : currentGameDraw.get(1);
+        final Game gameDraw = savedSession.isMorning() ? currentGameDraw.get(0)
+                : savedSession.isAfternoon() ? currentGameDraw.get(2) : currentGameDraw.get(1);
         savedSession.setGameId(gameDraw.getGameId());
         savedSession.setGameTypeId(gameDraw.getGameDraw());
         boolean containsLetters = s.getPosition() != 6 ? ValidationUtils.containsAnyLetters(s.getData()) : false;
@@ -424,48 +770,67 @@ public class UssdController {
                     updateSession(savedSession, false);
                     continueFlag = 1;
                     message = AppConstants.PAYMENT_INIT_MESSAGE;
+
                     Runnable paymentTask = () -> {
-                        Transaction t = mapper.mapTransactionFromSessionBanker(savedSession, false);
-                        System.out.println(t.toString());
-                        ResponseEntity<String> response = handler.client()
-                                .post()
-                                .uri("/api/V1/place-bet")
-                                .body(t)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .retrieve()
-                                .toEntity(String.class);
-                        System.out.println(response.getBody());
-                        System.out.println("--- Running Payment ---");
+                        try {
+                            Transaction t = mapper.mapTransactionFromSessionBanker(savedSession, false);
+                            System.out.println(t.toString());
+                            ResponseEntity<String> response = handler.client()
+                                    .post()
+                                    .uri("/api/V1/place-bet")
+                                    .body(t)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .retrieve()
+                                    .toEntity(String.class);
+                            System.out.println(response.getBody());
+                            System.out.println("--- Running Payment ---");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     };
-                    Runnable sessionTask = () -> {
-                        sessionRepository.deleteById(savedSession.getId());
-                        System.out.println("--- Deleting Session ---");
-                    };
-                    paymentThread.start(paymentTask).join();
-                    sessionThread.start(sessionTask);
+                    try {
+                        Runnable sessionTask = () -> {
+                            sessionRepository.deleteById(savedSession.getId());
+                            System.out.println("--- Deleting Session ---");
+                        };
+                        paymentThread.start(paymentTask).join();
+                        sessionThread.start(sessionTask);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+
                 } else if (savedSession.getData().equals("2")) {
                     updateSession(savedSession, false);
                     continueFlag = 1;
                     message = AppConstants.PAYMENT_INIT_MESSAGE_WALLET;
                     Runnable paymentTask = () -> {
-                        Transaction t = mapper.mapTransactionFromSessionBanker(savedSession, true);
-                        System.out.println(t.toString());
-                        ResponseEntity<String> response = handler.client()
-                                .post()
-                                .uri("/api/V1/place-bet")
-                                .body(t)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .retrieve()
-                                .toEntity(String.class);
-                        System.out.println(response.getBody());
-                        System.out.println("--- Running Payment ---");
+                        try {
+                            Transaction t = mapper.mapTransactionFromSessionBanker(savedSession, true);
+                            System.out.println(t.toString());
+                            ResponseEntity<String> response = handler.client()
+                                    .post()
+                                    .uri("/api/V1/place-bet")
+                                    .body(t)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .retrieve()
+                                    .toEntity(String.class);
+                            System.out.println(response.getBody());
+                            System.out.println("--- Running Payment ---");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     };
-                    Runnable sessionTask = () -> {
-                        sessionRepository.deleteById(savedSession.getId());
-                        System.out.println("--- Deleting Session ---");
-                    };
-                    paymentThread.start(paymentTask).join();
-                    sessionThread.start(sessionTask);
+                    try {
+                        Runnable sessionTask = () -> {
+                            sessionRepository.deleteById(savedSession.getId());
+                            System.out.println("--- Deleting Session ---");
+                        };
+                        paymentThread.start(paymentTask).join();
+                        sessionThread.start(sessionTask);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+
                 }
             } else {
                 String choice = s.getData();
@@ -482,47 +847,63 @@ public class UssdController {
                         continueFlag = 1;
                         message = AppConstants.PAYMENT_INIT_MESSAGE;
                         Runnable paymentTask = () -> {
-                            Transaction t = mapper.mapTransactionFromSessionBanker(savedSession, false);
-                            System.out.println(t.toString());
-                            ResponseEntity<String> response = handler.client()
-                                    .post()
-                                    .uri("/api/V1/place-bet")
-                                    .body(t)
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .retrieve()
-                                    .toEntity(String.class);
-                            System.out.println(response.getBody());
-                            System.out.println("--- Running Payment ---");
+                            try {
+                                Transaction t = mapper.mapTransactionFromSessionBanker(savedSession, false);
+                                System.out.println(t.toString());
+                                ResponseEntity<String> response = handler.client()
+                                        .post()
+                                        .uri("/api/V1/place-bet")
+                                        .body(t)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .retrieve()
+                                        .toEntity(String.class);
+                                System.out.println(response.getBody());
+                                System.out.println("--- Running Payment ---");
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
                         };
-                        Runnable sessionTask = () -> {
-                            sessionRepository.deleteById(savedSession.getId());
-                            System.out.println("--- Deleting Session ---");
-                        };
-                        paymentThread.start(paymentTask).join();
-                        sessionThread.start(sessionTask);
+                        try {
+                            Runnable sessionTask = () -> {
+                                sessionRepository.deleteById(savedSession.getId());
+                                System.out.println("--- Deleting Session ---");
+                            };
+                            paymentThread.start(paymentTask).join();
+                            sessionThread.start(sessionTask);
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
                     } else if (savedSession.getData().equals("2") && savedSession.getPosition() == 6) {
                         updateSession(savedSession, false);
                         continueFlag = 1;
                         message = AppConstants.PAYMENT_INIT_MESSAGE_WALLET;
                         Runnable paymentTask = () -> {
-                            Transaction t = mapper.mapTransactionFromSessionBanker(savedSession, false);
-                            System.out.println(t.toString());
-                            ResponseEntity<String> response = handler.client()
-                                    .post()
-                                    .uri("/api/V1/place-bet")
-                                    .body(t)
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .retrieve()
-                                    .toEntity(String.class);
-                            System.out.println(response.getBody());
-                            System.out.println("--- Running Payment ---");
+                            try {
+                                Transaction t = mapper.mapTransactionFromSessionBanker(savedSession, false);
+                                System.out.println(t.toString());
+                                ResponseEntity<String> response = handler.client()
+                                        .post()
+                                        .uri("/api/V1/place-bet")
+                                        .body(t)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .retrieve()
+                                        .toEntity(String.class);
+                                System.out.println(response.getBody());
+                                System.out.println("--- Running Payment ---");
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
                         };
-                        Runnable sessionTask = () -> {
-                            sessionRepository.deleteById(savedSession.getId());
-                            System.out.println("--- Deleting Session ---");
-                        };
-                        paymentThread.start(paymentTask).join();
-                        sessionThread.start(sessionTask);
+                        try {
+                            Runnable sessionTask = () -> {
+                                sessionRepository.deleteById(savedSession.getId());
+                                System.out.println("--- Deleting Session ---");
+                            };
+                            paymentThread.start(paymentTask).join();
+                            sessionThread.start(sessionTask);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     } else {
                         DiscountResponse response = applyCoupon(s.getAmount(), s.getData());
                         System.out.printf("Discount %s => ", response);
@@ -536,22 +917,32 @@ public class UssdController {
                     updateSession(savedSession, false);
                     continueFlag = 1;
                     message = AppConstants.PAYMENT_INIT_MESSAGE;
+
                     Runnable paymentTask = () -> {
-                        Transaction t = mapper.mapTransactionFromSessionBanker(savedSession, false);
-                        System.out.println(t.toString());
-                        ResponseEntity<String> response = handler.client()
-                                .post()
-                                .uri("/api/V1/place-bet")
-                                .body(t)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .retrieve()
-                                .toEntity(String.class);
-                        System.out.println(response.getBody());
-                        System.out.println("--- Running Payment ---");
+                        try {
+                            Transaction t = mapper.mapTransactionFromSessionBanker(savedSession, false);
+                            System.out.println(t.toString());
+                            ResponseEntity<String> response = handler.client()
+                                    .post()
+                                    .uri("/api/V1/place-bet")
+                                    .body(t)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .retrieve()
+                                    .toEntity(String.class);
+                            System.out.println(response.getBody());
+                            System.out.println("--- Running Payment ---");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     };
+
                     Runnable sessionTask = () -> {
-                        sessionRepository.deleteById(savedSession.getId());
-                        System.out.println("--- Deleting Session ---");
+                        try {
+                            sessionRepository.deleteById(savedSession.getId());
+                            System.out.println("--- Deleting Session ---");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     };
                     paymentThread.start(paymentTask).join();
                     sessionThread.start(sessionTask);
@@ -569,10 +960,10 @@ public class UssdController {
         try {
             savedSession.setData(session.getData());
 
-//            if (savedSession.getGameType() == 4 && savedSession.getPosition() == 2) {
-//                System.out.println("HAPPENING.........");
-//                session.setAmount(Double.valueOf(session.getData()));
-//            }
+            // if (savedSession.getGameType() == 4 && savedSession.getPosition() == 2) {
+            // System.out.println("HAPPENING.........");
+            // session.setAmount(Double.valueOf(session.getData()));
+            // }
 
             if (increment) {
                 savedSession.setPosition(savedSession.getPosition() + 1);
@@ -601,7 +992,8 @@ public class UssdController {
         sessionRepository.delete(session);
     }
 
-    private String megaGameOptions(int gameType, int position, Session s) throws ExecutionException, InterruptedException {
+    private String megaGameOptions(int gameType, int position, Session s)
+            throws ExecutionException, InterruptedException {
         String message = null;
         Game gameDraw;
         int continueFlag = 0;
@@ -611,7 +1003,8 @@ public class UssdController {
         savedSession.setCurrentGame(AppConstants.MEGA);
         updateSession(savedSession, false);
         System.out.println(savedSession.toString());
-        boolean containsLetters = savedSession.getPosition() != 8 ? ValidationUtils.containsAnyLetters(s.getData()) : false;
+        boolean containsLetters = savedSession.getPosition() != 8 ? ValidationUtils.containsAnyLetters(s.getData())
+                : false;
         if (!containsLetters) {
             if (savedSession.getGameType() == FIRST && savedSession.getPosition() == SECOND) {
                 message = AppConstants.MEGA_OPTIONS_CHOICE_MESSAGE;
@@ -643,12 +1036,14 @@ public class UssdController {
                     s.setGameTypeCode(Integer.parseInt("1"));
                     updateSession(savedSession, true);
                 } else {
-                    message = exceeds ? AppConstants.EXCEEDS_NUMBER_LIMIT_MESSAGE : AppConstants.MEGA_VALIDATION_MESSAGE;
+                    message = exceeds ? AppConstants.EXCEEDS_NUMBER_LIMIT_MESSAGE
+                            : AppConstants.MEGA_VALIDATION_MESSAGE;
                     deleteSession(savedSession);
                 }
 
                 if (!repeatedNumbers.isEmpty()) {
-                    message = exceeds ? AppConstants.EXCEEDS_NUMBER_LIMIT_MESSAGE : AppConstants.MEGA_VALIDATION_MESSAGE;
+                    message = exceeds ? AppConstants.EXCEEDS_NUMBER_LIMIT_MESSAGE
+                            : AppConstants.MEGA_VALIDATION_MESSAGE;
                     deleteSession(savedSession);
                 }
             } else if (savedSession.getGameType() == FIRST && savedSession.getPosition() == FIFTH) {
@@ -664,11 +1059,16 @@ public class UssdController {
                     message = "Amount should be between 1GHS and 20GHS \n 0 Back";
                 } else {
                     int finalAmount = amount;
-                    CompletableFuture<Game> matchAsync = CompletableFuture.supplyAsync(()
-                            -> gameRepository.findAll().stream().distinct().filter(game -> game.getAmount() == Double.parseDouble(String.valueOf(finalAmount))).findFirst().get());
+                    CompletableFuture<Game> matchAsync = CompletableFuture
+                            .supplyAsync(() -> gameRepository.findAll().stream().distinct()
+                                    .filter(game -> game.getAmount() == Double.parseDouble(String.valueOf(finalAmount)))
+                                    .findFirst().get());
                     gameDraw = matchAsync.get();
-                    //gameDraw = games.stream().filter(game -> game.getAmount() == Double.parseDouble(String.valueOf(finalAmount))).findFirst().get();
-                    //gameDraw = gameRepository.findAll().stream().distinct().filter(game -> game.getAmount() == Double.parseDouble(String.valueOf(finalAmount))).findFirst().get();
+                    // gameDraw = games.stream().filter(game -> game.getAmount() ==
+                    // Double.parseDouble(String.valueOf(finalAmount))).findFirst().get();
+                    // gameDraw = gameRepository.findAll().stream().distinct().filter(game ->
+                    // game.getAmount() ==
+                    // Double.parseDouble(String.valueOf(finalAmount))).findFirst().get();
                     String ticketInfo = """
                             Tck info:
                             --
@@ -861,27 +1261,37 @@ public class UssdController {
         return menuResponse(savedSession, continueFlag, message);
     }
 
-    private String directGameOptions(int gameType, int position, Session s) throws ExecutionException, InterruptedException {
+    private String directGameOptions(int gameType, int position, Session s)
+            throws ExecutionException, InterruptedException {
         String message = null;
         int continueFlag = 0;
         Session savedSession = sessionRepository.findBySequenceID(s.getSequenceID());
         System.err.printf("\nDIRECT SESSION => %s\n", savedSession);
         System.err.printf("\nSESSION SESSION => %s\n", savedSession);
-        List<Game> currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameTypeId() == 15).sorted(Comparator.comparing(Game::getGameName)).toList();
-        Game gameDraw = savedSession.isMorning() ? currentGameDraw.get(0) : currentGameDraw.get(1);
-        //System.out.printf("Game Name ----> %s", gameDraw.getGameName());
+        List<Game> currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameTypeId() == 15)
+                .sorted(Comparator.comparing(Game::getGameName)).toList();
+        // Game gameDraw = savedSession.isMorning() ? currentGameDraw.get(0) :
+        // currentGameDraw.get(1);
+        Game gameDraw = savedSession.isMorning() ? currentGameDraw.get(0)
+                : savedSession.isAfternoon() ? currentGameDraw.get(2) : currentGameDraw.get(1);
+        System.out.printf("\nGame List ---->", currentGameDraw.iterator().next());
+        System.out.printf("\nGame Name ----> %s", gameDraw.getGameName());
         savedSession.setGameId(gameDraw.getGameId());
         savedSession.setGameTypeId(gameDraw.getGameDraw());
         savedSession.setBetTypeCode(AppConstants.DIRECT);
         AtomicInteger index = new AtomicInteger(1);
-        List<String> directGames = savedSession.isMorning() ? AppConstants.DIRECT_GAMES_MORNING : AppConstants.DIRECT_GAMES;
+        List<String> directGames = savedSession.isMorning() || savedSession.isAfternoon()
+                ? AppConstants.DIRECT_GAMES_MORNING
+                : AppConstants.DIRECT_GAMES;
         updateSession(savedSession, false);
-        boolean containsLetters = savedSession.getPosition() != 7 ? ValidationUtils.containsAnyLetters(s.getData()) : false;
+        boolean containsLetters = savedSession.getPosition() != 7 ? ValidationUtils.containsAnyLetters(s.getData())
+                : false;
         if (!containsLetters) {
             if (savedSession.getGameType() == SECOND && savedSession.getPosition() == SECOND) {
                 StringBuilder builder = new StringBuilder();
                 directGames.stream().forEachOrdered(game -> {
                     int currentIndex = index.getAndIncrement();
+                    // Remove direct 5
                     if (currentIndex == 5) { // Skip the element at index 4
                         return;
                     }
@@ -890,7 +1300,8 @@ public class UssdController {
                 message = builder.toString();
             } else if (savedSession.getGameType() == SECOND && savedSession.getPosition() == THIRD) {
                 try {
-                    String currentGame = directGames.get(ValidationUtils.parseNumber(s.getData()).intValue() - 1).toString();
+                    String currentGame = directGames.get(ValidationUtils.parseNumber(s.getData()).intValue() - 1)
+                            .toString();
                     int currentMax = ValidationUtils.parseNumber(s.getData()).intValue();
                     savedSession.setMax(currentMax);
                     message = """
@@ -899,7 +1310,7 @@ public class UssdController {
                             99. More info
                             """;
                     message = String.format(message, currentGame);
-                    //s.setGameType(Integer.parseInt(s.getData()));
+                    // s.setGameType(Integer.parseInt(s.getData()));
                     s.setGameTypeCode(Integer.parseInt(s.getData()));
                     s.setCurrentGame(currentGame);
                     updateSession(s, false);
@@ -917,15 +1328,25 @@ public class UssdController {
                 List<Integer> numbers = ValidationUtils.extractNumbers(input);
                 Set<Integer> repeatedNumbers = ValidationUtils.findRepeatedNumbers(numbers);
 
-
-                if (savedSession.getMax() < len || savedSession.getMax() > len || exceeds || containsZero || !repeatedNumbers.isEmpty()) {
+                if (savedSession.getMax() < len || savedSession.getMax() > len || exceeds || containsZero
+                        || !repeatedNumbers.isEmpty()) {
                     message = exceeds ? AppConstants.EXCEEDS_NUMBER_LIMIT_MESSAGE : AppConstants.INVALID_TRAN_MESSAGE;
                     if (!repeatedNumbers.isEmpty()) {
                         message = "Duplicate numbers entered\n 0) Back";
                     }
                     deleteSession(savedSession);
                 } else {
-                    message = "Type amount to Start (1 - 20)";
+                    int game = savedSession.getGameTypeCode();
+                    System.out.printf("\n**** Current Game type Code %s **** \n", game);
+                    switch (game) {
+                        case 1, 2, 3:
+                            message = "Type amount to Start (2 - 100)";
+                            break;
+                        default:
+                            message = "Type amount to Start (2 - 20)";
+                    }
+
+                    // message = "Type amount to Start (2 - 20)";
                     savedSession.setSelectedNumbers(s.getData());
                     updateSession(savedSession, false);
                 }
@@ -933,26 +1354,53 @@ public class UssdController {
                 Number amount = ValidationUtils.parseNumber(s.getData());
                 boolean isDecimal = ValidationUtils.isDecimal(amount.doubleValue());
                 if (!isDecimal) {
-                    if (amount.intValue() > 20 || amount.intValue() < 1) {
-                        deleteSession(savedSession);
-                        message = "Amount should be between 1GHS and 20GHS \n 0 Back";
+                    if (savedSession.getGameTypeCode().equals(1) || savedSession.getGameTypeCode().equals(2)
+                            || savedSession.getGameTypeCode().equals(3)) {
+                        if (amount.intValue() > 100 || amount.intValue() < 2) {
+                            deleteSession(savedSession);
+                            message = "Amount should be between 2GHS and 100GHS \n 0 Back";
+                        } else {
+                            String ticketInfo = """
+                                    Tck info:
+                                    --
+                                    %s
+                                    Your No: %s
+                                    \s
+                                    1) to pay %s GHS.
+                                    \s
+                                    2) to apply coupon code.
+                                    \s
+                                    0) to cancel.
+                                    \s""";
+                            s.setAmount(Double.parseDouble(s.getData()));
+                            // s.setCurrentGame(directGameName);
+                            message = String.format(ticketInfo, gameDraw.getGameName(), s.getSelectedNumbers(),
+                                    s.getAmount());
+                            updateSession(s, false);
+                        }
                     } else {
-                        String ticketInfo = """
-                                Tck info:
-                                --
-                                %s
-                                Your No: %s
-                                \s
-                                1) to pay %s GHS.
-                                \s
-                                2) to apply coupon code.
-                                \s
-                                0) to cancel.
-                                \s""";
-                        s.setAmount(Double.parseDouble(s.getData()));
-                        //s.setCurrentGame(directGameName);
-                        message = String.format(ticketInfo, gameDraw.getGameName(), s.getSelectedNumbers(), s.getAmount());
-                        updateSession(s, false);
+                        if (amount.intValue() > 20 || amount.intValue() < 1) {
+                            deleteSession(savedSession);
+                            message = "Amount should be between 1GHS and 20GHS \n 0 Back";
+                        } else {
+                            String ticketInfo = """
+                                    Tck info:
+                                    --
+                                    %s
+                                    Your No: %s
+                                    \s
+                                    1) to pay %s GHS.
+                                    \s
+                                    2) to apply coupon code.
+                                    \s
+                                    0) to cancel.
+                                    \s""";
+                            s.setAmount(Double.parseDouble(s.getData()));
+                            // s.setCurrentGame(directGameName);
+                            message = String.format(ticketInfo, gameDraw.getGameName(), s.getSelectedNumbers(),
+                                    s.getAmount());
+                            updateSession(s, false);
+                        }
                     }
                 } else {
                     deleteSession(savedSession);
@@ -1052,8 +1500,12 @@ public class UssdController {
                         }
                     };
                     Runnable sessionTask = () -> {
-                        sessionRepository.deleteById(savedSession.getId());
-                        System.out.println("Session Thread running...");
+                        try {
+                            sessionRepository.deleteById(savedSession.getId());
+                            System.out.println("Session Thread running...");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     };
                     paymentThread.start(paymentTask).join();
                     sessionThread.start(sessionTask);
@@ -1171,25 +1623,30 @@ public class UssdController {
         int continueFlag = 0;
         String message = null;
         int codeType = 0;
-        List<String> permGames = s.isMorning() ? AppConstants.PERM_GAMES_MORNING : AppConstants.PERM_GAMES;
+        List<String> permGames = s.isMorning() || s.isAfternoon() ? AppConstants.PERM_GAMES_MORNING
+                : AppConstants.PERM_GAMES;
         AtomicReference<Integer> index = new AtomicReference<>(0);
-        List<Game> currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameTypeId() == 15).sorted(Comparator.comparing(Game::getGameName)).toList();
-        ;
-        final Game gameDraw = s.isMorning() ? currentGameDraw.get(0) : currentGameDraw.get(1);
+        List<Game> currentGameDraw = gameRepository.findAll().stream().filter(game -> game.getGameTypeId() == 15)
+                .sorted(Comparator.comparing(Game::getGameName)).toList();
+        // final Game gameDraw = s.isMorning() ? currentGameDraw.get(0) :
+        // currentGameDraw.get(1);
+        final Game gameDraw = s.isMorning() ? currentGameDraw.get(0)
+                : s.isAfternoon() ? currentGameDraw.get(2) : currentGameDraw.get(1);
         Session savedSession = sessionRepository.findBySequenceID(s.getSequenceID());
         savedSession.setGameId(gameDraw.getGameId());
         savedSession.setGameTypeId(gameDraw.getGameDraw());
-        //savedSession.setBetTypeCode(AppConstants.PERM);
+        // savedSession.setBetTypeCode(AppConstants.PERM);
         updateSession(savedSession, false);
-        boolean containsLetters = savedSession.getPosition() != 7 ? ValidationUtils.containsAnyLetters(s.getData()) : false;
+        boolean containsLetters = savedSession.getPosition() != 7 ? ValidationUtils.containsAnyLetters(s.getData())
+                : false;
         if (!containsLetters) {
             if (savedSession.getGameType() == THIRD && savedSession.getPosition() == SECOND) {
                 StringBuilder builder = new StringBuilder();
                 permGames.stream().forEachOrdered(game -> {
                     int currentIndex = index.updateAndGet(v -> v + 1);
-                    if (currentIndex == 4) { // Skip the element at index 5
-                        return;
-                    }
+                    // if (currentIndex == 4) { // Skip the element at index 5
+                    // return;
+                    // }
                     builder.append(String.format("%s) %s\n", currentIndex, game.toString()));
                 });
                 message = builder.toString();
@@ -1206,9 +1663,9 @@ public class UssdController {
                     case "1" -> 2;
                     case "2" -> 3;
                     case "3" -> 4;
-                    case "4" -> 5;
-                    case "5" -> 6;
-                    case "6" -> 7;
+                    case "4" -> 6;
+                    // case "5" -> 6;
+                    // case "6" -> 7;
                     default -> throw new IllegalStateException("Unexpected value: " + s.getData());
                 };
                 savedSession.setCurrentGame(currentGame);
@@ -1241,45 +1698,83 @@ public class UssdController {
                 List<Integer> numbers = ValidationUtils.extractNumbers(input);
                 Set<Integer> repeatedNumbers = ValidationUtils.findRepeatedNumbers(numbers);
 
-                // System.out.printf("Len => %s Min => %s Max => %s Exceeds => %s\n", len, savedSession.getMin(), savedSession.getMax(), exceeds);
+                // System.out.printf("Len => %s Min => %s Max => %s Exceeds => %s\n", len,
+                // savedSession.getMin(), savedSession.getMax(), exceeds);
 
-                if (!ValidationUtils.isBetween(len, savedSession.getMin(), savedSession.getMax()) || exceeds || containsZero || !repeatedNumbers.isEmpty()) {
+                if (!ValidationUtils.isBetween(len, savedSession.getMin(), savedSession.getMax()) || exceeds
+                        || containsZero || !repeatedNumbers.isEmpty()) {
                     message = exceeds ? AppConstants.EXCEEDS_NUMBER_LIMIT_MESSAGE : AppConstants.INVALID_TRAN_MESSAGE;
                     if (!repeatedNumbers.isEmpty()) {
                         message = "Duplicate numbers entered\n 0) Back";
                     }
                     deleteSession(savedSession);
                 } else {
-                    message = """
-                            Type amount to Start (1 - 20):
-                            """;
+                    int game = savedSession.getGameTypeCode();
+                    System.out.printf("\n**** Current Game type Code %s **** \n", game);
+                    switch (game) {
+                        case 2, 3:
+                            message = "Type amount to Start (1 - 100)";
+                            break;
+                        default:
+                            message = "Type amount to Start (1 - 20)";
+                    }
                     updateSession(savedSession, false);
                 }
             } else if (savedSession.getGameType() == THIRD && savedSession.getPosition() == FIFTH) {
                 Number amount = ValidationUtils.parseNumber(s.getData());
                 boolean isDecimal = ValidationUtils.isDecimal(amount.doubleValue());
                 if (!isDecimal) {
-                    if (amount.intValue() > 20 || amount.intValue() < 1) {
-                        deleteSession(savedSession);
-                        message = "Amount should be between 1GHS and 20GHS \n 0 Back";
+                    if (savedSession.getGameTypeCode().equals(2) || savedSession.getGameTypeCode().equals(3)) {
+                        if (amount.intValue() > 100 || amount.intValue() < 1) {
+                            deleteSession(savedSession);
+                            message = "Amount should be between 1GHS and 100GHS \n 0 Back";
+                        } else {
+                            savedSession.setAmount(Double.parseDouble(s.getData()));
+                            String total = calculateAmountPermAPI(savedSession, "perm");
+                            String ticketInfo = """
+                                    Tck info:
+                                    --
+                                    %s
+                                    Your No: %s
+                                    \s
+                                    1) to pay %s GHS.
+                                    \s
+                                    2) to apply coupon code.
+                                    \s
+                                    0) to cancel.
+                                    \s""";
+                            s.setAmount(Double.parseDouble(s.getData()));
+                            // s.setCurrentGame(directGameName);
+                            // message = String.format(ticketInfo, gameDraw.getGameName(),
+                            // s.getSelectedNumbers(), s.getAmount());
+                            message = String.format(ticketInfo, gameDraw.getGameName(), s.getSelectedNumbers(), total);
+                            savedSession.setAmount(Double.valueOf(total));
+                            updateSession(s, false);
+                        }
                     } else {
-                        savedSession.setAmount(Double.parseDouble(s.getData()));
-                        String total = calculateAmountPermAPI(savedSession, "perm");
-                        String ticketInfo = """
-                                Tck info:
-                                --
-                                %s
-                                Your No: %s
-                                \s
-                                1) to pay %s GHS.
-                                \s
-                                2) to apply coupon code.
-                                \s
-                                0) to cancel.
-                                \s""";
-                        message = String.format(ticketInfo, gameDraw.getGameName(), s.getSelectedNumbers(), total);
-                        savedSession.setAmount(Double.valueOf(total));
-                        updateSession(s, false);
+                        if (amount.intValue() > 20 || amount.intValue() < 1) {
+                            deleteSession(savedSession);
+                            message = "Amount should be between 1GHS and 20GHS \n 0 Back";
+                        } else {
+                            savedSession.setAmount(Double.parseDouble(s.getData()));
+                            String total = calculateAmountPermAPI(savedSession, "perm");
+                            System.out.printf("Total %s", total);
+                            String ticketInfo = """
+                                    Tck info:
+                                    --
+                                    %s
+                                    Your No: %s
+                                    \s
+                                    1) to pay %s GHS.
+                                    \s
+                                    2) to apply coupon code.
+                                    \s
+                                    0) to cancel.
+                                    \s""";
+                            message = String.format(ticketInfo, gameDraw.getGameName(), s.getSelectedNumbers(), total);
+                            savedSession.setAmount(Double.valueOf(total));
+                            updateSession(s, false);
+                        }
                     }
                 } else {
                     deleteSession(savedSession);
@@ -1301,27 +1796,36 @@ public class UssdController {
                     message = AppConstants.PAYMENT_INIT_MESSAGE;
                     System.out.printf("Perm session => ", savedSession.toString());
                     Runnable paymentTask = () -> {
-                        Transaction t = mapper.mapTransactionFromSessionPerm(s);
-                        System.out.println(t.toString());
-                        ResponseEntity<String> response = handler.client()
-                                .post()
-                                .uri("/api/V1/place-bet")
-                                .body(t)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .retrieve()
-                                .toEntity(String.class);
-                        System.out.println(response.getBody());
+                        try {
+                            Transaction t = mapper.mapTransactionFromSessionPerm(s);
+                            System.out.println(t.toString());
+                            ResponseEntity<String> response = handler.client()
+                                    .post()
+                                    .uri("/api/V1/place-bet")
+                                    .body(t)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .retrieve()
+                                    .toEntity(String.class);
+                            System.out.println(response.getBody());
 
-                        sessionRepository.deleteById(savedSession.getId());
-                        System.out.println("Payment Thread running...");
+                            sessionRepository.deleteById(savedSession.getId());
+                            System.out.println("Payment Thread running...");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     };
 
                     Runnable sessionTask = () -> {
-                        sessionRepository.deleteById(savedSession.getId());
-                        System.out.println("Session Thread running...");
+                        try {
+                            sessionRepository.deleteById(savedSession.getId());
+                            System.out.println("Session Thread running...");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     };
                     paymentThread.start(paymentTask).join();
                     sessionThread.start(sessionTask);
+
                 }
             } else if (savedSession.getPosition() == SEVEN) {
                 if (savedSession.getData().equals("1")) {
@@ -1330,19 +1834,23 @@ public class UssdController {
                     updateSession(s, true);
                     message = AppConstants.PAYMENT_INIT_MESSAGE;
                     Runnable paymentTask = () -> {
-                        Transaction t = mapper.mapTransactionFromSession(savedSession, gameDraw, false);
-                        System.out.println(t.toString());
-                        ResponseEntity<String> response = handler.client()
-                                .post()
-                                .uri("/api/V1/place-bet")
-                                .body(t)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .retrieve()
-                                .toEntity(String.class);
-                        System.out.println(response.getBody());
+                        try {
+                            Transaction t = mapper.mapTransactionFromSession(savedSession, gameDraw, false);
+                            System.out.println(t.toString());
+                            ResponseEntity<String> response = handler.client()
+                                    .post()
+                                    .uri("/api/V1/place-bet")
+                                    .body(t)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .retrieve()
+                                    .toEntity(String.class);
+                            System.out.println(response.getBody());
 
-                        sessionRepository.deleteById(savedSession.getId());
-                        System.out.println("Payment Thread running...");
+                            sessionRepository.deleteById(savedSession.getId());
+                            System.out.println("Payment Thread running...");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     };
                     Runnable sessionTask = () -> {
                         sessionRepository.deleteById(savedSession.getId());
@@ -1357,27 +1865,35 @@ public class UssdController {
                     updateSession(s, true);
                     message = AppConstants.PAYMENT_INIT_MESSAGE_WALLET;
                     Runnable paymentTask = () -> {
-                        Transaction t = mapper.mapTransactionFromSession(savedSession, gameDraw, true);
-                        System.out.println(t.toString());
-                        ResponseEntity<String> response = handler.client()
-                                .post()
-                                .uri("/api/V1/place-bet")
-                                .body(t)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .retrieve()
-                                .toEntity(String.class);
-                        System.out.println(response.getBody());
+                        try {
+                            Transaction t = mapper.mapTransactionFromSession(savedSession, gameDraw, true);
+                            System.out.println(t.toString());
+                            ResponseEntity<String> response = handler.client()
+                                    .post()
+                                    .uri("/api/V1/place-bet")
+                                    .body(t)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .retrieve()
+                                    .toEntity(String.class);
+                            System.out.println(response.getBody());
 
-                        sessionRepository.deleteById(savedSession.getId());
-                        System.out.println("Payment Thread running...");
+                            sessionRepository.deleteById(savedSession.getId());
+                            System.out.println("Payment Thread running...");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     };
-                    Runnable sessionTask = () -> {
-                        sessionRepository.deleteById(savedSession.getId());
-                        System.out.println("Session Thread running...");
-                    };
-                    paymentThread.start(paymentTask).join();
-                    sessionThread.start(sessionTask);
-                    continueFlag = 1;
+                    try {
+                        Runnable sessionTask = () -> {
+                            sessionRepository.deleteById(savedSession.getId());
+                            System.out.println("Session Thread running...");
+                        };
+                        paymentThread.start(paymentTask).join();
+                        sessionThread.start(sessionTask);
+                        continueFlag = 1;
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 } else {
                     DiscountResponse response = applyCoupon(s.getAmount(), s.getData());
                     System.out.printf("Discount => ", response);
@@ -1395,19 +1911,23 @@ public class UssdController {
                 if (savedSession.getData().equals("1")) {
                     message = AppConstants.PAYMENT_INIT_MESSAGE;
                     Runnable paymentTask = () -> {
-                        Transaction t = mapper.mapTransactionFromSession(s, gameDraw, false);
-                        System.out.println(t.toString());
-                        ResponseEntity<String> response = handler.client()
-                                .post()
-                                .uri("/api/V1/place-bet")
-                                .body(t)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .retrieve()
-                                .toEntity(String.class);
-                        System.out.println(response.getBody());
+                        try {
+                            Transaction t = mapper.mapTransactionFromSession(s, gameDraw, false);
+                            System.out.println(t.toString());
+                            ResponseEntity<String> response = handler.client()
+                                    .post()
+                                    .uri("/api/V1/place-bet")
+                                    .body(t)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .retrieve()
+                                    .toEntity(String.class);
+                            System.out.println(response.getBody());
 
-                        sessionRepository.deleteById(savedSession.getId());
-                        System.out.println("Payment Thread running...");
+                            sessionRepository.deleteById(savedSession.getId());
+                            System.out.println("Payment Thread running...");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     };
                     Runnable sessionTask = () -> {
                         sessionRepository.deleteById(savedSession.getId());
@@ -1418,8 +1938,46 @@ public class UssdController {
                     continueFlag = 1;
                 } else if (savedSession.getData().equals("2")) {
                     message = AppConstants.PAYMENT_INIT_MESSAGE_WALLET;
+
                     Runnable paymentTask = () -> {
-                        Transaction t = mapper.mapTransactionFromSession(s, gameDraw, true);
+                        try {
+                            Transaction t = mapper.mapTransactionFromSession(s, gameDraw, true);
+                            System.out.println(t.toString());
+                            ResponseEntity<String> response = handler.client()
+                                    .post()
+                                    .uri("/api/V1/place-bet")
+                                    .body(t)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .retrieve()
+                                    .toEntity(String.class);
+                            System.out.println(response.getBody());
+
+                            sessionRepository.deleteById(savedSession.getId());
+                            System.out.println("Payment Thread running...");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    };
+                    Runnable sessionTask = () -> {
+                        try {
+                            sessionRepository.deleteById(savedSession.getId());
+                            System.out.println("Session Thread running...");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    };
+                    paymentThread.start(paymentTask).join();
+                    sessionThread.start(sessionTask);
+                    continueFlag = 1;
+
+                }
+            } else {
+                savedSession.setCurrentGame("direct");
+                updateSession(s, true);
+                message = AppConstants.PAYMENT_INIT_MESSAGE;
+                Runnable paymentTask = () -> {
+                    try {
+                        Transaction t = mapper.mapTransactionFromSession(savedSession, gameDraw, false);
                         System.out.println(t.toString());
                         ResponseEntity<String> response = handler.client()
                                 .post()
@@ -1432,37 +1990,17 @@ public class UssdController {
 
                         sessionRepository.deleteById(savedSession.getId());
                         System.out.println("Payment Thread running...");
-                    };
-                    Runnable sessionTask = () -> {
-                        sessionRepository.deleteById(savedSession.getId());
-                        System.out.println("Session Thread running...");
-                    };
-                    paymentThread.start(paymentTask).join();
-                    sessionThread.start(sessionTask);
-                    continueFlag = 1;
-                }
-            } else {
-                savedSession.setCurrentGame("direct");
-                updateSession(s, true);
-                message = AppConstants.PAYMENT_INIT_MESSAGE;
-                Runnable paymentTask = () -> {
-                    Transaction t = mapper.mapTransactionFromSession(savedSession, gameDraw, false);
-                    System.out.println(t.toString());
-                    ResponseEntity<String> response = handler.client()
-                            .post()
-                            .uri("/api/V1/place-bet")
-                            .body(t)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .retrieve()
-                            .toEntity(String.class);
-                    System.out.println(response.getBody());
-
-                    sessionRepository.deleteById(savedSession.getId());
-                    System.out.println("Payment Thread running...");
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 };
                 Runnable sessionTask = () -> {
-                    sessionRepository.deleteById(savedSession.getId());
-                    System.out.println("Session Thread running...");
+                    try {
+                        sessionRepository.deleteById(savedSession.getId());
+                        System.out.println("Session Thread running...");
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 };
                 paymentThread.start(paymentTask).join();
                 sessionThread.start(sessionTask);
@@ -1490,8 +2028,8 @@ public class UssdController {
         ResponseEntity<String> response = handler.client()
                 .get()
                 .uri("/api/V1/recent-tickets?msisdn=" + msisdn)
-                //.body(String.format("{\"msisdn\":\"%s\"}", msisdn))
-                //.contentType(MediaType.APPLICATION_JSON)
+                // .body(String.format("{\"msisdn\":\"%s\"}", msisdn))
+                // .contentType(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .toEntity(String.class);
         return response.getBody();
@@ -1507,7 +2045,8 @@ public class UssdController {
     }
 
     private CustomerDepositResponseDto customerDeposit(String msisdn, String amount, String channel) {
-        String body = String.format("{\"msisdn\":\"%s\",\"amount\":\"%s\",\"channel\":\"%s\"}", msisdn, amount, channel);
+        String body = String.format("{\"msisdn\":\"%s\",\"amount\":\"%s\",\"channel\":\"%s\"}", msisdn, amount,
+                channel);
         ResponseEntity<CustomerDepositResponseDto> response = handler.client()
                 .post()
                 .uri("/api/V1/account/deposit")
@@ -1520,9 +2059,10 @@ public class UssdController {
 
     @Async
     private String calculateAmountPermAPI(Session session, String type) {
-        String body = String.format("{\"amount\":\"%s\",\"selected_numbers\":\"%s\",\"bet_type_code\":\"%s\",\"bet_type\":\"%s\"}"
-                , session.getAmount(), session.getSelectedNumbers(), session.getBetTypeCode(), type);
-        System.out.println(body);
+        String body = String.format(
+                "{\"amount\":\"%s\",\"selected_numbers\":\"%s\",\"bet_type_code\":\"%s\",\"bet_type\":\"%s\"}",
+                session.getAmount(), session.getSelectedNumbers(), session.getBetTypeCode(), type);
+        System.out.printf("\n ***Body***\n", body);
         ResponseEntity<String> response = handler.client()
                 .post()
                 .uri("/api/V1/request-bet-amount")
@@ -1538,8 +2078,9 @@ public class UssdController {
 
     @Async
     private String calculateAmountBankerAPI(Session session, String type) {
-        String body = String.format("{\"amount\":\"%s\",\"selected_numbers\":\"%s\",\"bet_type_code\":\"%s\",\"bet_type\":\"%s\"}"
-                , session.getAmount(), session.getSelectedNumbers(), 2, type);
+        String body = String.format(
+                "{\"amount\":\"%s\",\"selected_numbers\":\"%s\",\"bet_type_code\":\"%s\",\"bet_type\":\"%s\"}",
+                session.getAmount(), session.getSelectedNumbers(), 2, type);
         System.out.println(body);
         ResponseEntity<String> response = handler.client()
                 .post()
@@ -1567,6 +2108,7 @@ public class UssdController {
                 Contact us:
                 0303957964
                 0303958006
+                0531011932
                 """);
     }
 
@@ -1577,6 +2119,13 @@ public class UssdController {
         json.addProperty("timestamp", session.getTimeStamp());
         json.addProperty("message", message);
         json.addProperty("continueFlag", continueFlag);
+        return json.toString();
+    }
+
+    public String eligibityRequest(Session session) {
+        JsonObject json = new JsonObject();
+        json.addProperty("msisdn", session.getMsisdn());
+        json.addProperty("channel", session.getNetwork());
         return json.toString();
     }
 
@@ -1624,7 +2173,7 @@ public class UssdController {
         return dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH);
     }
 
-    public boolean handleExceptionForSunday(Session s, boolean isEvening) {
+    public void handleExceptionForSunday(Session s, boolean isEvening) {
         try {
             String getDayOfWeekInWords = getDayOfWeekInWords();
             if (getDayOfWeekInWords.equals(AppConstants.SUNDAY)) {
@@ -1643,6 +2192,28 @@ public class UssdController {
             System.out.println(e.getMessage());
             s.setGameType(Integer.valueOf("2"));
         }
-        return isEvening;
+        // return isEvening;
+    }
+
+    public EligibilityResponse checkUserEligibility(Session session) {
+        try {
+            ResponseEntity<String> resp = handler.client()
+                    .get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/api/V1/check-user-eligibility")
+                            .queryParam("msisdn", session.getMsisdn())
+                            .queryParam("channel", session.getNetwork())
+                            .build())
+                    .accept(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .toEntity(String.class);
+            ObjectMapper mapper = new ObjectMapper();
+            EligibilityResponse response = mapper.readValue(resp.getBody(), EligibilityResponse.class);
+            System.out.printf("\nResponse Message => %s", response.getMessage());
+            return response;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

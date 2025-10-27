@@ -14,15 +14,17 @@ public class AppConstants {
     public static final int THIRD = 3;
 
     public static final String WELCOME_MENU_MESSAGE = "Welcome to Afriluck-NLA\n1. Mega Jackpot\n2. Direct Game\n3. Perm Game\n4. Banker\n 0. Back".trim();
-    public static final String WELCOME_MENU_MESSAGE_NEW_EVENING = "Welcome to Afriluck-NLA\n--\n\n1. Anopa Bosuo (10:00 am)\n2. 6/57 Super %s (%s:00 pm)\n\n4. Deposit to wallet\n5. Account\n6. TnCs\n99. Contact Us".trim();
-    public static final String WELCOME_MENU_MESSAGE_NEW = "Welcome to Afriluck-NLA\n--\n\n1. 6/57 Super %s (%s:%s pm)\n\n4. Deposit to wallet\n5. Account\n6. TnCs\n99. Contact Us".trim();
-    public static final String WELCOME_MENU_MESSAGE_NEW_SUNDAY = "Welcome to Afriluck-NLA\n--\n\n1. 6/57 Super %s (5:30 pm)\n\n5. Account\n6. TnCs\n99. Contact Us".trim();
+    public static final String WELCOME_MENU_MESSAGE_NEW_EVENING = "Welcome to Afriluck-NLA\n1. Anopa Bosuo (10:00 am)\n2. Midday Cash(1:30pm)\n3. 6/57 Super %s (%s:00pm)\n\n4. Deposit to wallet\n5. Account\n99. Contact Us".trim();
+    public static final String WELCOME_MENU_MESSAGE_NEW_AFTERNOON = "Welcome to Afriluck-NLA\n1. Midday Cash (1:30 pm)\n2. 6/57 Super %s (%s:00 pm)\n\n4. Deposit to wallet\n5. Account\n99. Contact Us".trim();
+    public static final String WELCOME_MENU_MESSAGE_NEW = "Welcome to Afriluck-NLA\n1. 6/57 Super %s (%s:%s pm)\n\n4. Deposit to wallet\n5. Account\n99. Contact Us".trim();
+    public static final String WELCOME_MENU_MESSAGE_NEW_SUNDAY = "Welcome to Afriluck-NLA\n1. 6/57 Super %s (5:30 pm)\n\n5. Account\n99. Contact Us".trim();
     public static final String WELCOME_MENU_MESSAGE_MORNING = "Welcome to Afriluck-NLA\n2. Direct Game\n3. Perm Game\n4. Banker\n 0. Back".trim();
-    public static final String ACCOUNT_MENU_MESSAGE = "1) Last Draw Results\n2) Recent Transactions\n3) Wallet \n0. Back";
+    public static final String ACCOUNT_MENU_MESSAGE = "1) Last Draw Results\n2) Recent Transactions\n3) Wallet\n4) TnCs \n0. Back";
     public static final String BANKER_MENU_MESSAGE = "1) Banker";
     public static final String MEGA_VALIDATION_MESSAGE = "Numbers must be a total of 6 starting from 1 to 57.\n 0) Back";
     public static final String DISCOUNT_PROMPT_MESSAGE = "Enter your coupon code:";
     public static final String GAME_CLOSED_MESSAGE = "Game is closed for now. Try again later at 7:45 PM";
+
     public static final String DISCOUNT_VALID_MESSAGE = """
             Invalid coupon code. Amount to pay: %s GHS.\n
             Enter 1 to proceed with payment or 0 to cancel.
@@ -44,7 +46,8 @@ public class AppConstants {
             new Pair<>(3, 15),
             new Pair<>(4, 10),
             new Pair<>(5, 8),
-            new Pair<>(6, 8),
+            //new Pair<>(6, 8),
+            new Pair<>(7, 8),
             new Pair<>(7, 8)
     );
     public static final String RANGE_CHOICE_TEMPLATE = """
@@ -73,7 +76,7 @@ public class AppConstants {
             "Perm-2(2 nos. to win)",
             "Perm-3(3 nos. to win)",
             "Perm-4(4 nos. to win)",
-            "Perm-5(5 nos. to win)",
+            //"Perm-5(5 nos. to win)",
             "Perm-6(6 nos. to win)"
     );
 
@@ -87,4 +90,19 @@ public class AppConstants {
     public static String PAYMENT_INIT_MESSAGE = "Payment request initiated.\nApprove to complete ticket purchase";
     public static String PAYMENT_INIT_MESSAGE_WALLET = "Payment request initiated.";
     public static String SUNDAY = "Sunday";
+
+
+    public static List<String> allOptions = List.of(
+                        "Direct-1",
+                        "Direct-2",
+                        "Direct-3",
+                        "Direct-4",
+                        //"Direct-5",
+                        //"Direct-6",
+                        "Perm-2",
+                        "Perm-3",
+                        "Perm-4",
+                        //"Perm-5",
+                        "Perm-6"
+    );
 }
