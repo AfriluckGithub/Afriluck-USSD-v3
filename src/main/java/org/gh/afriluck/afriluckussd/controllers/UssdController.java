@@ -96,19 +96,6 @@ public class UssdController {
 
             if (savedSession == null) {
                 session.setPosition(0);
-                try {
-                    SessionLoggerService loggerService = new SessionLoggerService();
-                    loggerService.logSession(
-                            session.msisdn,
-                            session.network,
-                            session.data,
-                            session.getSequenceID(),
-                            session.message,
-                            LocalDateTime.now());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
                 sessionRepository.save(session);
 
             } else {
@@ -123,7 +110,7 @@ public class UssdController {
             }
 
             if (ValidationUtils.isBetweenGameTime()
-            // true
+                // true
             ) {
                 message = menuResponse(session, 1, AppConstants.GAME_CLOSED_MESSAGE);
                 // message = menuResponse(session, 1, "Game closed for now. Please try again on
@@ -336,28 +323,14 @@ public class UssdController {
         if (savedSession == null) {
             session.setPosition(0);
 
-            try {
-            SessionLoggerService loggerService = new SessionLoggerService();
-            loggerService.logSession(
-            session.msisdn,
-            session.network,
-            session.data,
-            session.getSequenceID(),
-            session.message,
-            LocalDateTime.now()
-            );
-            } catch (Exception e) {
-            e.printStackTrace();
-            }
-
             sessionRepository.save(session);
 
             EligibilityResponse eligibilityResponse = checkUserEligibility(session);
 
             if (!eligibilityResponse.isCan_participate()) {
-            continueFlag = 1;
-            return ResponseMenu.menuResponse(session, continueFlag,
-            eligibilityResponse.getMessage());
+                continueFlag = 1;
+                return ResponseMenu.menuResponse(session, continueFlag,
+                        eligibilityResponse.getMessage());
             }
 
             if (ValidationUtils.isBetweenGameTime()) {
@@ -422,7 +395,7 @@ public class UssdController {
                                 deleteSession(savedSession);
                                 message = exceeds ? AppConstants.EXCEEDS_NUMBER_LIMIT_MESSAGE
                                         : savedSession.getGameType().equals(1) ? AppConstants.MEGA_VALIDATION_MESSAGE
-                                                : "Numbers must be a total of 2 starting from 1 to 57.\\n 0) Back";
+                                        : "Numbers must be a total of 2 starting from 1 to 57.\\n 0) Back";
                             }
                         } else {
                             int max = savedSession.getGameType().equals(1) ? 6 : 2;
@@ -605,11 +578,11 @@ public class UssdController {
                     return menuResponse(savedSession, continueFlag,
                             ValidationUtils.isEveningGameTime()
                                     ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING,
-                                            getDayOfWeekInWords(), getDayOfWeekInWords().equals("Sunday") ? 5 : 7,
-                                            getDayOfWeekInWords().equals("Sunday") ? "30" : "00")
+                                    getDayOfWeekInWords(), getDayOfWeekInWords().equals("Sunday") ? 5 : 7,
+                                    getDayOfWeekInWords().equals("Sunday") ? "30" : "00")
                                     : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, getDayOfWeekInWords(),
-                                            getDayOfWeekInWords().equals("Sunday") ? 5 : 7,
-                                            getDayOfWeekInWords().equals("Sunday") ? "30" : "00"));
+                                    getDayOfWeekInWords().equals("Sunday") ? 5 : 7,
+                                    getDayOfWeekInWords().equals("Sunday") ? "30" : "00"));
                 case "1":
                     continueFlag = 1;
                     response = getDrawResults(savedSession);
