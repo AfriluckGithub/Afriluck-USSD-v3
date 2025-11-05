@@ -110,7 +110,7 @@ public class UssdController {
             }
 
             if (ValidationUtils.isBetweenGameTime()
-                // true
+            // true
             ) {
                 message = menuResponse(session, 1, AppConstants.GAME_CLOSED_MESSAGE);
                 // message = menuResponse(session, 1, "Game closed for now. Please try again on
@@ -395,7 +395,7 @@ public class UssdController {
                                 deleteSession(savedSession);
                                 message = exceeds ? AppConstants.EXCEEDS_NUMBER_LIMIT_MESSAGE
                                         : savedSession.getGameType().equals(1) ? AppConstants.MEGA_VALIDATION_MESSAGE
-                                        : "Numbers must be a total of 2 starting from 1 to 57.\\n 0) Back";
+                                                : "Numbers must be a total of 2 starting from 1 to 57.\\n 0) Back";
                             }
                         } else {
                             int max = savedSession.getGameType().equals(1) ? 6 : 2;
@@ -414,6 +414,7 @@ public class UssdController {
                         continueFlag = 1;
                     } else {
                         continueFlag = 1;
+
                         if (savedSession.getGameType() == 1 || savedSession.getGameType() == 2) {
                             Transaction t = mapper.mapPromo(
                                     savedSession.getMsisdn(),
@@ -421,8 +422,11 @@ public class UssdController {
                                     savedSession.getSelectedNumbers(),
                                     "ussd",
                                     savedSession.getNetwork());
-                            logger.debug("\nTransaction Params => {}\n", t.toString());
-                            Runnable paymentTask = () -> {
+
+                            logger.debug("\nTransaction Params => {}\n", t);
+
+                            // Run payment and session tasks asynchronously
+                            CompletableFuture<Void> paymentFuture = CompletableFuture.runAsync(() -> {
                                 try {
                                     ResponseEntity<String> response = handler.client()
                                             .post()
@@ -434,20 +438,34 @@ public class UssdController {
                                     logger.debug("Response => {}", response.getBody());
                                     logger.debug("--- Running Payment ---");
                                 } catch (Exception e) {
-                                    e.printStackTrace();
+                                    logger.error("Payment failed", e);
                                 }
-                            };
-                            Runnable sessionTask = () -> {
-                                sessionRepository.deleteById(savedSession.getId());
-                                logger.debug("--- Deleting Session ---");
-                            };
-                            paymentThread.start(paymentTask).join();
-                            sessionThread.start(sessionTask);
-                            message = savedSession.getGameType() == 1 ? "Ticket of 5 GHS purchased with free promo."
-                                    : "Ticket of 1 GHS purchased with free promo";
-                            return ResponseMenu.menuResponse(session, continueFlag, message);
+                            });
 
+                            CompletableFuture<Void> sessionFuture = CompletableFuture.runAsync(() -> {
+                                try {
+                                    sessionRepository.deleteById(savedSession.getId());
+                                    logger.debug("--- Deleting Session ---");
+                                } catch (Exception e) {
+                                    logger.error("Session deletion failed", e);
+                                }
+                            });
+
+                            // Run both asynchronously without blocking
+                            CompletableFuture.allOf(paymentFuture, sessionFuture)
+                                    .exceptionally(ex -> {
+                                        logger.error("Error in async tasks", ex);
+                                        return null;
+                                    });
+
+                            // Immediately respond to user (no waiting)
+                            message = savedSession.getGameType() == 1
+                                    ? "Ticket of 5 GHS purchased with free promo."
+                                    : "Ticket of 1 GHS purchased with free promo";
+
+                            return ResponseMenu.menuResponse(session, continueFlag, message);
                         }
+
                     }
                     return ResponseMenu.menuResponse(session, continueFlag, message);
                 default:
@@ -578,11 +596,11 @@ public class UssdController {
                     return menuResponse(savedSession, continueFlag,
                             ValidationUtils.isEveningGameTime()
                                     ? String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW_EVENING,
-                                    getDayOfWeekInWords(), getDayOfWeekInWords().equals("Sunday") ? 5 : 7,
-                                    getDayOfWeekInWords().equals("Sunday") ? "30" : "00")
+                                            getDayOfWeekInWords(), getDayOfWeekInWords().equals("Sunday") ? 5 : 7,
+                                            getDayOfWeekInWords().equals("Sunday") ? "30" : "00")
                                     : String.format(AppConstants.WELCOME_MENU_MESSAGE_NEW, getDayOfWeekInWords(),
-                                    getDayOfWeekInWords().equals("Sunday") ? 5 : 7,
-                                    getDayOfWeekInWords().equals("Sunday") ? "30" : "00"));
+                                            getDayOfWeekInWords().equals("Sunday") ? 5 : 7,
+                                            getDayOfWeekInWords().equals("Sunday") ? "30" : "00"));
                 case "1":
                     continueFlag = 1;
                     response = getDrawResults(savedSession);
