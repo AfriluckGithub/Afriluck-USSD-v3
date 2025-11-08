@@ -325,151 +325,164 @@ public class UssdController {
 
             sessionRepository.save(session);
 
-            EligibilityResponse eligibilityResponse = checkUserEligibility(session);
+            // EligibilityResponse eligibilityResponse = checkUserEligibility(session);
 
-            if (!eligibilityResponse.isCan_participate()) {
-                continueFlag = 1;
-                return ResponseMenu.menuResponse(session, continueFlag,
-                        eligibilityResponse.getMessage());
-            }
+            // if (!eligibilityResponse.isCan_participate()) {
+            // continueFlag = 1;
+            // return ResponseMenu.menuResponse(session, continueFlag,
+            // eligibilityResponse.getMessage());
+            // }
 
             if (ValidationUtils.isBetweenGameTime()) {
                 return ResponseMenu.menuResponse(session, 1, AppConstants.GAME_CLOSED_MESSAGE);
             }
 
         } else {
-            switch (savedSession.getPosition()) {
-                case 0:
-                    continueFlag = 0;
-                    savedSession.setGameType(Integer.valueOf(session.getData()));
-                    savedSession.setPosition(1);
-                    updateSession(session, false);
 
-                    if (savedSession.getGameType().equals(1)) {
-                        message = AppConstants.MEGA_OPTIONS_CHOICE_MESSAGE;
-                    } else if (savedSession.getGameType().equals(2)) {
-                        message = "Choose 2 numbers between 1 to 57 separated by space";
-                    } else {
-                        message = "Invalid menu option. 0) Back";
-                    }
-                    return ResponseMenu.menuResponse(session, continueFlag, message);
-                case 1:
-                    continueFlag = 0;
-                    boolean exceeds = false;
-                    savedSession.setData(session.getData());
-                    savedSession.setPosition(2);
-                    updateSession(session, false);
-                    boolean containsLetters = savedSession.getPosition() != 8
-                            ? ValidationUtils.containsAnyLetters(session.getData())
-                            : false;
-                    String input = ValidationUtils.removeSpecialCharacters(session.getData());
-                    List<Integer> numbers = ValidationUtils.extractNumbers(input);
-                    Set<Integer> repeatedNumbers = ValidationUtils.findRepeatedNumbers(numbers);
-                    try {
-                        exceeds = ValidationUtils.anyNumberExceedsLimit(input, ",", 57);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+            try {
+                switch (savedSession.getPosition()) {
+                    case 0:
+                        continueFlag = 0;
+                        savedSession.setGameType(Integer.valueOf(session.getData()));
+                        savedSession.setPosition(1);
+                        updateSession(session, false);
 
-                    logger.debug("Repeated numbers => {} ", repeatedNumbers);
-                    String[] selectedNumbers = ValidationUtils.splitNumbers(input);
-                    int len = selectedNumbers.length;
-                    boolean containsZero = ValidationUtils.containsSingularZero(input);
-                    boolean repeated = !repeatedNumbers.isEmpty();
-                    if (!containsLetters) {
-                        if (!repeated) {
-                            if (savedSession.getGameType().equals(1) ? len == AppConstants.MAX_MEGA
-                                    : len == AppConstants.SECOND && !exceeds && !containsZero) {
-                                if (savedSession.getGameType().equals(1)) {
-                                    message = String.format(
-                                            "Tck info:\n---\nLucky 70 million Mega GHS 5\nYour Numbers: %s\n1) Proceed\n0) Cancel",
-                                            session.getData());
+                        if (savedSession.getGameType().equals(1)) {
+                            message = AppConstants.MEGA_OPTIONS_CHOICE_MESSAGE;
+                        } else if (savedSession.getGameType().equals(2)) {
+                            message = "Choose 2 numbers between 1 to 57 separated by space";
+                        } else {
+                            deleteSession(savedSession);
+                            message = "Invalid menu option. 0) Back";
+                        }
+                        return ResponseMenu.menuResponse(session, continueFlag, message);
+                    case 1:
+                        continueFlag = 0;
+                        boolean exceeds = false;
+                        savedSession.setData(session.getData());
+                        savedSession.setPosition(2);
+                        updateSession(session, false);
+                        boolean containsLetters = savedSession.getPosition() != 8
+                                ? ValidationUtils.containsAnyLetters(session.getData())
+                                : false;
+                        String input = ValidationUtils.removeSpecialCharacters(session.getData());
+                        List<Integer> numbers = ValidationUtils.extractNumbers(input);
+                        Set<Integer> repeatedNumbers = ValidationUtils.findRepeatedNumbers(numbers);
+                        try {
+                            exceeds = ValidationUtils.anyNumberExceedsLimit(input, ",", 57);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+
+                        logger.debug("Repeated numbers => {} ", repeatedNumbers);
+                        String[] selectedNumbers = ValidationUtils.splitNumbers(input);
+                        int len = selectedNumbers.length;
+                        boolean containsZero = ValidationUtils.containsSingularZero(input);
+                        boolean repeated = !repeatedNumbers.isEmpty();
+                        if (!containsLetters) {
+                            if (!repeated) {
+                                if (savedSession.getGameType().equals(1) ? len == AppConstants.MAX_MEGA
+                                        : len == AppConstants.SECOND && !exceeds && !containsZero) {
+                                    if (savedSession.getGameType().equals(1)) {
+                                        message = String.format(
+                                                "Tck info:\n---\nLucky 70 million Mega GHS 5\nYour Numbers: %s\n1) Proceed\n0) Cancel",
+                                                session.getData());
+                                    } else {
+                                        message = String.format(
+                                                "Tck info:\n---\nDirect 1 GHS 1\nYour Numbers: %s\n1) Proceed\n0) Cancel",
+                                                session.getData());
+                                    }
+                                    savedSession.setSelectedNumbers(session.getData());
+                                    updateSession(session, false);
                                 } else {
-                                    message = String.format(
-                                            "Tck info:\n---\nDirect 1 GHS 1\nYour Numbers: %s\n1) Proceed\n0) Cancel",
-                                            session.getData());
+                                    deleteSession(savedSession);
+                                    message = exceeds ? AppConstants.EXCEEDS_NUMBER_LIMIT_MESSAGE
+                                            : savedSession.getGameType().equals(1)
+                                                    ? AppConstants.MEGA_VALIDATION_MESSAGE
+                                                    : "Numbers must be a total of 2 starting from 1 to 57.\\n 0) Back";
                                 }
-                                savedSession.setSelectedNumbers(session.getData());
-                                updateSession(session, false);
                             } else {
-                                deleteSession(savedSession);
-                                message = exceeds ? AppConstants.EXCEEDS_NUMBER_LIMIT_MESSAGE
-                                        : savedSession.getGameType().equals(1) ? AppConstants.MEGA_VALIDATION_MESSAGE
-                                                : "Numbers must be a total of 2 starting from 1 to 57.\\n 0) Back";
+                                int max = savedSession.getGameType().equals(1) ? 6 : 2;
+                                message = String.format(
+                                        "Numbers must be a total of %s starting from 1 to 57.\\n 0) Back",
+                                        max);
                             }
                         } else {
-                            int max = savedSession.getGameType().equals(1) ? 6 : 2;
-                            message = String.format("Numbers must be a total of %s starting from 1 to 57.\\n 0) Back",
-                                    max);
+                            deleteSession(savedSession);
+                            message = "Numbers cannot contain letters.\n 0) Back";
                         }
-                    } else {
+                        return ResponseMenu.menuResponse(session, continueFlag, message);
+                    case 2:
+                        logger.debug("\n---  Gets here => {}---\n", savedSession.getGameType());
+                        if (session.getData().equals("0")) {
+                            message = "Ticket cancelled by user\n0) Back";
+                            continueFlag = 1;
+                        } else {
+                            continueFlag = 1;
+
+                            if (savedSession.getGameType() == 1 || savedSession.getGameType() == 2) {
+                                Transaction t = mapper.mapPromo(
+                                        savedSession.getMsisdn(),
+                                        savedSession.getGameType() == 1 ? "mega" : "direct",
+                                        savedSession.getSelectedNumbers(),
+                                        "ussd",
+                                        savedSession.getNetwork());
+
+                                logger.debug("\nTransaction Params => {}\n", t);
+
+                                // Run payment and session tasks asynchronously
+                                CompletableFuture<Void> paymentFuture = CompletableFuture.runAsync(() -> {
+                                    try {
+                                        ResponseEntity<String> response = handler.client()
+                                                .post()
+                                                .uri("/api/V1/promo")
+                                                .body(t)
+                                                .contentType(MediaType.APPLICATION_JSON)
+                                                .retrieve()
+                                                .toEntity(String.class);
+                                        logger.debug("Response => {}", response.getBody());
+                                        logger.debug("--- Running Payment ---");
+                                    } catch (Exception e) {
+                                        logger.error("Payment failed", e);
+                                    }
+                                });
+
+                                CompletableFuture<Void> sessionFuture = CompletableFuture.runAsync(() -> {
+                                    try {
+                                        sessionRepository.deleteById(savedSession.getId());
+                                        logger.debug("--- Deleting Session ---");
+                                    } catch (Exception e) {
+                                        logger.error("Session deletion failed", e);
+                                    }
+                                });
+
+                                // Run both asynchronously without blocking
+                                CompletableFuture.allOf(paymentFuture, sessionFuture)
+                                        .exceptionally(ex -> {
+                                            logger.error("Error in async tasks", ex);
+                                            return null;
+                                        });
+
+                                // Immediately respond to user (no waiting)
+                                message = savedSession.getGameType() == 1
+                                        ? "Ticket of 5 GHS purchased with free promo."
+                                        : "Ticket of 1 GHS purchased with free promo";
+
+                                return ResponseMenu.menuResponse(session, continueFlag, message);
+                            }
+
+                        }
+                        return ResponseMenu.menuResponse(session, continueFlag, message);
+                    default:
+                        logger.debug("\n Got here \n");
                         deleteSession(savedSession);
-                        message = "Numbers cannot contain letters.\n 0) Back";
-                    }
-                    return ResponseMenu.menuResponse(session, continueFlag, message);
-                case 2:
-                    logger.debug("\n---  Gets here => {}---\n", savedSession.getGameType());
-                    if (session.getData().equals("0")) {
-                        message = "Ticket cancelled by user\n0) Back";
-                        continueFlag = 1;
-                    } else {
-                        continueFlag = 1;
+                        return ResponseMenu.menuResponse(session, continueFlag, "Invalid input entered. 0) Back");
 
-                        if (savedSession.getGameType() == 1 || savedSession.getGameType() == 2) {
-                            Transaction t = mapper.mapPromo(
-                                    savedSession.getMsisdn(),
-                                    savedSession.getGameType() == 1 ? "mega" : "direct",
-                                    savedSession.getSelectedNumbers(),
-                                    "ussd",
-                                    savedSession.getNetwork());
-
-                            logger.debug("\nTransaction Params => {}\n", t);
-
-                            // Run payment and session tasks asynchronously
-                            CompletableFuture<Void> paymentFuture = CompletableFuture.runAsync(() -> {
-                                try {
-                                    ResponseEntity<String> response = handler.client()
-                                            .post()
-                                            .uri("/api/V1/promo")
-                                            .body(t)
-                                            .contentType(MediaType.APPLICATION_JSON)
-                                            .retrieve()
-                                            .toEntity(String.class);
-                                    logger.debug("Response => {}", response.getBody());
-                                    logger.debug("--- Running Payment ---");
-                                } catch (Exception e) {
-                                    logger.error("Payment failed", e);
-                                }
-                            });
-
-                            CompletableFuture<Void> sessionFuture = CompletableFuture.runAsync(() -> {
-                                try {
-                                    sessionRepository.deleteById(savedSession.getId());
-                                    logger.debug("--- Deleting Session ---");
-                                } catch (Exception e) {
-                                    logger.error("Session deletion failed", e);
-                                }
-                            });
-
-                            // Run both asynchronously without blocking
-                            CompletableFuture.allOf(paymentFuture, sessionFuture)
-                                    .exceptionally(ex -> {
-                                        logger.error("Error in async tasks", ex);
-                                        return null;
-                                    });
-
-                            // Immediately respond to user (no waiting)
-                            message = savedSession.getGameType() == 1
-                                    ? "Ticket of 5 GHS purchased with free promo."
-                                    : "Ticket of 1 GHS purchased with free promo";
-
-                            return ResponseMenu.menuResponse(session, continueFlag, message);
-                        }
-
-                    }
-                    return ResponseMenu.menuResponse(session, continueFlag, message);
-                default:
-                    return "Service Error";
+                }
+            } catch (Exception e) {
+                logger.error("Error -> {} ", e);
+                deleteSession(savedSession);
+                return ResponseMenu.menuResponse(session, continueFlag, "Invalid input entered. 0) Back");
             }
         }
         return ResponseMenu.menuResponse(session, continueFlag, "Free Ticket Promo\n1. Mega\n2.Direct-2");
